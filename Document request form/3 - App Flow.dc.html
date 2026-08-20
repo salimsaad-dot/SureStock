@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+<style>
+doc-page:not(:defined){visibility:hidden}
+body{margin:0}
+a{color:oklch(0.48 0.1 250);text-decoration:underline}
+a:hover{color:oklch(0.38 0.11 250)}
+</style>
+<script src="./doc-page.js"></script>
+</helmet>
+<doc-page margin="0.8in" style="font-family:'Source Serif 4',Georgia,serif;font-size:15px;line-height:1.62;color:oklch(0.24 0.012 260)">
+<div slot="header" style="display:flex;justify-content:space-between;align-items:baseline;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:oklch(0.55 0.01 260);padding-bottom:6px;border-bottom:1px solid oklch(0.9 0.005 260)"><span>Shop Inventory System</span><span>Doc 3 of 6 — App Flow</span></div>
+<div slot="footer" style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.6 0.01 260);padding-top:6px;border-top:1px solid oklch(0.9 0.005 260)"><span>v0.1 — Draft for review</span><span>Prepared 8 August 2026</span></div>
+
+<h1 style="font-family:'IBM Plex Sans',sans-serif;font-size:31px;font-weight:600;letter-spacing:-0.015em;line-height:1.15;margin:0 0 8px">App Flow Document</h1>
+<p style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:oklch(0.5 0.012 260);margin:0 0 28px">Screens, navigation, and what happens on every meaningful action.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:0 0 10px;padding-top:14px;border-top:2px solid oklch(0.22 0.012 260)">1. Navigation model</h2>
+<p style="margin:0 0 12px">The application has six top-level destinations. On desktop they sit in a persistent left sidebar; on mobile the four most-used appear in a bottom bar with the rest under "More". The active destination is always visible, and the shop name plus sync status sit in the top bar on every screen.</p>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.9;background:oklch(0.97 0.004 260);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:12px 14px;margin:0 0 14px;white-space:pre-wrap;break-inside:avoid">Sell        — the point-of-sale screen (default landing for cashiers)
+Inventory   — product list, product detail, receiving, stock takes
+Sales       — transaction history, refunds, till shifts
+Reports     — daily summary, product performance, valuation, shrinkage
+Purchasing  — suppliers, purchase orders, low-stock list
+Settings    — shop profile, staff, categories, tax, devices, backups</div>
+<p style="margin:0 0 12px">Cashiers see only Sell, Inventory (read-only), and Sales (own transactions). Managers see everything except Settings and cost figures. The owner sees all six. Hidden destinations are absent, not disabled — no dead ends.</p>
+<p style="margin:0 0 12px">A global search field, focused with <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">/</span>, finds products, receipts, and suppliers from anywhere. A barcode scanned on any screen jumps to that product; scanned on the Sell screen it adds to the cart instead.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">2. Onboarding</h2>
+<p style="margin:0 0 10px">First-run setup happens once, on the owner's account, and takes about fifteen minutes plus catalogue entry. Each step is skippable and resumable; a progress checklist stays on the dashboard until it is complete.</p>
+<ol style="margin:0 0 14px;padding-left:22px">
+<li style="margin-bottom:6px"><strong style="font-weight:600">Create the account.</strong> Owner name, shop name, phone, email, password. Verify by SMS code.</li>
+<li style="margin-bottom:6px"><strong style="font-weight:600">Shop profile.</strong> Currency, tax rate and whether prices include tax, opening hours, receipt header and footer text.</li>
+<li style="margin-bottom:6px"><strong style="font-weight:600">Categories.</strong> Accept a suggested starter set for the shop type, or write your own. Editable later.</li>
+<li style="margin-bottom:6px"><strong style="font-weight:600">Add products.</strong> Two paths: import a spreadsheet (download template → upload → column mapping → validation preview → commit) or add the first product by hand with a guided form. The importer reports each rejected row with a reason and lets it be fixed inline.</li>
+<li style="margin-bottom:6px"><strong style="font-weight:600">Opening stock.</strong> Run the first stock take to set real counts and cost prices. Until this is done the dashboard shows an "opening stock not set" banner.</li>
+<li style="margin-bottom:6px"><strong style="font-weight:600">Invite staff.</strong> Name, role, and a four-digit PIN. Staff receive an SMS link, set a password, and are ready to sell.</li>
+<li style="margin-bottom:6px"><strong style="font-weight:600">Connect hardware.</strong> Test the barcode scanner (a live "scan anything" field confirms input) and print a test receipt.</li>
+</ol>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">3. The selling flow</h2>
+<p style="margin:0 0 12px">This is the screen staff live in. Layout: a large product search and scan field at the top, a grid of category tiles and favourite products below it, and the running cart on the right (or in a bottom sheet on mobile) showing lines, subtotal, tax, and total.</p>
+<table style="width:100%;border-collapse:collapse;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;margin:0 0 16px">
+<thead><tr style="background:oklch(0.965 0.004 260)">
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260);width:32%">Action</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">What happens</th>
+</tr></thead>
+<tbody>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Scan a barcode</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Product is added to the cart with quantity 1, or its quantity increments if already present. A short tone and a row highlight confirm. Unknown barcode opens a "create this product" prompt for managers, or an error toast for cashiers.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Type in search</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Results filter as you type against the local cache, showing name, price, and stock on hand. Enter adds the top result. Out-of-stock items still appear, marked, and can be sold with a confirmation.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Tap a cart line</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Opens quantity, line discount, and remove. Discounts above a configured threshold require a manager PIN and a reason.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Hold cart</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Cart is parked with an optional label and the screen clears for the next customer. Held carts appear as chips above the search field.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Charge</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Opens payment: method tabs (cash, mobile money, card, account), amount tendered with quick-cash buttons, live change due. Split payment adds a second method row.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Confirm payment</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Sale is written locally and confirmed immediately, then posted to the server in the background. Success screen shows change due in large type with Print, SMS, and New Sale. New Sale is focused so the flow can continue with one keypress.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Offline</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Top bar turns amber: "Offline — N sales queued". Selling continues unchanged. On reconnect the badge counts down to zero and turns green briefly.</td></tr>
+</tbody>
+</table>
+<p style="margin:0 0 12px"><strong style="font-weight:600">Errors:</strong> a failed server post never blocks the cashier — the sale stays in the outbox and retries. A sale that the server rejects outright (for example, a deleted product) surfaces in a "needs attention" list for the owner, with the original receipt intact.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">4. Inventory flows</h2>
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">4.1 Receiving a delivery</h3>
+<p style="margin:0 0 14px">Inventory → Receive stock → choose supplier (or an open purchase order). Scan or search each item, enter quantity and unit cost — the previous cost is pre-filled — and add batch and expiry for perishables. A running total shows units and value received. Saving posts one stock movement per line, updates each product's moving-average cost, marks the purchase order fully or partially received, and shows a summary with an option to print a goods-received note.</p>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">4.2 Stock take</h3>
+<p style="margin:0 0 14px">Inventory → Stock take → choose full shop or a category. The system freezes an expected-quantity snapshot and presents a count list, optimised for a phone in one hand: item name, a big number field, and next. Counted lines show a live variance. At the end a review screen lists only the discrepancies, sorted by value impact, each requiring a reason before posting. Posting writes adjustment movements and closes the stock take, which then becomes a permanent, uneditable record.</p>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">4.3 Product detail</h3>
+<p style="margin:0 0 14px">One screen per product: stock on hand, price and cost, margin, a 90-day sales sparkline, days of cover at current velocity, and the full movement history. Actions are Edit, Adjust stock, Reorder, and Discontinue. Discontinuing hides a product from the sell screen without deleting its history — nothing that has ever been sold is deletable.</p>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">4.4 Low stock and reordering</h3>
+<p style="margin:0 0 14px">Purchasing → Low stock lists every product at or below its reorder point, grouped by supplier, with a suggested quantity. Select items → Create purchase order produces a draft grouped per supplier; each can be sent as PDF or a WhatsApp message and later received against.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">5. Sales, refunds, and till shifts</h2>
+<ul style="margin:0 0 14px;padding-left:20px">
+<li style="margin-bottom:5px"><strong style="font-weight:600">History:</strong> a reverse-chronological list filterable by date, staff member, and payment method. Tapping a transaction shows the full receipt with its sync status.</li>
+<li style="margin-bottom:5px"><strong style="font-weight:600">Refund:</strong> open the sale → Refund → select lines and quantities → choose restock or write off as damaged → refund method → confirm. A refund is a new linked transaction with negative amounts; the original is never edited.</li>
+<li style="margin-bottom:5px"><strong style="font-weight:600">Open shift:</strong> a cashier entering the sell screen with no open shift is asked for the opening cash float.</li>
+<li style="margin-bottom:5px"><strong style="font-weight:600">Close shift:</strong> the cashier enters counted cash; the system compares against expected, records the variance, and prints a shift summary. Variances beyond a threshold notify the owner.</li>
+</ul>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">6. The owner's dashboard</h2>
+<p style="margin:0 0 14px">The owner lands on a dashboard, not the till. Top row: today's revenue, transactions, gross profit, and cash in drawer, each with a comparison to the same day last week. Below: a 30-day revenue chart, an attention list (low stock, expiring soon, till variances, failed syncs), and today's top sellers. Every card links straight into the screen that acts on it — the dashboard is a set of doorways, not a wall of numbers.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">7. Screen inventory</h2>
+<table style="width:100%;border-collapse:collapse;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;margin:0 0 8px">
+<thead><tr style="background:oklch(0.965 0.004 260)">
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Screen</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Primary action</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Roles</th>
+</tr></thead>
+<tbody>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Login / PIN unlock</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Enter the app</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">All</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Dashboard</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">See the day at a glance</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Owner, Manager</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Sell</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Complete a sale</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">All</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Payment / receipt</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Take payment, issue receipt</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">All</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Product list / detail</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Find and manage a product</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">All (edit: Manager+)</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Receive stock</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Log a delivery</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Manager, Owner</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Stock take</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Count and correct</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Manager, Owner</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Sales history / refund</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Find and reverse a sale</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Manager, Owner</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Reports</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Understand performance</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Owner (partial: Manager)</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Purchasing</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Reorder stock</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Manager, Owner</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Settings</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Configure the shop</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Owner</td></tr>
+</tbody>
+</table>
+</doc-page>
+</x-dc>
+</body>
+</html>

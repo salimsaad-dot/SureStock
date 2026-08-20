@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+<style>
+doc-page:not(:defined){visibility:hidden}
+body{margin:0}
+a{color:oklch(0.48 0.1 250);text-decoration:underline}
+a:hover{color:oklch(0.38 0.11 250)}
+</style>
+<script src="./doc-page.js"></script>
+</helmet>
+<doc-page margin="0.8in" style="font-family:'Source Serif 4',Georgia,serif;font-size:15px;line-height:1.62;color:oklch(0.24 0.012 260)">
+<div slot="header" style="display:flex;justify-content:space-between;align-items:baseline;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:oklch(0.55 0.01 260);padding-bottom:6px;border-bottom:1px solid oklch(0.9 0.005 260)"><span>Shop Inventory System</span><span>Doc 1 of 6 — Product Requirements</span></div>
+<div slot="footer" style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.6 0.01 260);padding-top:6px;border-top:1px solid oklch(0.9 0.005 260)"><span>v0.1 — Draft for review</span><span>Prepared 8 August 2026</span></div>
+
+<h1 style="font-family:'IBM Plex Sans',sans-serif;font-size:31px;font-weight:600;letter-spacing:-0.015em;line-height:1.15;margin:0 0 8px">Product Requirements Document</h1>
+<p style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:oklch(0.5 0.012 260);margin:0 0 28px">A modern inventory, sales, and revenue management system for a single retail shop, built to grow into multiple locations.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:0 0 10px;padding-top:14px;border-top:2px solid oklch(0.22 0.012 260)">1. Overview</h2>
+<p style="margin:0 0 12px">The shop currently tracks stock, sales, and money in a mix of notebooks, spreadsheets, and memory. That works until it doesn't: stock-outs go unnoticed until a customer asks, slow-moving capital sits on the shelf, and the true margin on any given day is a guess made at closing time.</p>
+<p style="margin:0 0 12px">This system replaces that with one source of truth. Every item that enters the shop is recorded, every sale decrements stock in real time, and every cedi of revenue and cost is attributable to a product, a day, and a staff member. The product is a web application usable on a laptop at the counter and on a phone in the stockroom, and it must keep selling when the internet drops.</p>
+<p style="margin:0 0 12px"><strong style="font-weight:600">Primary outcome:</strong> at any moment, the owner can answer three questions in under ten seconds — what do I have, what did I sell, and what did I make.</p>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">1.1 Goals</h3>
+<ul style="margin:0 0 14px;padding-left:20px">
+<li style="margin-bottom:5px">Accurate, live stock counts for every product, with a clear audit trail for every change.</li>
+<li style="margin-bottom:5px">A fast point-of-sale flow — a typical sale completed in under 20 seconds.</li>
+<li style="margin-bottom:5px">Revenue, cost of goods, and gross profit reported daily without manual reconciliation.</li>
+<li style="margin-bottom:5px">Automatic low-stock alerts and reorder suggestions based on real sales velocity.</li>
+<li style="margin-bottom:5px">Full offline capability at the counter, syncing when the connection returns.</li>
+</ul>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">1.2 Non-goals for version 1</h3>
+<ul style="margin:0 0 14px;padding-left:20px">
+<li style="margin-bottom:5px">Full accounting (ledgers, payroll, tax filing). The system exports to accounting, it does not replace it.</li>
+<li style="margin-bottom:5px">A customer-facing online store. The data model anticipates it; the build does not include it.</li>
+<li style="margin-bottom:5px">Manufacturing or bill-of-materials assembly.</li>
+<li style="margin-bottom:5px">Loyalty programmes and marketing automation.</li>
+</ul>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">2. Users and roles</h2>
+<table style="width:100%;border-collapse:collapse;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;margin:0 0 16px">
+<thead><tr style="background:oklch(0.965 0.004 260)">
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Role</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Who they are</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">What they can do</th>
+</tr></thead>
+<tbody>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Owner</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">You. On the floor and off it.</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Everything: pricing, cost visibility, reports, staff accounts, settings, data export.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Manager</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Trusted senior staff.</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Sell, receive stock, adjust counts, run stock takes, view sales reports. No cost prices or margin unless granted.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Cashier</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Counter staff, possibly part-time.</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Sell, look up stock, open and close their own till shift. Cannot edit prices, delete sales, or see reports.</td></tr>
+</tbody>
+</table>
+<p style="margin:0 0 12px">Permissions are enforced on the server, not only hidden in the interface. A refund, a price override, or a manual stock adjustment always records who did it and when.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">3. Core features</h2>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">3.1 Product catalogue</h3>
+<p style="margin:0 0 10px">Every sellable thing in the shop is a product record: name, SKU, barcode, category, supplier, unit of measure, cost price, selling price, tax treatment, reorder point, and an optional photo. Products may have variants (size, colour, pack size), each with its own SKU and its own stock count. Products can be marked as active, discontinued, or seasonal.</p>
+<ul style="margin:0 0 14px;padding-left:20px">
+<li style="margin-bottom:5px">Bulk import from a spreadsheet for the initial catalogue load, with a preview-and-fix step before committing.</li>
+<li style="margin-bottom:5px">Barcode lookup, plus generated internal barcodes for unlabelled goods.</li>
+<li style="margin-bottom:5px">Price history retained — changing a price never rewrites what past sales recorded.</li>
+</ul>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">3.2 Inventory tracking</h3>
+<p style="margin:0 0 10px">Stock is never edited directly. It is the running total of an append-only log of stock movements, each with a reason: goods received, sale, return, transfer, damage, theft, expiry, or stock-take correction. This makes every discrepancy explainable after the fact.</p>
+<ul style="margin:0 0 14px;padding-left:20px">
+<li style="margin-bottom:5px"><strong style="font-weight:600">Receiving:</strong> record a delivery against a supplier and an optional purchase order; enter quantities and unit costs; the system updates the moving-average cost.</li>
+<li style="margin-bottom:5px"><strong style="font-weight:600">Stock takes:</strong> a guided count by category or full shop; the system shows expected vs counted and posts the variance as an adjustment with a note.</li>
+<li style="margin-bottom:5px"><strong style="font-weight:600">Low-stock alerts:</strong> triggered by reorder point, with a suggested order quantity derived from average daily sales and the supplier's lead time.</li>
+<li style="margin-bottom:5px"><strong style="font-weight:600">Expiry tracking</strong> for perishable goods, with a batch and expiry date on receipt and a "expiring within 30 days" view.</li>
+</ul>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">3.3 Sales and point of sale</h3>
+<p style="margin:0 0 10px">The selling screen is the most-used surface in the product and is designed for speed: scan or search, quantity, tender, done. It supports mixed payment (part cash, part mobile money), line-level and cart-level discounts with a reason, held carts for customers who step away, and printed or SMS receipts.</p>
+<ul style="margin:0 0 14px;padding-left:20px">
+<li style="margin-bottom:5px">Payment methods: cash, mobile money, card, and "on account" for known credit customers.</li>
+<li style="margin-bottom:5px">Returns and refunds against an original receipt, restoring stock unless marked damaged.</li>
+<li style="margin-bottom:5px">Till shifts: opening float, expected cash at close, counted cash, and the variance recorded per staff member.</li>
+<li style="margin-bottom:5px">Offline mode: sales queue locally and sync automatically; the cashier sees a clear sync indicator, never a blocked sale.</li>
+</ul>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">3.4 Revenue and reporting</h3>
+<p style="margin:0 0 10px">Reports answer business questions, not database questions. Each report is filterable by date range, category, staff member, and payment method, and each is exportable to CSV or PDF.</p>
+<table style="width:100%;border-collapse:collapse;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;margin:0 0 16px">
+<thead><tr style="background:oklch(0.965 0.004 260)">
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Report</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Answers</th>
+</tr></thead>
+<tbody>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Daily summary</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Revenue, transaction count, average basket, cost of goods sold, gross profit, cash vs mobile money split.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Product performance</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Best and worst sellers by units and by profit; margin per product; items with no sale in 60 days.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Stock valuation</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Capital tied up in stock, by category, at cost and at retail.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Shrinkage</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Losses to damage, expiry, and unexplained variance, by period and by staff shift.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Staff activity</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Sales per cashier, discounts given, refunds processed, till variances.</td></tr>
+</tbody>
+</table>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">3.5 Suppliers and purchasing</h3>
+<p style="margin:0 0 14px">Supplier records hold contact details, lead time, and payment terms. Purchase orders can be raised from the low-stock list in one action, sent as PDF or WhatsApp message, and later received against — partially or in full. Outstanding supplier balances are visible but not double-entry accounted.</p>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">3.6 Settings and administration</h3>
+<p style="margin:0 0 14px">Shop profile and receipt header, currency and tax rates, categories, staff accounts and roles, printer and scanner setup, backup and data export, and an activity log covering every sensitive action.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">4. Requirements by priority</h2>
+<table style="width:100%;border-collapse:collapse;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;margin:0 0 16px">
+<thead><tr style="background:oklch(0.965 0.004 260)">
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">ID</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Requirement</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Priority</th>
+</tr></thead>
+<tbody>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">R-01</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Create, edit, and search products with variants and barcodes</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Must</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">R-02</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Record a sale and decrement stock atomically</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Must</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">R-03</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Append-only stock movement log with reason codes</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Must</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">R-04</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Receive stock against a supplier and update average cost</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Must</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">R-05</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Daily revenue, COGS, and gross profit summary</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Must</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">R-06</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Role-based access enforced server-side</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Must</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">R-07</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Offline selling with automatic sync and conflict handling</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Must</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">R-08</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Low-stock alerts with suggested reorder quantity</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Should</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">R-09</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Guided stock take with variance posting</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Should</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">R-10</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Purchase orders raised from low-stock list</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Should</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">R-11</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Batch and expiry tracking for perishables</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Should</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">R-12</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Customer accounts with credit balances</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Could</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">R-13</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Multi-location stock and transfers</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Could</td></tr>
+</tbody>
+</table>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">5. Success metrics</h2>
+<ul style="margin:0 0 14px;padding-left:20px">
+<li style="margin-bottom:5px">Median time to complete a two-item sale under 20 seconds after one week of use.</li>
+<li style="margin-bottom:5px">Stock accuracy above 98% at the monthly stock take, measured as counted vs expected units.</li>
+<li style="margin-bottom:5px">Zero sales lost to system unavailability, including during internet outages.</li>
+<li style="margin-bottom:5px">Daily close completed in under five minutes with no manual arithmetic.</li>
+<li style="margin-bottom:5px">Stock-outs on the top 50 products reduced by half within three months.</li>
+</ul>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">6. Assumptions and open questions</h2>
+<p style="margin:0 0 10px">These were assumed while writing and should be confirmed before the build starts.</p>
+<ul style="margin:0 0 14px;padding-left:20px">
+<li style="margin-bottom:5px">One physical location at launch; the schema supports more from day one.</li>
+<li style="margin-bottom:5px">Prices are in Ghana cedis, tax-inclusive, with a configurable rate.</li>
+<li style="margin-bottom:5px">Mobile money is a significant share of payments and needs first-class treatment at the till.</li>
+<li style="margin-bottom:5px">Roughly 500–3,000 SKUs and up to 300 transactions a day at launch.</li>
+<li style="margin-bottom:5px">Hardware: one laptop or tablet at the counter, a USB or Bluetooth barcode scanner, a thermal receipt printer, and staff phones.</li>
+</ul>
+<p style="margin:0 0 6px"><strong style="font-weight:600">Open:</strong> Do you need supplier invoice payment tracking in v1? Should returns be allowed without a receipt? Is a customer credit ledger needed at launch, or later?</p>
+</doc-page>
+</x-dc>
+</body>
+</html>

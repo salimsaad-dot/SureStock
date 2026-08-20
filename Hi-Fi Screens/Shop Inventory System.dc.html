@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+body{margin:0;background:oklch(0.94 0.004 95)}
+a{color:oklch(0.48 0.1 250)}
+a:hover{color:oklch(0.38 0.11 250)}
+*{box-sizing:border-box}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:oklch(0.85 0.005 260);border-radius:4px}
+</style>
+</helmet>
+
+<div style="font-family:'IBM Plex Sans',system-ui,sans-serif;color:oklch(0.22 0.012 260);padding:24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:10px;background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:10px;padding:14px 16px;width:100%;max-width:1340px">
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:oklch(0.55 0.012 260)">Shop Inventory System — hi-fi prototype</span>
+<span style="font-size:12px;color:oklch(0.55 0.012 260)">Click anything. Products add to the cart, the keypad works, nav switches screens.</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<sc-for list="{{ screenChips }}" as="c" hint-placeholder-count="11">
+<button onClick="{{ c.go }}" style="font:500 12px 'IBM Plex Sans',sans-serif;padding:6px 11px;border-radius:6px;cursor:pointer;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
+</sc-for>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:center;padding-top:10px;border-top:1px solid oklch(0.92 0.004 260)">
+<div style="display:flex;align-items:center;gap:7px"><span style="font:500 11px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">Width</span>
+<sc-for list="{{ widthChips }}" as="c" hint-placeholder-count="2">
+<button onClick="{{ c.go }}" style="font:500 12px 'IBM Plex Sans';padding:5px 10px;border-radius:6px;cursor:pointer;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
+</sc-for>
+</div>
+<div style="display:flex;align-items:center;gap:7px"><span style="font:500 11px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">Variants</span>
+<sc-for list="{{ variantChips }}" as="c" hint-placeholder-count="3">
+<button onClick="{{ c.go }}" style="font:500 12px 'IBM Plex Sans';padding:5px 10px;border-radius:6px;cursor:pointer;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
+</sc-for>
+</div>
+<div style="display:flex;align-items:center;gap:7px"><span style="font:500 11px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">States</span>
+<sc-for list="{{ stateChips }}" as="c" hint-placeholder-count="4">
+<button onClick="{{ c.go }}" style="font:500 12px 'IBM Plex Sans';padding:5px 10px;border-radius:6px;cursor:pointer;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="display:flex;align-items:flex-start;gap:18px">
+<div style="position:relative;background:oklch(0.965 0.004 95);border:1px solid oklch(0.86 0.005 260);border-radius:{{ stageRadius }};box-shadow:0 8px 30px oklch(0.5 0.02 260 / 0.14);overflow:hidden;width:{{ stageW }};height:{{ stageH }};display:flex;flex-direction:column">
+
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;align-items:center;justify-content:center;background:oklch(0.99 0.003 95);padding:32px">
+<div style="width:340px;display:flex;flex-direction:column;gap:20px">
+<div><div style="font:600 24px 'IBM Plex Sans';letter-spacing:-0.01em">Kwabena Stores</div><div style="font:400 13px 'IBM Plex Sans';color:oklch(0.55 0.012 260);margin-top:2px">Enter your 4-digit PIN to start selling</div></div>
+<div style="display:flex;gap:10px">
+<sc-for list="{{ pinDots }}" as="d" hint-placeholder-count="4">
+<div style="flex:1;height:52px;border:1px solid oklch(0.9 0.005 260);border-radius:6px;background:oklch(0.965 0.004 95);display:flex;align-items:center;justify-content:center;font:600 24px 'IBM Plex Mono';color:oklch(0.22 0.012 260)">{{ d.ch }}</div>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+<sc-for list="{{ loginKeys }}" as="k" hint-placeholder-count="12">
+<button onClick="{{ k.press }}" style="height:56px;border:1px solid oklch(0.9 0.005 260);background:oklch(0.99 0.003 95);border-radius:6px;font:500 20px 'IBM Plex Mono';cursor:pointer;color:oklch(0.22 0.012 260)">{{ k.label }}</button>
+</sc-for>
+</div>
+<button onClick="{{ doLogin }}" style="height:52px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer">Unlock</button>
+<div style="font:400 12px 'IBM Plex Sans';color:oklch(0.55 0.012 260);text-align:center">Signed in as cashier on this device · <span style="color:oklch(0.48 0.1 250)">Switch user</span></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showShell }}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;display:flex;min-height:0;flex-direction:{{ shellDir }}">
+
+<sc-if value="{{ isCounter }}" hint-placeholder-val="{{ true }}">
+<nav style="width:212px;flex:none;background:oklch(0.99 0.003 95);border-right:1px solid oklch(0.9 0.005 260);display:flex;flex-direction:column;padding:14px 10px;gap:2px">
+<div style="padding:4px 10px 14px"><div style="font:600 14px 'IBM Plex Sans'">Kwabena Stores</div><div style="font:400 11.5px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">Adenta · Owner</div></div>
+<sc-for list="{{ nav }}" as="n" hint-placeholder-count="7">
+<button onClick="{{ n.go }}" style="display:flex;align-items:center;gap:10px;text-align:left;border:none;cursor:pointer;padding:0 10px;height:40px;border-radius:6px;font:500 13.5px 'IBM Plex Sans';background:{{ n.bg }};color:{{ n.fg }}"><span style="font-family:'IBM Plex Mono';font-size:13px;opacity:0.7">{{ n.icon }}</span>{{ n.label }}</button>
+</sc-for>
+<div style="margin-top:auto;padding:10px;border-top:1px solid oklch(0.92 0.004 260);font:400 11.5px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">Shift open · float GH₵ 200.00</div>
+</nav>
+</sc-if>
+
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;background:oklch(0.965 0.004 95)">
+
+<header style="flex:none;background:{{ topBg }};border-bottom:1px solid {{ topBd }};padding:0 16px;height:56px;display:flex;align-items:center;gap:12px">
+<div style="font:600 15px 'IBM Plex Sans';white-space:nowrap">{{ screenTitle }}</div>
+<div style="flex:1;min-width:0;display:flex;justify-content:center">
+<div style="width:100%;max-width:380px;height:34px;border:1px solid oklch(0.9 0.005 260);border-radius:6px;background:oklch(0.99 0.003 95);display:flex;align-items:center;padding:0 10px;gap:8px;font:400 13px 'IBM Plex Sans';color:oklch(0.55 0.012 260)"><span style="font-family:'IBM Plex Mono'">⌕</span>Search products, receipts, suppliers<span style="margin-left:auto;font-family:'IBM Plex Mono';font-size:11px;border:1px solid oklch(0.9 0.005 260);border-radius:4px;padding:1px 5px">/</span></div>
+</div>
+<div style="display:flex;align-items:center;gap:6px;font:500 11.5px 'IBM Plex Sans';white-space:nowrap;padding:4px 9px;border-radius:999px;background:{{ syncBg }};color:{{ syncFg }}"><span style="width:7px;height:7px;border-radius:50%;background:{{ syncDot }}"></span>{{ syncLabel }}</div>
+</header>
+
+<div style="flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column">
+
+<sc-if value="{{ isSell }}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;display:flex;flex-wrap:wrap;align-items:stretch;min-height:0">
+<div style="flex:1 1 420px;min-width:0;display:flex;flex-direction:column;padding:14px;gap:12px">
+<div style="height:56px;flex:none;border:1px solid oklch(0.48 0.1 250);box-shadow:0 0 0 2px oklch(0.94 0.03 250);border-radius:6px;background:oklch(0.99 0.003 95);display:flex;align-items:center;padding:0 14px;gap:10px;font:400 16px 'IBM Plex Sans'"><span style="font-family:'IBM Plex Mono';color:oklch(0.55 0.012 260)">⌗</span><span style="color:oklch(0.45 0.012 260)">Scan barcode or type a product name</span><span style="margin-left:auto;font:500 11px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">SCANNER READY</span></div>
+<sc-if value="{{ heldChips.length }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{ heldChips }}" as="h" hint-placeholder-count="2">
+<div style="font:500 12px 'IBM Plex Sans';padding:5px 10px;border-radius:999px;border:1px dashed oklch(0.8 0.01 260);color:oklch(0.4 0.012 260);background:oklch(0.99 0.003 95)">Held · {{ h.label }}</div>
+</sc-for>
+</div>
+</sc-if>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<sc-for list="{{ cats }}" as="c" hint-placeholder-count="5">
+<button onClick="{{ c.go }}" style="font:500 12.5px 'IBM Plex Sans';padding:6px 12px;border-radius:999px;cursor:pointer;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{ emptyCatalogue }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:40px 20px">
+<div style="font:600 17px 'IBM Plex Sans'">No products yet</div>
+<div style="font:400 14px 'IBM Plex Sans';color:oklch(0.55 0.012 260);max-width:340px">Add your catalogue before you can sell. Import a spreadsheet or add the first product by hand.</div>
+<div style="display:flex;gap:8px"><button onClick="{{ goInventory }}" style="height:44px;padding:0 18px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 13.5px 'IBM Plex Sans';cursor:pointer">Import spreadsheet</button><button onClick="{{ goInventory }}" style="height:44px;padding:0 18px;border:1px solid oklch(0.85 0.008 260);border-radius:6px;background:transparent;font:500 13.5px 'IBM Plex Sans';cursor:pointer;color:oklch(0.22 0.012 260)">Add a product</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sellGrid }}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;align-content:start">
+<sc-for list="{{ shownProducts }}" as="p" hint-placeholder-count="12">
+<button onClick="{{ p.add }}" style="text-align:left;cursor:pointer;padding:0;border:1px solid oklch(0.9 0.005 260);border-radius:6px;overflow:hidden;background:oklch(0.99 0.003 95);display:flex;flex-direction:column;filter:{{ p.filter }}">
+<div style="position:relative;aspect-ratio:1.5;background:{{ p.tint }};display:flex;align-items:center;justify-content:center;font:600 22px 'IBM Plex Mono';color:oklch(0.4 0.06 250)">{{ p.initials }}
+<span style="position:absolute;top:6px;right:6px;font:600 9.5px 'IBM Plex Sans';letter-spacing:0.05em;text-transform:uppercase;padding:2px 6px;border-radius:999px;background:{{ p.pillBg }};color:{{ p.pillFg }}">{{ p.pill }}</span></div>
+<div style="padding:8px 9px 9px;display:flex;flex-direction:column;gap:3px"><div style="font:500 12.5px/1.25 'IBM Plex Sans';height:31px;overflow:hidden">{{ p.name }}</div><div style="font:600 13px 'IBM Plex Mono'">{{ p.priceStr }}</div></div>
+</button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ sellList }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;overflow:auto;border:1px solid oklch(0.9 0.005 260);border-radius:6px;background:oklch(0.99 0.003 95)">
+<sc-for list="{{ shownProducts }}" as="p" hint-placeholder-count="12">
+<button onClick="{{ p.add }}" style="width:100%;text-align:left;cursor:pointer;border:none;border-bottom:1px solid oklch(0.93 0.004 260);background:transparent;display:flex;align-items:center;gap:12px;padding:0 12px;height:56px">
+<span style="width:36px;height:36px;flex:none;border-radius:5px;background:{{ p.tint }};display:flex;align-items:center;justify-content:center;font:600 12px 'IBM Plex Mono';color:oklch(0.4 0.06 250)">{{ p.initials }}</span>
+<span style="flex:1;min-width:0"><span style="display:block;font:500 14px 'IBM Plex Sans'">{{ p.name }}</span><span style="display:block;font:400 11.5px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">{{ p.sku }} · {{ p.stockStr }}</span></span>
+<span style="font:600 9.5px 'IBM Plex Sans';letter-spacing:0.05em;text-transform:uppercase;padding:3px 7px;border-radius:999px;background:{{ p.pillBg }};color:{{ p.pillFg }}">{{ p.pill }}</span>
+<span style="font:600 15px 'IBM Plex Mono';width:96px;text-align:right">{{ p.priceStr }}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+
+<aside style="flex:1 1 330px;max-width:100%;min-width:300px;background:oklch(0.99 0.003 95);border-left:1px solid oklch(0.9 0.005 260);display:flex;flex-direction:column">
+<div style="padding:12px 14px;border-bottom:1px solid oklch(0.92 0.004 260);display:flex;align-items:center;justify-content:space-between"><span style="font:600 15px 'IBM Plex Sans'">Cart</span><span style="font:400 12px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">{{ cartCount }} items · Receipt #{{ receiptNo }}</span></div>
+<div style="flex:1;min-height:120px;overflow:auto">
+<sc-if value="{{ cartEmpty }}" hint-placeholder-val="{{ false }}">
+<div style="padding:36px 20px;text-align:center;font:400 13.5px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">Scan or tap a product to start a sale.</div>
+</sc-if>
+<sc-for list="{{ cartLines }}" as="l" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:10px;padding:0 14px;height:56px;border-bottom:1px solid oklch(0.94 0.004 260)">
+<div style="flex:1;min-width:0"><div style="font:500 13.5px 'IBM Plex Sans';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.name }}</div><div style="font:400 11.5px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">{{ l.unit }}</div></div>
+<div style="display:flex;align-items:center;gap:2px;border:1px solid oklch(0.9 0.005 260);border-radius:6px;overflow:hidden">
+<button onClick="{{ l.dec }}" style="width:30px;height:32px;border:none;background:oklch(0.97 0.004 260);cursor:pointer;font:500 15px 'IBM Plex Mono';color:oklch(0.22 0.012 260)">−</button>
+<span style="width:30px;text-align:center;font:600 13.5px 'IBM Plex Mono'">{{ l.qty }}</span>
+<button onClick="{{ l.inc }}" style="width:30px;height:32px;border:none;background:oklch(0.97 0.004 260);cursor:pointer;font:500 15px 'IBM Plex Mono';color:oklch(0.22 0.012 260)">+</button>
+</div>
+<div style="width:86px;text-align:right;font:600 14px 'IBM Plex Mono'">{{ l.total }}</div>
+</div>
+</sc-for>
+</div>
+<div style="flex:none;padding:12px 14px;border-top:1px solid oklch(0.92 0.004 260);display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;justify-content:space-between;font:400 13px 'IBM Plex Sans';color:oklch(0.45 0.012 260)"><span>Subtotal</span><span style="font-family:'IBM Plex Mono'">{{ subtotalStr }}</span></div>
+<div style="display:flex;justify-content:space-between;font:400 13px 'IBM Plex Sans';color:oklch(0.45 0.012 260)"><span>VAT included (15%)</span><span style="font-family:'IBM Plex Mono'">{{ taxStr }}</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:6px;border-top:1px solid oklch(0.92 0.004 260)"><span style="font:600 14px 'IBM Plex Sans'">Total</span><span style="font:600 34px 'IBM Plex Mono';letter-spacing:-0.02em">{{ totalStr }}</span></div>
+<div style="display:flex;gap:8px;margin-top:4px">
+<button onClick="{{ holdCart }}" style="flex:none;height:56px;padding:0 16px;border:1px solid oklch(0.85 0.008 260);border-radius:6px;background:transparent;font:500 13.5px 'IBM Plex Sans';cursor:pointer;color:oklch(0.22 0.012 260)">Hold</button>
+<button onClick="{{ openPay }}" style="flex:1;height:56px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 16px 'IBM Plex Sans';cursor:pointer">Charge {{ totalStr }}</button>
+</div>
+</div>
+</aside>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDash }}" hint-placeholder-val="{{ false }}">
+<div style="padding:18px;display:flex;flex-direction:column;gap:16px">
+<sc-if value="{{ dashCards }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px">
+<sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+<div style="background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:4px">
+<div style="font:500 12px 'IBM Plex Sans';letter-spacing:0.04em;text-transform:uppercase;color:oklch(0.55 0.012 260)">{{ s.label }}</div>
+<div style="font:600 34px 'IBM Plex Mono';letter-spacing:-0.02em">{{ s.value }}</div>
+<div style="font:400 12px 'IBM Plex Sans';color:{{ s.deltaFg }}">{{ s.delta }}</div>
+</div>
+</sc-for>
+</div>
+<div style="background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:14px 16px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font:600 17px 'IBM Plex Sans'">Revenue, last 30 days</span><span style="font:400 12px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">GH₵ 68,420 total · GH₵ 2,281 daily average</span></div>
+<div style="display:flex;align-items:flex-end;gap:3px;height:150px;border-bottom:1px solid oklch(0.9 0.005 260)">
+<sc-for list="{{ chart }}" as="b" hint-placeholder-count="30">
+<div style="flex:1;background:{{ b.fill }};height:{{ b.h }};border-radius:2px 2px 0 0"></div>
+</sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;font:400 10.5px 'IBM Plex Mono';color:oklch(0.55 0.012 260);margin-top:6px"><span>9 Jul</span><span>24 Jul</span><span>8 Aug</span></div>
+</div>
+</sc-if>
+<sc-if value="{{ dashDense }}" hint-placeholder-val="{{ false }}">
+<div style="background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;display:flex;flex-wrap:wrap">
+<div style="flex:1 1 300px;min-width:280px;padding:16px 18px;border-right:1px solid oklch(0.92 0.004 260)">
+<div style="font:500 11.5px 'IBM Plex Sans';letter-spacing:0.06em;text-transform:uppercase;color:oklch(0.55 0.012 260);margin-bottom:10px">Today at a glance</div>
+<sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid oklch(0.94 0.004 260)"><span style="font:400 13.5px 'IBM Plex Sans';color:oklch(0.4 0.012 260)">{{ s.label }}</span><span style="display:flex;align-items:baseline;gap:10px"><span style="font:400 11.5px 'IBM Plex Sans';color:{{ s.deltaFg }}">{{ s.delta }}</span><span style="font:600 20px 'IBM Plex Mono'">{{ s.value }}</span></span></div>
+</sc-for>
+</div>
+<div style="flex:2 1 380px;min-width:300px;padding:16px 18px">
+<div style="font:500 11.5px 'IBM Plex Sans';letter-spacing:0.06em;text-transform:uppercase;color:oklch(0.55 0.012 260);margin-bottom:10px">Revenue, last 30 days</div>
+<div style="display:flex;align-items:flex-end;gap:3px;height:118px;border-bottom:1px solid oklch(0.9 0.005 260)">
+<sc-for list="{{ chart }}" as="b" hint-placeholder-count="30">
+<div style="flex:1;background:{{ b.fill }};height:{{ b.h }};border-radius:2px 2px 0 0"></div>
+</sc-for>
+</div>
+<div style="display:flex;gap:18px;margin-top:14px;flex-wrap:wrap">
+<sc-for list="{{ topSellers }}" as="t" hint-placeholder-count="4">
+<div style="min-width:120px"><div style="font:400 12px 'IBM Plex Sans';color:oklch(0.55 0.012 260);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</div><div style="font:600 15px 'IBM Plex Mono'">{{ t.amount }}</div></div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:12px">
+<div style="flex:1 1 340px;min-width:280px;background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:14px 16px">
+<div style="font:600 17px 'IBM Plex Sans';margin-bottom:8px">Needs attention</div>
+<sc-for list="{{ attention }}" as="a" hint-placeholder-count="4">
+<button onClick="{{ a.go }}" style="width:100%;text-align:left;cursor:pointer;border:none;background:transparent;border-bottom:1px solid oklch(0.94 0.004 260);padding:10px 0;display:flex;align-items:center;gap:10px">
+<span style="width:8px;height:8px;border-radius:50%;background:{{ a.dot }};flex:none"></span>
+<span style="flex:1;font:400 13.5px 'IBM Plex Sans';color:oklch(0.22 0.012 260)">{{ a.text }}</span>
+<span style="font:500 12px 'IBM Plex Sans';color:oklch(0.48 0.1 250)">{{ a.action }} →</span>
+</button>
+</sc-for>
+</div>
+<div style="flex:1 1 300px;min-width:260px;background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:14px 16px">
+<div style="font:600 17px 'IBM Plex Sans';margin-bottom:8px">Today's top sellers</div>
+<sc-for list="{{ topSellers }}" as="t" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid oklch(0.94 0.004 260)"><span style="flex:1;font:400 13.5px 'IBM Plex Sans'">{{ t.name }}</span><span style="font:400 12px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">{{ t.units }}</span><span style="font:600 13.5px 'IBM Plex Mono';width:88px;text-align:right">{{ t.amount }}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ false }}">
+<div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+<sc-for list="{{ cats }}" as="c" hint-placeholder-count="5">
+<button onClick="{{ c.go }}" style="font:500 12.5px 'IBM Plex Sans';padding:6px 12px;border-radius:999px;cursor:pointer;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
+</sc-for>
+<button onClick="{{ goReceive }}" style="margin-left:auto;height:40px;padding:0 16px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 13.5px 'IBM Plex Sans';cursor:pointer">Add product</button>
+</div>
+<sc-if value="{{ emptyCatalogue }}" hint-placeholder-val="{{ false }}">
+<div style="background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:60px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px">
+<div style="font:600 17px 'IBM Plex Sans'">No products yet</div>
+<div style="font:400 14px 'IBM Plex Sans';color:oklch(0.55 0.012 260);max-width:380px">Import your catalogue from a spreadsheet — download the template, map your columns, fix any rejected rows, then commit.</div>
+<button style="height:44px;padding:0 18px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 13.5px 'IBM Plex Sans';cursor:pointer">Import spreadsheet</button>
+</div>
+</sc-if>
+<div style="background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;overflow:hidden">
+<div style="display:flex;align-items:center;gap:12px;padding:0 14px;height:40px;background:oklch(0.965 0.004 95);border-bottom:1px solid oklch(0.9 0.005 260);font:500 12px 'IBM Plex Sans';letter-spacing:0.04em;text-transform:uppercase;color:oklch(0.5 0.012 260)">
+<span style="width:36px"></span><span style="flex:1">Product</span><span style="width:110px">Category</span><span style="width:110px">Stock</span><span style="width:92px;text-align:right">Price</span><span style="width:76px;text-align:right">Margin</span></div>
+<sc-for list="{{ shownProducts }}" as="p" hint-placeholder-count="12">
+<button onClick="{{ p.open }}" style="width:100%;cursor:pointer;border:none;border-bottom:1px solid oklch(0.94 0.004 260);background:transparent;display:flex;align-items:center;gap:12px;padding:0 14px;height:52px;text-align:left">
+<span style="width:36px;height:36px;flex:none;border-radius:5px;background:{{ p.tint }};display:flex;align-items:center;justify-content:center;font:600 12px 'IBM Plex Mono';color:oklch(0.4 0.06 250)">{{ p.initials }}</span>
+<span style="flex:1;min-width:0"><span style="display:block;font:500 13.5px 'IBM Plex Sans'">{{ p.name }}</span><span style="display:block;font:400 11px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">{{ p.sku }}</span></span>
+<span style="width:110px;font:400 12.5px 'IBM Plex Sans';color:oklch(0.45 0.012 260)">{{ p.cat }}</span>
+<span style="width:110px;display:flex;align-items:center;gap:7px"><span style="font:600 13px 'IBM Plex Mono'">{{ p.stock }}</span><span style="font:600 9.5px 'IBM Plex Sans';letter-spacing:0.05em;text-transform:uppercase;padding:2px 6px;border-radius:999px;background:{{ p.pillBg }};color:{{ p.pillFg }}">{{ p.pill }}</span></span>
+<span style="width:92px;text-align:right;font:500 13px 'IBM Plex Mono'">{{ p.priceStr }}</span>
+<span style="width:76px;text-align:right;font:400 13px 'IBM Plex Mono';color:oklch(0.45 0.012 260)">{{ p.margin }}</span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+<div style="padding:18px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start">
+<div style="flex:1 1 300px;min-width:280px;display:flex;flex-direction:column;gap:12px">
+<div style="background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;overflow:hidden">
+<div style="aspect-ratio:1.9;background:{{ detail.tint }};display:flex;align-items:center;justify-content:center;font:600 44px 'IBM Plex Mono';color:oklch(0.4 0.06 250)">{{ detail.initials }}</div>
+<div style="padding:14px 16px;display:flex;flex-direction:column;gap:2px">
+<div style="font:600 22px 'IBM Plex Sans';letter-spacing:-0.01em">{{ detail.name }}</div>
+<div style="font:400 12px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">{{ detail.sku }} · {{ detail.cat }} · Kofi Wholesale</div>
+</div>
+</div>
+<div style="background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:14px">
+<div><div style="font:500 12px 'IBM Plex Sans';letter-spacing:0.05em;text-transform:uppercase;color:oklch(0.55 0.012 260)">Stock on hand</div><div style="font:600 44px 'IBM Plex Mono';line-height:1.1;letter-spacing:-0.02em">{{ detail.stock }}</div><div style="font:400 12.5px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">{{ detail.cover }} days of cover at current velocity</div></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px">
+<div><div style="font:400 11.5px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">Selling price</div><div style="font:600 16px 'IBM Plex Mono'">{{ detail.priceStr }}</div></div>
+<div><div style="font:400 11.5px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">Cost</div><div style="font:600 16px 'IBM Plex Mono'">{{ detail.costStr }}</div></div>
+<div><div style="font:400 11.5px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">Margin</div><div style="font:600 16px 'IBM Plex Mono';color:oklch(0.45 0.13 150)">{{ detail.margin }}</div></div>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button style="height:44px;padding:0 16px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 13.5px 'IBM Plex Sans';cursor:pointer">Reorder</button><button onClick="{{ openPin }}" style="height:44px;padding:0 16px;border:1px solid oklch(0.85 0.008 260);border-radius:6px;background:transparent;font:500 13.5px 'IBM Plex Sans';cursor:pointer;color:oklch(0.22 0.012 260)">Adjust stock</button><button style="height:44px;padding:0 16px;border:1px solid oklch(0.85 0.008 260);border-radius:6px;background:transparent;font:500 13.5px 'IBM Plex Sans';cursor:pointer;color:oklch(0.22 0.012 260)">Edit</button></div>
+</div>
+</div>
+<div style="flex:1 1 340px;min-width:290px;background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:16px">
+<div style="font:600 17px 'IBM Plex Sans';margin-bottom:4px">Movement history</div>
+<div style="font:400 12px 'IBM Plex Sans';color:oklch(0.55 0.012 260);margin-bottom:12px">Append-only. Every change has a reason and an author.</div>
+<sc-for list="{{ movements }}" as="m" hint-placeholder-count="7">
+<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid oklch(0.94 0.004 260)">
+<span style="width:74px;flex:none;font:400 11.5px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">{{ m.when }}</span>
+<span style="flex:1;min-width:0"><span style="display:block;font:500 13px 'IBM Plex Sans'">{{ m.reason }}</span><span style="display:block;font:400 11.5px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">{{ m.who }}</span></span>
+<span style="font:600 13.5px 'IBM Plex Mono';color:{{ m.fg }}">{{ m.delta }}</span>
+<span style="width:44px;text-align:right;font:400 12.5px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">{{ m.after }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSales }}" hint-placeholder-val="{{ false }}">
+<div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<div style="font:500 12.5px 'IBM Plex Sans';padding:6px 12px;border-radius:999px;border:1px solid oklch(0.48 0.1 250);background:oklch(0.94 0.03 250);color:oklch(0.35 0.09 250)">Today</div>
+<div style="font:500 12.5px 'IBM Plex Sans';padding:6px 12px;border-radius:999px;border:1px solid oklch(0.88 0.005 260);color:oklch(0.4 0.012 260)">All staff</div>
+<div style="font:500 12.5px 'IBM Plex Sans';padding:6px 12px;border-radius:999px;border:1px solid oklch(0.88 0.005 260);color:oklch(0.4 0.012 260)">All payment methods</div>
+<div style="margin-left:auto;font:400 12.5px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">142 transactions · GH₵ 3,847.50</div>
+</div>
+<div style="background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;overflow:hidden">
+<div style="display:flex;align-items:center;gap:12px;padding:0 14px;height:40px;background:oklch(0.965 0.004 95);border-bottom:1px solid oklch(0.9 0.005 260);font:500 12px 'IBM Plex Sans';letter-spacing:0.04em;text-transform:uppercase;color:oklch(0.5 0.012 260)"><span style="width:90px">Receipt</span><span style="width:64px">Time</span><span style="flex:1">Cashier</span><span style="width:120px">Method</span><span style="width:96px">Status</span><span style="width:96px;text-align:right">Amount</span><span style="width:80px"></span></div>
+<sc-for list="{{ sales }}" as="s" hint-placeholder-count="8">
+<div style="display:flex;align-items:center;gap:12px;padding:0 14px;height:52px;border-bottom:1px solid oklch(0.94 0.004 260)">
+<span style="width:90px;font:500 12.5px 'IBM Plex Mono'">{{ s.no }}</span>
+<span style="width:64px;font:400 12.5px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">{{ s.time }}</span>
+<span style="flex:1;font:400 13.5px 'IBM Plex Sans'">{{ s.who }}</span>
+<span style="width:120px;font:400 13px 'IBM Plex Sans';color:oklch(0.45 0.012 260)">{{ s.method }}</span>
+<span style="width:96px"><span style="font:600 9.5px 'IBM Plex Sans';letter-spacing:0.05em;text-transform:uppercase;padding:3px 7px;border-radius:999px;background:{{ s.pillBg }};color:{{ s.pillFg }}">{{ s.status }}</span></span>
+<span style="width:96px;text-align:right;font:600 13.5px 'IBM Plex Mono';color:{{ s.amtFg }}">{{ s.amount }}</span>
+<span style="width:80px;text-align:right"><button onClick="{{ openRefund }}" style="border:1px solid oklch(0.85 0.008 260);background:transparent;border-radius:6px;padding:5px 10px;font:500 12px 'IBM Plex Sans';cursor:pointer;color:oklch(0.22 0.012 260)">Refund</button></span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isTake }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px;gap:18px">
+<div style="width:100%;max-width:440px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;font:400 12.5px 'IBM Plex Sans';color:oklch(0.55 0.012 260)"><span>Stock take · Beverages</span><span style="font-family:'IBM Plex Mono'">{{ take.progressLabel }}</span></div>
+<div style="height:6px;border-radius:999px;background:oklch(0.92 0.004 260);overflow:hidden"><div style="height:100%;background:oklch(0.48 0.1 250);width:{{ take.progress }}"></div></div>
+</div>
+<div style="width:100%;max-width:440px;background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:24px 20px;display:flex;flex-direction:column;gap:18px">
+<div><div style="font:400 12px 'IBM Plex Sans';letter-spacing:0.05em;text-transform:uppercase;color:oklch(0.55 0.012 260)">Count this item</div><div style="font:600 26px/1.2 'IBM Plex Sans';margin-top:4px">{{ take.name }}</div><div style="font:400 12.5px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">{{ take.sku }} · shelf B2</div></div>
+<div><div style="font:500 13px 'IBM Plex Sans';margin-bottom:6px">Counted quantity</div>
+<div style="height:72px;border:1px solid oklch(0.48 0.1 250);box-shadow:0 0 0 2px oklch(0.94 0.03 250);border-radius:6px;background:oklch(0.99 0.003 95);display:flex;align-items:center;justify-content:flex-end;padding:0 18px;font:600 40px 'IBM Plex Mono'">{{ take.entry }}</div>
+<div style="font:400 12.5px 'IBM Plex Sans';color:{{ take.varianceFg }};margin-top:6px">{{ take.varianceText }}</div></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+<sc-for list="{{ takeKeys }}" as="k" hint-placeholder-count="12">
+<button onClick="{{ k.press }}" style="height:56px;border:1px solid oklch(0.9 0.005 260);background:oklch(0.99 0.003 95);border-radius:6px;font:500 20px 'IBM Plex Mono';cursor:pointer;color:oklch(0.22 0.012 260)">{{ k.label }}</button>
+</sc-for>
+</div>
+<button onClick="{{ take.next }}" style="height:56px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 16px 'IBM Plex Sans';cursor:pointer">{{ take.nextLabel }}</button>
+</div>
+<sc-if value="{{ take.showReview }}" hint-placeholder-val="{{ false }}">
+<div style="width:100%;max-width:440px;background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:16px">
+<div style="font:600 17px 'IBM Plex Sans';margin-bottom:2px">Review variances</div>
+<div style="font:400 12.5px 'IBM Plex Sans';color:oklch(0.55 0.012 260);margin-bottom:10px">Only discrepancies are shown, largest value impact first. Each needs a reason before posting.</div>
+<sc-for list="{{ take.variances }}" as="v" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid oklch(0.94 0.004 260)"><span style="flex:1;font:400 13.5px 'IBM Plex Sans'">{{ v.name }}</span><span style="font:400 12px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">{{ v.expected }} → {{ v.counted }}</span><span style="font:600 13.5px 'IBM Plex Mono';width:52px;text-align:right;color:{{ v.fg }}">{{ v.delta }}</span></div>
+</sc-for>
+<button style="margin-top:12px;width:100%;height:44px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 14px 'IBM Plex Sans';cursor:pointer">Post adjustments</button>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReceive }}" hint-placeholder-val="{{ false }}">
+<div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+<div style="background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+<div style="flex:1 1 200px"><div style="font:500 13px 'IBM Plex Sans';margin-bottom:5px">Supplier</div><div style="height:44px;border:1px solid oklch(0.9 0.005 260);border-radius:6px;display:flex;align-items:center;padding:0 12px;font:400 14px 'IBM Plex Sans'">Kofi Wholesale Ltd</div></div>
+<div style="flex:1 1 180px"><div style="font:500 13px 'IBM Plex Sans';margin-bottom:5px">Against purchase order</div><div style="height:44px;border:1px solid oklch(0.9 0.005 260);border-radius:6px;display:flex;align-items:center;padding:0 12px;font:400 14px 'IBM Plex Mono'">PO-0241</div></div>
+<div style="flex:1 1 140px"><div style="font:500 13px 'IBM Plex Sans';margin-bottom:5px">Delivery date</div><div style="height:44px;border:1px solid oklch(0.9 0.005 260);border-radius:6px;display:flex;align-items:center;padding:0 12px;font:400 14px 'IBM Plex Mono'">08/08/2026</div></div>
+</div>
+<div style="background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;overflow:hidden">
+<div style="display:flex;align-items:center;gap:12px;padding:0 14px;height:40px;background:oklch(0.965 0.004 95);border-bottom:1px solid oklch(0.9 0.005 260);font:500 12px 'IBM Plex Sans';letter-spacing:0.04em;text-transform:uppercase;color:oklch(0.5 0.012 260)"><span style="flex:1">Item</span><span style="width:88px;text-align:right">Ordered</span><span style="width:88px;text-align:right">Received</span><span style="width:96px;text-align:right">Unit cost</span><span style="width:104px;text-align:right">Line value</span></div>
+<sc-for list="{{ receiveLines }}" as="r" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:12px;padding:0 14px;height:56px;border-bottom:1px solid oklch(0.94 0.004 260)">
+<span style="flex:1;min-width:0"><span style="display:block;font:500 13.5px 'IBM Plex Sans'">{{ r.name }}</span><span style="display:block;font:400 11px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">{{ r.meta }}</span></span>
+<span style="width:88px;text-align:right;font:400 13px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">{{ r.ordered }}</span>
+<span style="width:88px;text-align:right;font:600 13px 'IBM Plex Mono'">{{ r.received }}</span>
+<span style="width:96px;text-align:right;font:400 13px 'IBM Plex Mono'">{{ r.cost }}</span>
+<span style="width:104px;text-align:right;font:600 13px 'IBM Plex Mono'">{{ r.value }}</span>
+</div>
+</sc-for>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:oklch(0.965 0.004 95)"><span style="font:400 13px 'IBM Plex Sans';color:oklch(0.45 0.012 260)">184 units received · average cost updated on save</span><span style="display:flex;align-items:baseline;gap:14px"><span style="font:600 26px 'IBM Plex Mono'">GH₵ 4,318.00</span><button style="height:44px;padding:0 18px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 14px 'IBM Plex Sans';cursor:pointer">Save delivery</button></span></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReports }}" hint-placeholder-val="{{ false }}">
+<div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<div style="font:500 12.5px 'IBM Plex Sans';padding:6px 12px;border-radius:999px;border:1px solid oklch(0.48 0.1 250);background:oklch(0.94 0.03 250);color:oklch(0.35 0.09 250)">1–8 Aug 2026</div>
+<div style="font:500 12.5px 'IBM Plex Sans';padding:6px 12px;border-radius:999px;border:1px solid oklch(0.88 0.005 260);color:oklch(0.4 0.012 260)">All categories</div>
+<button style="margin-left:auto;height:36px;padding:0 14px;border:1px solid oklch(0.85 0.008 260);border-radius:6px;background:transparent;font:500 12.5px 'IBM Plex Sans';cursor:pointer;color:oklch(0.22 0.012 260)">Export CSV</button>
+</div>
+<div style="background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:16px">
+<div style="font:600 17px 'IBM Plex Sans';margin-bottom:12px">Product performance</div>
+<div style="display:flex;align-items:center;gap:12px;height:34px;border-bottom:1px solid oklch(0.9 0.005 260);font:500 12px 'IBM Plex Sans';letter-spacing:0.04em;text-transform:uppercase;color:oklch(0.5 0.012 260)"><span style="flex:1">Product</span><span style="width:78px;text-align:right">Units</span><span style="width:104px;text-align:right">Revenue</span><span style="width:104px;text-align:right">Profit</span><span style="width:76px;text-align:right">Margin</span></div>
+<sc-for list="{{ perf }}" as="r" hint-placeholder-count="7">
+<div style="display:flex;align-items:center;gap:12px;height:46px;border-bottom:1px solid oklch(0.94 0.004 260)"><span style="flex:1;font:400 13.5px 'IBM Plex Sans'">{{ r.name }}</span><span style="width:78px;text-align:right;font:400 13px 'IBM Plex Mono'">{{ r.units }}</span><span style="width:104px;text-align:right;font:400 13px 'IBM Plex Mono'">{{ r.rev }}</span><span style="width:104px;text-align:right;font:600 13px 'IBM Plex Mono'">{{ r.profit }}</span><span style="width:76px;text-align:right;font:400 13px 'IBM Plex Mono';color:{{ r.fg }}">{{ r.margin }}</span></div>
+</sc-for>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px">
+<div style="flex:1 1 300px;background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:16px"><div style="font:600 17px 'IBM Plex Sans';margin-bottom:10px">Stock valuation</div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid oklch(0.94 0.004 260);font:400 13.5px 'IBM Plex Sans'"><span>At cost</span><span style="font:600 15px 'IBM Plex Mono'">GH₵ 41,206.00</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid oklch(0.94 0.004 260);font:400 13.5px 'IBM Plex Sans'"><span>At retail</span><span style="font:600 15px 'IBM Plex Mono'">GH₵ 53,890.00</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;font:400 13.5px 'IBM Plex Sans'"><span>Unrealised margin</span><span style="font:600 15px 'IBM Plex Mono';color:oklch(0.45 0.13 150)">GH₵ 12,684.00</span></div></div>
+<div style="flex:1 1 300px;background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:16px"><div style="font:600 17px 'IBM Plex Sans';margin-bottom:10px">Shrinkage, this month</div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid oklch(0.94 0.004 260);font:400 13.5px 'IBM Plex Sans'"><span>Damage</span><span style="font:600 15px 'IBM Plex Mono'">GH₵ 214.00</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid oklch(0.94 0.004 260);font:400 13.5px 'IBM Plex Sans'"><span>Expiry</span><span style="font:600 15px 'IBM Plex Mono'">GH₵ 96.50</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;font:400 13.5px 'IBM Plex Sans'"><span>Unexplained variance</span><span style="font:600 15px 'IBM Plex Mono';color:oklch(0.5 0.16 27)">GH₵ 348.00</span></div></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPurch }}" hint-placeholder-val="{{ false }}">
+<div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+<div style="background:oklch(0.99 0.003 95);border:1px solid oklch(0.72 0.14 75);border-radius:6px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:oklch(0.72 0.14 75)"></span><span style="font:500 13.5px 'IBM Plex Sans'">6 products at or below reorder point across 3 suppliers</span><button style="margin-left:auto;height:36px;padding:0 14px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 12.5px 'IBM Plex Sans';cursor:pointer">Create purchase orders</button></div>
+<sc-for list="{{ suppliers }}" as="s" hint-placeholder-count="3">
+<div style="background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;overflow:hidden">
+<div style="padding:12px 14px;border-bottom:1px solid oklch(0.92 0.004 260);display:flex;align-items:baseline;gap:10px"><span style="font:600 15px 'IBM Plex Sans'">{{ s.name }}</span><span style="font:400 12px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">{{ s.meta }}</span><span style="margin-left:auto;font:600 15px 'IBM Plex Mono'">{{ s.value }}</span></div>
+<sc-for list="{{ s.items }}" as="i" hint-placeholder-count="2">
+<div style="display:flex;align-items:center;gap:12px;padding:0 14px;height:50px;border-bottom:1px solid oklch(0.95 0.004 260)"><span style="width:16px;height:16px;border-radius:4px;border:1px solid oklch(0.48 0.1 250);background:oklch(0.48 0.1 250);color:#fff;font:600 10px 'IBM Plex Mono';display:flex;align-items:center;justify-content:center">✓</span><span style="flex:1;font:400 13.5px 'IBM Plex Sans'">{{ i.name }}</span><span style="font:400 12.5px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">{{ i.onHand }}</span><span style="font:600 13px 'IBM Plex Mono';width:96px;text-align:right">Order {{ i.suggest }}</span></div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+<div style="padding:18px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start">
+<sc-for list="{{ settings }}" as="g" hint-placeholder-count="4">
+<div style="flex:1 1 300px;min-width:280px;background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:16px">
+<div style="font:600 17px 'IBM Plex Sans';margin-bottom:2px">{{ g.title }}</div>
+<div style="font:400 12.5px 'IBM Plex Sans';color:oklch(0.55 0.012 260);margin-bottom:10px">{{ g.desc }}</div>
+<sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid oklch(0.94 0.004 260)"><span style="flex:1;font:400 13.5px 'IBM Plex Sans'">{{ r.k }}</span><span style="font:500 13px 'IBM Plex Mono';color:oklch(0.4 0.012 260)">{{ r.v }}</span></div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+</div>
+
+<sc-if value="{{ isPhone }}" hint-placeholder-val="{{ false }}">
+<nav style="flex:none;height:64px;background:oklch(0.99 0.003 95);border-top:1px solid oklch(0.9 0.005 260);display:flex;align-items:stretch">
+<sc-for list="{{ bottomNav }}" as="n" hint-placeholder-count="4">
+<button onClick="{{ n.go }}" style="flex:1;border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:500 11px 'IBM Plex Sans';color:{{ n.fg }}"><span style="font-family:'IBM Plex Mono';font-size:16px">{{ n.icon }}</span>{{ n.label }}</button>
+</sc-for>
+</nav>
+</sc-if>
+
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ payModalOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:oklch(0.3 0.02 260 / 0.42);display:flex;align-items:center;justify-content:center;padding:20px">
+<div style="width:100%;max-width:420px;max-height:100%;overflow:auto;background:oklch(0.99 0.003 95);border-radius:10px;box-shadow:0 18px 50px oklch(0.3 0.02 260 / 0.3);padding:20px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 17px 'IBM Plex Sans'">Take payment</span><button onClick="{{ closePay }}" style="border:none;background:transparent;cursor:pointer;font:400 18px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">✕</button></div>
+<div style="background:oklch(0.965 0.004 95);border:1px solid oklch(0.92 0.004 260);border-radius:6px;padding:12px 14px;display:flex;justify-content:space-between;align-items:baseline"><span style="font:400 13px 'IBM Plex Sans';color:oklch(0.45 0.012 260)">Amount due</span><span style="font:600 34px 'IBM Plex Mono';letter-spacing:-0.02em">{{ totalStr }}</span></div>
+<div style="display:flex;gap:6px">
+<sc-for list="{{ methods }}" as="m" hint-placeholder-count="4">
+<button onClick="{{ m.pick }}" style="flex:1;height:40px;border-radius:6px;cursor:pointer;font:500 12.5px 'IBM Plex Sans';border:1px solid {{ m.bd }};background:{{ m.bg }};color:{{ m.fg }}">{{ m.label }}</button>
+</sc-for>
+</div>
+<div><div style="font:500 13px 'IBM Plex Sans';margin-bottom:5px">Amount tendered</div><div style="height:56px;border:1px solid oklch(0.48 0.1 250);box-shadow:0 0 0 2px oklch(0.94 0.03 250);border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding:0 14px;font:600 28px 'IBM Plex Mono'">{{ tenderStr }}</div></div>
+<div style="display:flex;gap:6px">
+<sc-for list="{{ quickCash }}" as="q" hint-placeholder-count="4">
+<button onClick="{{ q.press }}" style="flex:1;height:36px;border:1px solid oklch(0.88 0.005 260);background:transparent;border-radius:6px;font:500 12.5px 'IBM Plex Mono';cursor:pointer;color:oklch(0.22 0.012 260)">{{ q.label }}</button>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+<sc-for list="{{ payKeys }}" as="k" hint-placeholder-count="12">
+<button onClick="{{ k.press }}" style="height:52px;border:1px solid oklch(0.9 0.005 260);background:oklch(0.99 0.003 95);border-radius:6px;font:500 19px 'IBM Plex Mono';cursor:pointer;color:oklch(0.22 0.012 260)">{{ k.label }}</button>
+</sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:400 13px 'IBM Plex Sans';color:oklch(0.45 0.012 260)">Change due</span><span style="font:600 24px 'IBM Plex Mono';color:{{ changeFg }}">{{ changeStr }}</span></div>
+<button onClick="{{ confirmPay }}" style="height:56px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 16px 'IBM Plex Sans';cursor:pointer">Confirm payment</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ payFullOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:oklch(0.99 0.003 95);display:flex;flex-direction:column">
+<div style="height:56px;flex:none;border-bottom:1px solid oklch(0.9 0.005 260);display:flex;align-items:center;padding:0 16px;gap:12px"><button onClick="{{ closePay }}" style="border:none;background:transparent;cursor:pointer;font:500 14px 'IBM Plex Sans';color:oklch(0.48 0.1 250)">← Back to cart</button><span style="margin-left:auto;font:400 13px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">Receipt #{{ receiptNo }} · {{ cartCount }} items</span></div>
+<div style="flex:1;min-height:0;overflow:auto;display:flex;flex-wrap:wrap">
+<div style="flex:1 1 340px;min-width:300px;padding:24px;display:flex;flex-direction:column;gap:16px;border-right:1px solid oklch(0.92 0.004 260)">
+<div><div style="font:400 13px 'IBM Plex Sans';color:oklch(0.45 0.012 260)">Amount due</div><div style="font:600 64px/1.05 'IBM Plex Mono';letter-spacing:-0.03em">{{ totalStr }}</div></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<sc-for list="{{ methods }}" as="m" hint-placeholder-count="4">
+<button onClick="{{ m.pick }}" style="flex:1 1 90px;height:44px;border-radius:6px;cursor:pointer;font:500 13px 'IBM Plex Sans';border:1px solid {{ m.bd }};background:{{ m.bg }};color:{{ m.fg }}">{{ m.label }}</button>
+</sc-for>
+</div>
+<div style="border-top:1px solid oklch(0.92 0.004 260);padding-top:14px;display:flex;justify-content:space-between;align-items:baseline"><span style="font:400 14px 'IBM Plex Sans';color:oklch(0.45 0.012 260)">Change due</span><span style="font:600 44px 'IBM Plex Mono';color:{{ changeFg }}">{{ changeStr }}</span></div>
+<div style="margin-top:auto"><button onClick="{{ confirmPay }}" style="width:100%;height:64px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 18px 'IBM Plex Sans';cursor:pointer">Confirm payment</button></div>
+</div>
+<div style="flex:1 1 320px;min-width:280px;padding:24px;display:flex;flex-direction:column;gap:12px">
+<div><div style="font:500 13px 'IBM Plex Sans';margin-bottom:5px">Amount tendered</div><div style="height:72px;border:1px solid oklch(0.48 0.1 250);box-shadow:0 0 0 2px oklch(0.94 0.03 250);border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding:0 18px;font:600 40px 'IBM Plex Mono'">{{ tenderStr }}</div></div>
+<div style="display:flex;gap:6px">
+<sc-for list="{{ quickCash }}" as="q" hint-placeholder-count="4">
+<button onClick="{{ q.press }}" style="flex:1;height:40px;border:1px solid oklch(0.88 0.005 260);background:transparent;border-radius:6px;font:500 13px 'IBM Plex Mono';cursor:pointer;color:oklch(0.22 0.012 260)">{{ q.label }}</button>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+<sc-for list="{{ payKeys }}" as="k" hint-placeholder-count="12">
+<button onClick="{{ k.press }}" style="height:64px;border:1px solid oklch(0.9 0.005 260);background:oklch(0.99 0.003 95);border-radius:6px;font:500 22px 'IBM Plex Mono';cursor:pointer;color:oklch(0.22 0.012 260)">{{ k.label }}</button>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ paid }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:oklch(0.99 0.003 95);display:flex;align-items:center;justify-content:center;padding:24px">
+<div style="width:100%;max-width:420px;display:flex;flex-direction:column;gap:20px;text-align:center">
+<div style="display:flex;align-items:center;justify-content:center;gap:8px;font:600 14px 'IBM Plex Sans';color:oklch(0.45 0.13 150)"><span style="width:22px;height:22px;border-radius:50%;background:oklch(0.55 0.13 150);color:#fff;font:600 12px 'IBM Plex Mono';display:flex;align-items:center;justify-content:center">✓</span>{{ paidLabel }}</div>
+<div><div style="font:400 14px 'IBM Plex Sans';color:oklch(0.45 0.012 260)">Change due</div><div style="font:600 72px/1.05 'IBM Plex Mono';letter-spacing:-0.03em">{{ changeStr }}</div></div>
+<div style="background:oklch(0.965 0.004 95);border:1px solid oklch(0.92 0.004 260);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;text-align:left">
+<div style="display:flex;justify-content:space-between;font:400 12.5px 'IBM Plex Sans';color:oklch(0.45 0.012 260)"><span>Receipt #{{ receiptNo }}</span><span style="font-family:'IBM Plex Mono'">{{ paidTotal }}</span></div>
+<div style="display:flex;justify-content:space-between;font:400 12.5px 'IBM Plex Sans';color:oklch(0.45 0.012 260)"><span>{{ payMethod }} · tendered</span><span style="font-family:'IBM Plex Mono'">{{ tenderStr }}</span></div>
+</div>
+<div style="display:flex;gap:8px"><button style="flex:1;height:52px;border:1px solid oklch(0.85 0.008 260);border-radius:6px;background:transparent;font:500 14px 'IBM Plex Sans';cursor:pointer;color:oklch(0.22 0.012 260)">Print</button><button style="flex:1;height:52px;border:1px solid oklch(0.85 0.008 260);border-radius:6px;background:transparent;font:500 14px 'IBM Plex Sans';cursor:pointer;color:oklch(0.22 0.012 260)">SMS</button><button onClick="{{ newSale }}" style="flex:1;height:52px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 14px 'IBM Plex Sans';cursor:pointer">New sale</button></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ pinOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:oklch(0.3 0.02 260 / 0.42);display:flex;align-items:center;justify-content:center;padding:20px">
+<div style="width:100%;max-width:340px;background:oklch(0.99 0.003 95);border-radius:10px;box-shadow:0 18px 50px oklch(0.3 0.02 260 / 0.3);padding:20px;display:flex;flex-direction:column;gap:14px">
+<div><div style="font:600 17px 'IBM Plex Sans'">Manager approval needed</div><div style="font:400 13px 'IBM Plex Sans';color:oklch(0.55 0.012 260);margin-top:3px">Manual stock adjustments are recorded against the approving manager.</div></div>
+<div style="display:flex;gap:8px">
+<sc-for list="{{ pinDots }}" as="d" hint-placeholder-count="4">
+<div style="flex:1;height:48px;border:1px solid oklch(0.9 0.005 260);border-radius:6px;background:oklch(0.965 0.004 95);display:flex;align-items:center;justify-content:center;font:600 22px 'IBM Plex Mono'">{{ d.ch }}</div>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+<sc-for list="{{ loginKeys }}" as="k" hint-placeholder-count="12">
+<button onClick="{{ k.press }}" style="height:48px;border:1px solid oklch(0.9 0.005 260);background:oklch(0.99 0.003 95);border-radius:6px;font:500 18px 'IBM Plex Mono';cursor:pointer;color:oklch(0.22 0.012 260)">{{ k.label }}</button>
+</sc-for>
+</div>
+<div style="display:flex;gap:8px"><button onClick="{{ closePin }}" style="flex:1;height:44px;border:1px solid oklch(0.85 0.008 260);border-radius:6px;background:transparent;font:500 13.5px 'IBM Plex Sans';cursor:pointer;color:oklch(0.22 0.012 260)">Cancel</button><button onClick="{{ closePin }}" style="flex:1;height:44px;border:none;border-radius:6px;background:oklch(0.48 0.1 250);color:#fff;font:600 13.5px 'IBM Plex Sans';cursor:pointer">Approve</button></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ refundOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:oklch(0.3 0.02 260 / 0.42);display:flex;align-items:center;justify-content:center;padding:20px">
+<div style="width:100%;max-width:440px;max-height:100%;overflow:auto;background:oklch(0.99 0.003 95);border-radius:10px;box-shadow:0 18px 50px oklch(0.3 0.02 260 / 0.3);padding:20px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 17px 'IBM Plex Sans'">Refund receipt #1042</span><button onClick="{{ closeRefund }}" style="border:none;background:transparent;cursor:pointer;font:400 18px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">✕</button></div>
+<div style="font:400 13px 'IBM Plex Sans';color:oklch(0.55 0.012 260)">Select the lines to return. The original sale is never edited — a linked negative transaction is created.</div>
+<div style="border:1px solid oklch(0.92 0.004 260);border-radius:6px;overflow:hidden">
+<sc-for list="{{ refundLines }}" as="r" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:10px;padding:0 12px;height:56px;border-bottom:1px solid oklch(0.95 0.004 260)"><span style="width:16px;height:16px;border-radius:4px;border:1px solid {{ r.boxBd }};background:{{ r.boxBg }};color:#fff;font:600 10px 'IBM Plex Mono';display:flex;align-items:center;justify-content:center">{{ r.tick }}</span><span style="flex:1;min-width:0"><span style="display:block;font:500 13.5px 'IBM Plex Sans'">{{ r.name }}</span><span style="display:block;font:400 11.5px 'IBM Plex Mono';color:oklch(0.55 0.012 260)">{{ r.unit }}</span></span><span style="font:600 13.5px 'IBM Plex Mono'">{{ r.total }}</span></div>
+</sc-for>
+</div>
+<div style="display:flex;gap:8px"><div style="flex:1;height:44px;border:1px solid oklch(0.48 0.1 250);border-radius:6px;background:oklch(0.94 0.03 250);color:oklch(0.35 0.09 250);font:500 13px 'IBM Plex Sans';display:flex;align-items:center;justify-content:center">Restock</div><div style="flex:1;height:44px;border:1px solid oklch(0.88 0.005 260);border-radius:6px;font:500 13px 'IBM Plex Sans';color:oklch(0.4 0.012 260);display:flex;align-items:center;justify-content:center">Write off as damaged</div></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:10px;border-top:1px solid oklch(0.92 0.004 260)"><span style="font:600 14px 'IBM Plex Sans'">Refund total</span><span style="font:600 30px 'IBM Plex Mono';color:oklch(0.5 0.16 27)">−GH₵ 51.00</span></div>
+<button onClick="{{ closeRefund }}" style="height:52px;border:1px solid oklch(0.55 0.16 27);border-radius:6px;background:oklch(0.55 0.16 27);color:#fff;font:600 15px 'IBM Plex Sans';cursor:pointer">Confirm refund</button>
+</div>
+</div>
+</sc-if>
+
+</div>
+
+<div style="width:260px;flex:none;background:oklch(0.99 0.003 95);border:1px solid oklch(0.9 0.005 260);border-radius:10px;padding:14px 16px;font:400 12.5px/1.55 'IBM Plex Sans';color:oklch(0.4 0.012 260);display:flex;flex-direction:column;gap:10px">
+<div style="font:600 13px 'IBM Plex Sans';color:oklch(0.22 0.012 260)">{{ screenTitle }}</div>
+<div>{{ screenNote }}</div>
+<div style="padding-top:10px;border-top:1px solid oklch(0.93 0.004 260);font-size:11.5px;color:oklch(0.55 0.012 260)">Built to the Design Brief: IBM Plex Sans + Mono, accent reserved for primary actions and focus, status colour only for meaning, 44px minimum targets, 56px on the sell screen.</div>
+</div>
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1640,&quot;height&quot;:1000}}">
+const ACC='oklch(0.48 0.1 250)', WASH='oklch(0.94 0.03 250)', INK='oklch(0.22 0.012 260)', MUT='oklch(0.55 0.012 260)', BD='oklch(0.88 0.005 260)', OK='oklch(0.55 0.13 150)', WARN='oklch(0.72 0.14 75)', DANG='oklch(0.55 0.16 27)';
+const P=[
+{n:'Milo Refill 400g',s:'MIL-400',c:'Beverages',p:42,co:33.5,st:24,r:8},
+{n:'Ideal Milk 410g',s:'IDL-410',c:'Beverages',p:12.5,co:9.8,st:6,r:10},
+{n:'Voltic Water 1.5L',s:'VLT-15',c:'Beverages',p:5,co:3.6,st:0,r:12},
+{n:'Cola 500ml',s:'COL-500',c:'Beverages',p:6,co:4.3,st:88,r:24},
+{n:'Indomie Chicken',s:'IND-CHK',c:'Dry goods',p:4.5,co:3.2,st:140,r:40},
+{n:'Perfumed Rice 5kg',s:'RCE-5K',c:'Dry goods',p:96,co:82,st:11,r:6},
+{n:'Sugar 1kg',s:'SGR-1K',c:'Dry goods',p:18,co:14.5,st:7,r:10},
+{n:'Frytol Oil 1L',s:'FRY-1L',c:'Cooking',p:38,co:31,st:18,r:10},
+{n:'Tomato Paste 400g',s:'GIN-400',c:'Cooking',p:11,co:8.4,st:33,r:12},
+{n:'Sardines 125g',s:'TIT-125',c:'Cooking',p:14.5,co:11.2,st:4,r:10},
+{n:'Key Soap Bar',s:'KEY-BAR',c:'Household',p:9,co:6.9,st:62,r:20},
+{n:'Washing Powder 900g',s:'OMO-900',c:'Household',p:34,co:27.5,st:15,r:8},
+{n:'Tissue 10-roll',s:'TIS-10',c:'Household',p:45,co:36,st:9,r:6},
+{n:'Sugar Bread Loaf',s:'BRD-SUG',c:'Bakery',p:15,co:11,st:12,r:6}];
+const TITLES={dash:'Dashboard',sell:'Sell',list:'Inventory',detail:'Product detail',sales:'Sales',take:'Stock take',receive:'Receive stock',reports:'Reports',purch:'Purchasing',settings:'Settings',login:'PIN unlock'};
+const NOTES={
+dash:'Owner lands here, not the till. Stat cards compare to the same day last week; every attention row is a doorway into the screen that acts on it.',
+sell:'Three zones: scan bar, product grid, pinned cart. Total in display mono, one accent Charge button. Tap tiles and steppers — the cart is live.',
+list:'Dense table at 52px rows: thumbnail, name over SKU, category, stock with status pill, price, margin. Filter chips, not a drawer. Click a row for detail.',
+detail:'Stock on hand is the largest element. Movement history is append-only — Adjust stock asks for a manager PIN.',
+sales:'Reverse-chronological, filterable. Refund opens a linked negative transaction; the original receipt is never edited.',
+take:'Deliberately stark for a phone in one hand: one item, one big field, one Next. Review lists only variances, by value impact.',
+receive:'Delivery against a supplier and open PO. Unit cost pre-fills from last received; saving posts one movement per line and updates average cost.',
+reports:'One chart or table per question, single accent tone, every report ends with an export row.',
+purch:'Low stock grouped by supplier with suggested quantities from sales velocity and lead time. Select and raise POs in one action.',
+settings:'Owner only. Shop profile, staff and roles, tax, devices, and the activity log behind every sensitive action.',
+login:'Cashiers unlock with a 4-digit PIN on a shared counter device. 56px keys, no password typing mid-rush.'};
+
+class Component extends DCLogic {
+  state={screen:'sell',w:'counter',vSell:'grid',vDash:'cards',vPay:'modal',offline:false,empty:false,
+    cart:[{i:4,q:3},{i:0,q:1}],cat:'All',pay:false,paid:false,pin:false,refund:false,tender:'',method:'Cash',
+    detail:0,pinEntry:'',stI:0,stEntry:'',stDone:false};
+
+  set(k,v){this.setState({[k]:v})}
+  money(n){return 'GH₵ '+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+  tint(i){return 'oklch(0.94 0.03 '+((i*47)%360)+')'}
+  initials(n){return n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()}
+  chip(active){return active?{bg:ACC,fg:'#fff',bd:ACC}:{bg:'transparent',fg:'oklch(0.35 0.012 260)',bd:BD}}
+  add(i){this.setState(s=>{const c=s.cart.slice(),f=c.findIndex(l=>l.i===i);if(f>=0)c[f]={...c[f],q:c[f].q+1};else c.push({i,q:1});return{cart:c}})}
+  bump(i,d){this.setState(s=>{const c=s.cart.map(l=>l.i===i?{...l,q:l.q+d}:l).filter(l=>l.q>0);return{cart:c}})}
+  total(){return this.state.cart.reduce((a,l)=>a+P[l.i].p*l.q,0)}
+
+  renderVals(){
+    const s=this.state, w=s.w, counter=w==='counter', phone=w==='phone';
+    const total=this.total(), tenderNum=parseFloat(s.tender||'0')/100;
+    const change=tenderNum-total;
+    const go=k=>()=>this.setState({screen:k,pay:false,paid:false});
+
+    const screens=['dash','sell','list','detail','sales','take','receive','reports','purch','settings','login'];
+    const screenChips=screens.map(k=>({label:TITLES[k],go:go(k),...this.chip(s.screen===k)}));
+    const widthChips=[['counter','Counter 1280'],['phone','Phone 390']].map(([k,l])=>({label:l,go:()=>this.set('w',k),...this.chip(w===k)}));
+    const variantChips=[
+      {label:s.vSell==='grid'?'Sell: tile grid':'Sell: search list',go:()=>{this.setState({vSell:s.vSell==='grid'?'list':'grid',screen:'sell'})},...this.chip(true)},
+      {label:s.vDash==='cards'?'Dashboard: stat cards':'Dashboard: dense pane',go:()=>{this.setState({vDash:s.vDash==='cards'?'dense':'cards',screen:'dash'})},...this.chip(true)},
+      {label:s.vPay==='modal'?'Payment: modal':'Payment: full screen',go:()=>{this.setState({vPay:s.vPay==='modal'?'full':'modal'})},...this.chip(true)}];
+    const stateChips=[
+      {label:'Offline queue',go:()=>this.set('offline',!s.offline),...this.chip(s.offline)},
+      {label:'Empty catalogue',go:()=>this.set('empty',!s.empty),...this.chip(s.empty)},
+      {label:'Manager PIN',go:()=>this.setState({pin:!s.pin}),...this.chip(s.pin)},
+      {label:'Refund',go:()=>this.setState({screen:'sales',refund:!s.refund}),...this.chip(s.refund)}];
+
+    const navDefs=[['dash','▦','Dashboard'],['sell','▤','Sell'],['list','▣','Inventory'],['sales','↺','Sales'],['reports','◫','Reports'],['purch','⇪','Purchasing'],['settings','⚙','Settings']];
+    const activeNav=k=>s.screen===k||(k==='list'&&(s.screen==='detail'||s.screen==='take'||s.screen==='receive'));
+    const nav=navDefs.map(([k,ic,l])=>({label:l,icon:ic,go:go(k),bg:activeNav(k)?WASH:'transparent',fg:activeNav(k)?'oklch(0.33 0.09 250)':'oklch(0.35 0.012 260)'}));
+    const bottomNav=[['sell','▤','Sell'],['list','▣','Stock'],['sales','↺','Sales'],['dash','▦','More']].map(([k,ic,l])=>({label:l,icon:ic,go:go(k),fg:activeNav(k)?ACC:MUT}));
+
+    const catList=['All','Beverages','Dry goods','Cooking','Household','Bakery'];
+    const cats=catList.map(c=>({label:c,go:()=>this.set('cat',c),...this.chip(s.cat===c)}));
+
+    const pillOf=p=>p.st===0?{pill:'Out',pillBg:'oklch(0.94 0.05 27)',pillFg:'oklch(0.42 0.16 27)'}:p.st<=p.r?{pill:'Low',pillBg:'oklch(0.95 0.06 75)',pillFg:'oklch(0.45 0.12 75)'}:{pill:'In stock',pillBg:'oklch(0.95 0.04 150)',pillFg:'oklch(0.4 0.11 150)'};
+    const shownProducts=s.empty?[]:P.map((p,i)=>({...p,idx:i})).filter(p=>s.cat==='All'||p.c===s.cat).map(p=>({
+      name:p.n,sku:p.s,cat:p.c,stock:String(p.st),stockStr:p.st+' in stock',priceStr:this.money(p.p),
+      margin:Math.round((p.p-p.co)/p.p*100)+'%',initials:this.initials(p.n),tint:this.tint(p.idx),
+      filter:p.st===0?'grayscale(1)':'none',...pillOf(p),
+      add:()=>this.add(p.idx),open:()=>this.setState({screen:'detail',detail:p.idx})}));
+
+    const cartLines=s.cart.map(l=>({name:P[l.i].n,unit:this.money(P[l.i].p)+' each',qty:String(l.q),total:this.money(P[l.i].p*l.q),inc:()=>this.bump(l.i,1),dec:()=>this.bump(l.i,-1)}));
+
+    const dp=P[s.detail];
+    const detail={name:dp.n,sku:dp.s,cat:dp.c,stock:String(dp.st),initials:this.initials(dp.n),tint:this.tint(s.detail),
+      priceStr:this.money(dp.p),costStr:this.money(dp.co),margin:Math.round((dp.p-dp.co)/dp.p*100)+'%',cover:Math.max(1,Math.round(dp.st/3))};
+
+    const movements=[['Today 14:12','Sale · receipt #1046','Ama (cashier)','−2',String(dp.st)],['Today 11:40','Sale · receipt #1039','Ama (cashier)','−1',String(dp.st+2)],['Yesterday','Goods received · PO-0241','Kwabena (owner)','+48',String(dp.st+3)],['6 Aug','Stock take correction','Kwabena (owner)','−3',String(dp.st-45)],['5 Aug','Damage · dented tins','Yaw (manager)','−2',String(dp.st-42)],['3 Aug','Sale · receipt #0987','Yaw (manager)','−6',String(dp.st-40)],['1 Aug','Goods received · PO-0233','Kwabena (owner)','+36',String(dp.st-34)]]
+      .map(([when,reason,who,delta,after])=>({when,reason,who,delta,after,fg:delta[0]==='+'?'oklch(0.45 0.13 150)':'oklch(0.5 0.16 27)'}));
+
+    const stats=[['Revenue today','GH₵ 3,847.50','+12% vs last Sat',OK],['Transactions','142','+8 vs last Sat',OK],['Gross profit','GH₵ 986.20','25.6% margin',MUT],['Cash in drawer','GH₵ 1,204.00','Expected at close',MUT]]
+      .map(([label,value,delta,deltaFg])=>({label,value,delta,deltaFg}));
+    const seed=[38,52,41,60,47,55,72,44,58,63,49,70,66,54,81,59,47,68,75,62,57,84,71,66,79,58,73,88,69,92];
+    const chart=seed.map((v,i)=>({h:v+'%',fill:i>26?ACC:'oklch(0.72 0.07 250)'}));
+    const topSellers=[['Indomie Chicken','86 units','GH₵ 387.00'],['Cola 500ml','54 units','GH₵ 324.00'],['Sugar Bread Loaf','21 units','GH₵ 315.00'],['Milo Refill 400g','7 units','GH₵ 294.00']].map(([name,units,amount])=>({name,units,amount}));
+    const attention=[['4 products below reorder point','Reorder',WARN,go('purch')],['Voltic Water 1.5L is out of stock','Fix',DANG,go('list')],['Till variance −GH₵ 18.00 on Ama\u2019s shift','Review',WARN,go('sales')],['2 sales still queued for sync','Retry',WARN,go('sales')]]
+      .map(([text,action,dot,g])=>({text,action,dot,go:g}));
+
+    const sales=[['#1046','14:12','Ama','Cash','Synced','GH₵ 62.50'],['#1045','13:58','Ama','Mobile money','Synced','GH₵ 148.00'],['#1044','13:31','Yaw','Cash + MoMo','Synced','GH₵ 96.00'],['#1043','13:04','Ama','Mobile money','Pending','GH₵ 24.50'],['#1042','12:47','Yaw','Cash','Synced','GH₵ 187.00'],['#1041','12:20','Ama','Card','Refunded','−GH₵ 45.00'],['#1040','11:55','Ama','Cash','Synced','GH₵ 33.00'],['#1039','11:40','Yaw','Mobile money','Synced','GH₵ 71.50']]
+      .map(([no,time,who,method,status,amount])=>({no,time,who,method,status,amount,
+        amtFg:amount[0]==='−'?'oklch(0.5 0.16 27)':INK,
+        pillBg:status==='Synced'?'oklch(0.95 0.04 150)':status==='Pending'?'oklch(0.95 0.06 75)':'oklch(0.94 0.05 27)',
+        pillFg:status==='Synced'?'oklch(0.4 0.11 150)':status==='Pending'?'oklch(0.45 0.12 75)':'oklch(0.42 0.16 27)'}));
+
+    const mkKeys=(handler)=>['1','2','3','4','5','6','7','8','9','00','0','⌫'].map(k=>({label:k,press:()=>handler(k)}));
+    const payKeys=mkKeys(k=>this.setState(st=>({tender:k==='⌫'?st.tender.slice(0,-1):(st.tender+k).slice(0,7)})));
+    const loginKeys=mkKeys(k=>this.setState(st=>({pinEntry:k==='⌫'?st.pinEntry.slice(0,-1):(st.pinEntry+k).slice(0,4)})));
+    const takeKeys=mkKeys(k=>this.setState(st=>({stEntry:k==='⌫'?st.stEntry.slice(0,-1):(st.stEntry+k).slice(0,4)})));
+    const pinDots=[0,1,2,3].map(i=>({ch:s.pinEntry[i]?'•':''}));
+    const quickCash=[50,100,200,'Exact'].map(v=>({label:v==='Exact'?'Exact':'GH₵ '+v,press:()=>this.set('tender',String(Math.round((v==='Exact'?total:v)*100)))}));
+    const methods=['Cash','Mobile money','Card','Account'].map(m=>({label:m,pick:()=>this.set('method',m),...this.chip(s.method===m)}));
+
+    const stItems=[{n:'Milo Refill 400g',s:'MIL-400',e:24},{n:'Ideal Milk 410g',s:'IDL-410',e:6},{n:'Voltic Water 1.5L',s:'VLT-15',e:0},{n:'Cola 500ml',s:'COL-500',e:88},{n:'Sugar 1kg',s:'SGR-1K',e:7},{n:'Sardines 125g',s:'TIT-125',e:4}];
+    const cur=stItems[Math.min(s.stI,stItems.length-1)];
+    const entered=s.stEntry===''?null:parseInt(s.stEntry,10);
+    const diff=entered===null?null:entered-cur.e;
+    const take={name:cur.n,sku:cur.s,entry:s.stEntry===''?'0':s.stEntry,
+      progress:Math.round(s.stI/stItems.length*100)+'%',progressLabel:s.stI+' of '+stItems.length+' counted',
+      varianceText:diff===null?'Expected '+cur.e+' on the system':diff===0?'Matches the system count of '+cur.e:(diff>0?'+':'')+diff+' against expected '+cur.e,
+      varianceFg:diff===null?MUT:diff===0?'oklch(0.45 0.13 150)':'oklch(0.5 0.16 27)',
+      nextLabel:s.stI>=stItems.length-1?'Finish and review':'Next item',
+      next:()=>this.setState(st=>st.stI>=stItems.length-1?{stDone:true}:{stI:st.stI+1,stEntry:''}),
+      showReview:s.stDone,
+      variances:[{name:'Sardines 125g',expected:'4',counted:'1',delta:'−3',fg:'oklch(0.5 0.16 27)'},{name:'Sugar 1kg',expected:'7',counted:'9',delta:'+2',fg:'oklch(0.45 0.13 150)'},{name:'Ideal Milk 410g',expected:'6',counted:'5',delta:'−1',fg:'oklch(0.5 0.16 27)'}]};
+
+    const receiveLines=[['Milo Refill 400g','MIL-400 · batch B2608','48','48','GH₵ 33.50','GH₵ 1,608.00'],['Ideal Milk 410g','IDL-410 · exp 04/2027','60','60','GH₵ 9.80','GH₵ 588.00'],['Perfumed Rice 5kg','RCE-5K','24','20','GH₵ 82.00','GH₵ 1,640.00'],['Sugar 1kg','SGR-1K','40','40','GH₵ 14.50','GH₵ 580.00'],['Sardines 125g','TIT-125 · exp 09/2027','16','16','GH₵ 11.20','GH₵ 179.20']]
+      .map(([name,meta,ordered,received,cost,value])=>({name,meta,ordered,received,cost,value}));
+
+    const perf=[['Indomie Chicken','612','GH₵ 2,754.00','GH₵ 795.60','28.9%',OK],['Cola 500ml','388','GH₵ 2,328.00','GH₵ 659.60','28.3%',OK],['Milo Refill 400g','64','GH₵ 2,688.00','GH₵ 544.00','20.2%',MUT],['Perfumed Rice 5kg','22','GH₵ 2,112.00','GH₵ 308.00','14.6%',MUT],['Frytol Oil 1L','41','GH₵ 1,558.00','GH₵ 287.00','18.4%',MUT],['Tissue 10-roll','18','GH₵ 810.00','GH₵ 162.00','20.0%',MUT],['Ideal Milk 410g','96','GH₵ 1,200.00','GH₵ 259.20','21.6%',MUT]]
+      .map(([name,units,rev,profit,margin,fg])=>({name,units,rev,profit,margin,fg}));
+
+    const suppliers=[
+      {name:'Kofi Wholesale Ltd',meta:'3 day lead time · net 14',value:'GH₵ 2,946.00',items:[{name:'Ideal Milk 410g',onHand:'6 on hand · reorder at 10',suggest:'72'},{name:'Sugar 1kg',onHand:'7 on hand · reorder at 10',suggest:'40'}]},
+      {name:'Adenta Beverages',meta:'1 day lead time · cash',value:'GH₵ 604.80',items:[{name:'Voltic Water 1.5L',onHand:'0 on hand · reorder at 12',suggest:'96'},{name:'Cola 500ml',onHand:'88 on hand · reorder at 24',suggest:'48'}]},
+      {name:'Tema Foods',meta:'5 day lead time · net 30',value:'GH₵ 1,120.00',items:[{name:'Sardines 125g',onHand:'4 on hand · reorder at 10',suggest:'60'},{name:'Tissue 10-roll',onHand:'9 on hand · reorder at 6',suggest:'24'}]}];
+
+    const settings=[
+      {title:'Shop profile',desc:'Appears on every receipt.',rows:[{k:'Shop name',v:'Kwabena Stores'},{k:'Currency',v:'GHS (GH₵)'},{k:'VAT',v:'15% · tax inclusive'},{k:'Receipt footer',v:'Thank you — no refunds after 7 days'}]},
+      {title:'Staff and roles',desc:'Permissions are enforced on the server.',rows:[{k:'Kwabena Mensah',v:'Owner'},{k:'Yaw Boateng',v:'Manager'},{k:'Ama Serwaa',v:'Cashier'},{k:'Discount needing approval',v:'above 10%'}]},
+      {title:'Devices',desc:'Tested at this counter.',rows:[{k:'Barcode scanner',v:'Connected'},{k:'Receipt printer',v:'80mm · connected'},{k:'Offline cache',v:'Last synced 14:12'},{k:'Daily backup',v:'02:00'}]},
+      {title:'Activity log',desc:'Every sensitive action, who and when.',rows:[{k:'Price change · Sugar 1kg',v:'Yaw · 13:02'},{k:'Refund #1041',v:'Yaw · 12:20'},{k:'Stock adjustment · Milo',v:'Kwabena · 09:14'},{k:'Staff added · Ama',v:'Kwabena · 3 Aug'}]}];
+
+    const heldChips=[{label:'Blue shirt customer · GH₵ 84.00'},{label:'Auntie Efua · GH₵ 22.50'}];
+
+    return {
+      screenChips,widthChips,variantChips,stateChips,nav,bottomNav,cats,
+      isCounter:counter,isPhone:phone,shellDir:counter?'row':'column',
+      stageW:counter?'1300px':'390px',stageH:counter?'840px':'800px',stageRadius:counter?'10px':'26px',
+      isLogin:s.screen==='login',showShell:s.screen!=='login',
+      isSell:s.screen==='sell',isDash:s.screen==='dash',isList:s.screen==='list',isDetail:s.screen==='detail',
+      isSales:s.screen==='sales',isTake:s.screen==='take',isReceive:s.screen==='receive',isReports:s.screen==='reports',
+      isPurch:s.screen==='purch',isSettings:s.screen==='settings',
+      screenTitle:TITLES[s.screen],screenNote:NOTES[s.screen],
+      sellGrid:s.vSell==='grid'&&!s.empty,sellList:s.vSell==='list'&&!s.empty,
+      dashCards:s.vDash==='cards',dashDense:s.vDash==='dense',
+      emptyCatalogue:s.empty,
+      topBg:s.offline?'oklch(0.96 0.05 75)':'oklch(0.99 0.003 95)',
+      topBd:s.offline?WARN:'oklch(0.9 0.005 260)',
+      syncLabel:s.offline?'Offline — 2 sales queued':'Synced',
+      syncBg:s.offline?'oklch(0.93 0.08 75)':'oklch(0.95 0.04 150)',
+      syncFg:s.offline?'oklch(0.42 0.12 75)':'oklch(0.4 0.11 150)',
+      syncDot:s.offline?WARN:OK,
+      shownProducts,cartLines,cartCount:s.cart.reduce((a,l)=>a+l.q,0),cartEmpty:s.cart.length===0,
+      subtotalStr:this.money(total/1.15),taxStr:this.money(total-total/1.15),totalStr:this.money(total),
+      receiptNo:'1047',heldChips,
+      detail,movements,stats,chart,topSellers,attention,sales,perf,suppliers,settings,receiveLines,take,takeKeys,
+      payKeys,loginKeys,pinDots,quickCash,methods,payMethod:s.method,
+      tenderStr:this.money(tenderNum),changeStr:this.money(Math.max(0,change)),
+      changeFg:change<0?MUT:'oklch(0.45 0.13 150)',
+      paidLabel:s.offline?'Saved on this device — will sync when back online':'Sale recorded and synced',
+      paidTotal:this.money(total),
+      payModalOpen:s.pay&&s.vPay==='modal'&&!s.paid,payFullOpen:s.pay&&s.vPay==='full'&&!s.paid,paid:s.paid,
+      pinOpen:s.pin,refundOpen:s.refund,
+      openPay:()=>this.setState({pay:true,tender:''}),closePay:()=>this.set('pay',false),
+      confirmPay:()=>this.setState({paid:true}),
+      newSale:()=>this.setState({paid:false,pay:false,cart:[],tender:''}),
+      holdCart:()=>this.setState({cart:[]}),
+      openPin:()=>this.setState({pin:true,pinEntry:''}),closePin:()=>this.set('pin',false),
+      openRefund:()=>this.set('refund',true),closeRefund:()=>this.set('refund',false),
+      doLogin:()=>this.setState({screen:'sell',pinEntry:''}),
+      goInventory:go('list'),goReceive:go('receive'),
+      refundLines:[{name:'Frytol Oil 1L',unit:'GH₵ 38.00 × 1',total:'GH₵ 38.00',tick:'✓',boxBg:ACC,boxBd:ACC},
+        {name:'Sugar Bread Loaf',unit:'GH₵ 15.00 × 1',total:'GH₵ 15.00',tick:'',boxBg:'transparent',boxBd:BD},
+        {name:'Key Soap Bar',unit:'GH₵ 9.00 × 2',total:'GH₵ 18.00',tick:'✓',boxBg:ACC,boxBd:ACC}]
+    };
+  }
+}
+</script>
+</body>
+</html>

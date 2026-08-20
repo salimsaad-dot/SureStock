@@ -1,0 +1,19 @@
+{
+  "name": "surestock",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @surestock/api",
+    "build": "npm run build -w @surestock/api",
+    "lint": "npm run lint -w @surestock/api",
+    "typecheck": "npm run typecheck -w @surestock/api",
+    "test": "npm run test -w @surestock/api",
+    "dev:web": "npm run dev -w @surestock/web",
+    "build:web": "npm run build -w @surestock/web",
+    "lint:web": "npm run lint -w @surestock/web",
+    "typecheck:web": "npm run typecheck -w @surestock/web",
+    "test:web": "npm run test -w @surestock/web"
+  }
+}

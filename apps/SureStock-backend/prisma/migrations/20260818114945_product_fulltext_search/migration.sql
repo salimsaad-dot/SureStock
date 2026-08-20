@@ -1,0 +1,16 @@
+-- Superseded by the native `@@fulltext([name], map: "product_name_fulltext")`
+-- declaration in schema.prisma (that index already exists as of migration
+-- 20260818104243). All that's actually needed here is dropping the plain
+-- index migration 20260818104138 originally created for the same column,
+-- now redundant.
+--
+-- Hand-written rather than accepted from `prisma migrate dev`'s
+-- auto-generated diff: on this MariaDB 10.4 instance, Prisma 7's diff
+-- engine has twice generated spurious, incorrect statements alongside
+-- the real change — dropping stock_movement's variant_id foreign key
+-- and re-adding a purchase_order_line constraint that already exists
+-- (which would fail outright, as it did the first time). Neither
+-- relates to anything actually changed in schema.prisma. Root cause not
+-- fully chased down; treating it as a known quirk of this engine/version
+-- combination and hand-verifying migrations touching indexes from here.
+DROP INDEX `product_name_idx` ON `product`;

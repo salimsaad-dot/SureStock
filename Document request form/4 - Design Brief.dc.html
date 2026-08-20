@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+<style>
+doc-page:not(:defined){visibility:hidden}
+body{margin:0}
+a{color:oklch(0.48 0.1 250);text-decoration:underline}
+a:hover{color:oklch(0.38 0.11 250)}
+</style>
+<script src="./doc-page.js"></script>
+</helmet>
+<doc-page margin="0.8in" style="font-family:'Source Serif 4',Georgia,serif;font-size:15px;line-height:1.62;color:oklch(0.24 0.012 260)">
+<div slot="header" style="display:flex;justify-content:space-between;align-items:baseline;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:oklch(0.55 0.01 260);padding-bottom:6px;border-bottom:1px solid oklch(0.9 0.005 260)"><span>Shop Inventory System</span><span>Doc 4 of 6 — Design Brief</span></div>
+<div slot="footer" style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.6 0.01 260);padding-top:6px;border-top:1px solid oklch(0.9 0.005 260)"><span>v0.1 — Draft for review</span><span>Prepared 8 August 2026</span></div>
+
+<h1 style="font-family:'IBM Plex Sans',sans-serif;font-size:31px;font-weight:600;letter-spacing:-0.015em;line-height:1.15;margin:0 0 8px">Design Brief</h1>
+<p style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:oklch(0.5 0.012 260);margin:0 0 28px">Colour, type, components, and per-screen guidance for a consistent, calm interface.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:0 0 10px;padding-top:14px;border-top:2px solid oklch(0.22 0.012 260)">1. Design principles</h2>
+<ul style="margin:0 0 14px;padding-left:20px">
+<li style="margin-bottom:5px"><strong style="font-weight:600">Speed over decoration.</strong> The sale screen is used hundreds of times a day. Nothing on it exists that does not shorten a transaction.</li>
+<li style="margin-bottom:5px"><strong style="font-weight:600">One obvious next action.</strong> Every screen has exactly one primary button. Everything else is secondary or quiet.</li>
+<li style="margin-bottom:5px"><strong style="font-weight:600">Numbers are the interface.</strong> Money and quantities get the largest, clearest type on any screen they appear on, always tabular-aligned.</li>
+<li style="margin-bottom:5px"><strong style="font-weight:600">Colour carries meaning, never mood.</strong> Green, amber, and red mean exactly one thing each and are never used decoratively.</li>
+<li style="margin-bottom:5px"><strong style="font-weight:600">Built for a real counter.</strong> Bright shop lighting, a phone held in one hand, a thumb that is not clean. High contrast, large targets, forgiving spacing.</li>
+</ul>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">2. Colour palette</h2>
+<p style="margin:0 0 12px">A near-neutral base with a single cool ink accent, plus three status colours. Surfaces are warm-neutral rather than pure white so long shifts are easier on the eyes.</p>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 16px;break-inside:avoid">
+<div><div style="height:52px;border-radius:5px;background:oklch(0.99 0.003 95);border:1px solid oklch(0.88 0.005 260)"></div><div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;margin-top:5px;font-weight:600">Surface</div><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.55 0.01 260)">oklch(.99 .003 95)</div></div>
+<div><div style="height:52px;border-radius:5px;background:oklch(0.965 0.004 95);border:1px solid oklch(0.88 0.005 260)"></div><div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;margin-top:5px;font-weight:600">Surface sunken</div><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.55 0.01 260)">oklch(.965 .004 95)</div></div>
+<div><div style="height:52px;border-radius:5px;background:oklch(0.9 0.005 260)"></div><div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;margin-top:5px;font-weight:600">Border</div><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.55 0.01 260)">oklch(.9 .005 260)</div></div>
+<div><div style="height:52px;border-radius:5px;background:oklch(0.55 0.012 260)"></div><div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;margin-top:5px;font-weight:600">Text muted</div><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.55 0.01 260)">oklch(.55 .012 260)</div></div>
+<div><div style="height:52px;border-radius:5px;background:oklch(0.22 0.012 260)"></div><div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;margin-top:5px;font-weight:600">Ink (text)</div><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.55 0.01 260)">oklch(.22 .012 260)</div></div>
+<div><div style="height:52px;border-radius:5px;background:oklch(0.48 0.1 250)"></div><div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;margin-top:5px;font-weight:600">Accent</div><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.55 0.01 260)">oklch(.48 .1 250)</div></div>
+<div><div style="height:52px;border-radius:5px;background:oklch(0.94 0.03 250)"></div><div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;margin-top:5px;font-weight:600">Accent wash</div><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.55 0.01 260)">oklch(.94 .03 250)</div></div>
+<div><div style="height:52px;border-radius:5px;background:oklch(0.55 0.13 150)"></div><div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;margin-top:5px;font-weight:600">Success</div><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.55 0.01 260)">oklch(.55 .13 150)</div></div>
+<div><div style="height:52px;border-radius:5px;background:oklch(0.72 0.14 75)"></div><div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;margin-top:5px;font-weight:600">Warning</div><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.55 0.01 260)">oklch(.72 .14 75)</div></div>
+<div><div style="height:52px;border-radius:5px;background:oklch(0.55 0.16 27)"></div><div style="font-family:'IBM Plex Sans',sans-serif;font-size:11px;margin-top:5px;font-weight:600">Danger</div><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.55 0.01 260)">oklch(.55 .16 27)</div></div>
+</div>
+<p style="margin:0 0 14px"><strong style="font-weight:600">Usage rules.</strong> Accent is reserved for primary buttons, active navigation, and focus rings — nothing else. Success confirms a completed sale or a synced state; warning marks low stock, offline mode, and pending sync; danger marks refunds, deletions, and negative variances. Never use colour as the only signal: pair it with an icon or a word. All text meets WCAG AA against its surface (4.5:1 for body, 3:1 for large numerals).</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">3. Typography</h2>
+<p style="margin:0 0 12px">One family for the interface, one for numbers. <strong style="font-weight:600">IBM Plex Sans</strong> for all UI text: it is legible at small sizes, has a genuine set of weights, and its numerals are unfussy. <strong style="font-weight:600">IBM Plex Mono</strong> for money, quantities, SKUs, and receipt numbers, so columns of figures align and misreadings drop.</p>
+<table style="width:100%;border-collapse:collapse;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;margin:0 0 16px">
+<thead><tr style="background:oklch(0.965 0.004 260)">
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Token</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Size / weight</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Used for</th>
+</tr></thead>
+<tbody>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">display</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">40 / 600, mono</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Cart total, change due, dashboard headline figures</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">title</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">24 / 600</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Screen titles</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">section</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">17 / 600</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Card and section headings</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">body</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">15 / 400, 1.5 line-height</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Default interface text, list rows</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">label</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">13 / 500</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Field labels, table headers, buttons</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);font-family:'IBM Plex Mono',monospace">caption</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">11.5 / 400, muted</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260)">Timestamps, helper text, metadata</td></tr>
+</tbody>
+</table>
+<p style="margin:0 0 14px">Never below 13px anywhere in the product; never below 15px on the sell screen. Currency is always written with the symbol and two decimals (GH₵ 24.50), right-aligned in any column of figures.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">4. Layout and spacing</h2>
+<ul style="margin:0 0 14px;padding-left:20px">
+<li style="margin-bottom:5px">4px base unit; spacing steps of 4, 8, 12, 16, 24, 32, 48. Nothing in between.</li>
+<li style="margin-bottom:5px">Corner radius: 6px for inputs, buttons, and cards; 10px for modals and sheets; full for status pills.</li>
+<li style="margin-bottom:5px">Elevation: one hairline border for cards, one soft shadow for overlays. No layered or coloured shadows.</li>
+<li style="margin-bottom:5px">Touch targets never smaller than 44×44px; cart lines and numeric keypad keys are 56px tall.</li>
+<li style="margin-bottom:5px">Breakpoints: phone below 640px (bottom nav, cart as a sheet), tablet 640–1024px, counter/desktop above 1024px (sidebar plus persistent cart pane).</li>
+</ul>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">5. Component guidelines</h2>
+<table style="width:100%;border-collapse:collapse;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;margin:0 0 16px">
+<thead><tr style="background:oklch(0.965 0.004 260)">
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260);width:26%">Component</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Specification</th>
+</tr></thead>
+<tbody>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Buttons</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Primary: solid accent, white text, 44px tall (56px for Charge). Secondary: bordered, transparent. Ghost: text only. Destructive: danger text with a danger border, solid only inside a confirmation dialog. One primary per screen.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Inputs</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">44px tall, hairline border, label above, helper or error text below. Numeric fields use a mono font and open a numeric keypad on mobile. Focus is a 2px accent ring, never a removed outline.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Product tile</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Square, photo or a coloured initial block, name on two lines maximum, price in mono, a stock badge in the corner. Out of stock is a greyscale tile plus a label, still tappable.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Cart line</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Name and unit price on the left, stepper in the middle, line total right-aligned in mono. Swipe left on mobile to remove, with undo.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Data table</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Hairline row dividers only, no vertical rules or zebra striping. Numeric columns right-aligned and mono. Sticky header. Collapses to stacked cards below 640px.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Status pill</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Small caps label on a tinted wash of its status colour. Used for In stock, Low, Out, Synced, Pending, Refunded.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Empty state</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">One line of plain explanation and the action that fills it. No illustrations, no jokes.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Toast</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Bottom-centre, 4 seconds, one line, optional Undo. Errors persist until dismissed.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Icons</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">One outline set (Lucide), 20px at 1.5px stroke, always paired with a label except in the nav bar.</td></tr>
+</tbody>
+</table>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">6. Screen-by-screen visual guidance</h2>
+<div style="border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:12px 14px;margin:0 0 10px;break-inside:avoid;orphans:3;widows:3"><div style="font-family:'IBM Plex Sans',sans-serif;font-size:13.5px;font-weight:600;margin-bottom:4px">Sell</div><p style="margin:0;font-size:14px">Three zones: search and scan bar across the top (56px tall, always focused), a product tile grid filling the middle, and the cart pinned right at roughly one third width. The total sits at the bottom of the cart in display mono, with a full-width accent Charge button beneath it. No sidebar illustration, no promotional space, nothing that scrolls unexpectedly.</p></div>
+<div style="border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:12px 14px;margin:0 0 10px;break-inside:avoid;orphans:3;widows:3"><div style="font-family:'IBM Plex Sans',sans-serif;font-size:13.5px;font-weight:600;margin-bottom:4px">Payment and receipt</div><p style="margin:0;font-size:14px">A modal over a dimmed sell screen. Amount due in display type at the top, method tabs, a large numeric keypad, live change due. On success the modal becomes a confirmation with change due as the largest element on screen and three equal buttons: Print, SMS, New Sale.</p></div>
+<div style="border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:12px 14px;margin:0 0 10px;break-inside:avoid;orphans:3;widows:3"><div style="font-family:'IBM Plex Sans',sans-serif;font-size:13.5px;font-weight:600;margin-bottom:4px">Dashboard</div><p style="margin:0;font-size:14px">Four stat cards in a row, each with a label, a display-size figure, and a small comparison line. Below, a wide revenue chart in a single accent tone on a plain grid, then a two-column split of the attention list and today's top sellers. Generous white space; no more than one chart above the fold.</p></div>
+<div style="border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:12px 14px;margin:0 0 10px;break-inside:avoid;orphans:3;widows:3"><div style="font-family:'IBM Plex Sans',sans-serif;font-size:13.5px;font-weight:600;margin-bottom:4px">Product list</div><p style="margin:0;font-size:14px">A dense table: photo thumbnail, name and SKU stacked, category, stock with a status pill, price, margin. Filter chips above the table rather than a filter drawer. Row height 52px so a full screen shows around fifteen products.</p></div>
+<div style="border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:12px 14px;margin:0 0 10px;break-inside:avoid;orphans:3;widows:3"><div style="font-family:'IBM Plex Sans',sans-serif;font-size:13.5px;font-weight:600;margin-bottom:4px">Product detail</div><p style="margin:0;font-size:14px">A two-column split: the photo and key figures on the left, the movement history as a timeline on the right. Stock on hand is the largest element. Actions sit in a top-right button group.</p></div>
+<div style="border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:12px 14px;margin:0 0 10px;break-inside:avoid;orphans:3;widows:3"><div style="font-family:'IBM Plex Sans',sans-serif;font-size:13.5px;font-weight:600;margin-bottom:4px">Stock take</div><p style="margin:0;font-size:14px">Deliberately stark, designed for a phone: one item per screen, name large, a single big numeric field, and a Next button under the thumb. A progress bar shows items counted. The review step is a plain list of variances, each red or green, with a reason field inline.</p></div>
+<div style="border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:12px 14px;margin:0 0 14px;break-inside:avoid;orphans:3;widows:3"><div style="font-family:'IBM Plex Sans',sans-serif;font-size:13.5px;font-weight:600;margin-bottom:4px">Reports</div><p style="margin:0;font-size:14px">A date-range control and filter chips at the top, then one chart and one table per report. Charts use a single accent tone with a muted comparison series — no multi-colour palettes. Every report ends with an export row.</p></div>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">7. Voice and motion</h2>
+<p style="margin:0 0 10px"><strong style="font-weight:600">Copy</strong> is plain and specific. "3 items below reorder point", not "Attention required". Errors say what happened and what to do: "Sale not synced yet — it will send when you're back online." No exclamation marks, no jargon, no apologies.</p>
+<p style="margin:0 0 14px"><strong style="font-weight:600">Motion</strong> is functional only: 150ms for state changes, 200ms for sheets and modals, ease-out. Adding to the cart animates the line in so the eye can follow it. Nothing else moves, and all motion respects the reduced-motion setting.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">8. Deliverables</h2>
+<ul style="margin:0 0 8px;padding-left:20px">
+<li style="margin-bottom:5px">Design tokens as CSS custom properties and a matching Tailwind theme extension.</li>
+<li style="margin-bottom:5px">A component library covering the table above, documented in Storybook.</li>
+<li style="margin-bottom:5px">High-fidelity mock-ups for Sell, Payment, Dashboard, Product detail, and Stock take at phone and counter widths.</li>
+<li style="margin-bottom:5px">An 80mm receipt layout, printed and physically checked before launch.</li>
+</ul>
+</doc-page>
+</x-dc>
+</body>
+</html>

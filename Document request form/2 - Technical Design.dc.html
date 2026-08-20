@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+<style>
+doc-page:not(:defined){visibility:hidden}
+body{margin:0}
+a{color:oklch(0.48 0.1 250);text-decoration:underline}
+a:hover{color:oklch(0.38 0.11 250)}
+</style>
+<script src="./doc-page.js"></script>
+</helmet>
+<doc-page margin="0.8in" style="font-family:'Source Serif 4',Georgia,serif;font-size:15px;line-height:1.62;color:oklch(0.24 0.012 260)">
+<div slot="header" style="display:flex;justify-content:space-between;align-items:baseline;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:oklch(0.55 0.01 260);padding-bottom:6px;border-bottom:1px solid oklch(0.9 0.005 260)"><span>Shop Inventory System</span><span>Doc 2 of 6 — Technical Design</span></div>
+<div slot="footer" style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:oklch(0.6 0.01 260);padding-top:6px;border-top:1px solid oklch(0.9 0.005 260)"><span>v0.1 — Draft for review</span><span>Prepared 8 August 2026</span></div>
+
+<h1 style="font-family:'IBM Plex Sans',sans-serif;font-size:31px;font-weight:600;letter-spacing:-0.015em;line-height:1.15;margin:0 0 8px">Technical Design Document</h1>
+<p style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:oklch(0.5 0.012 260);margin:0 0 28px">Stack, architecture, and the reasoning behind each decision.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:0 0 10px;padding-top:14px;border-top:2px solid oklch(0.22 0.012 260)">1. Design constraints</h2>
+<p style="margin:0 0 12px">Four constraints drive every choice below. The shop must be able to sell during an internet outage. There is no dedicated operations team, so infrastructure must be nearly maintenance-free. Money is involved, so stock and cash figures must be provably correct rather than eventually correct. And a single developer — or a very small team — has to be able to hold the whole system in their head.</p>
+<p style="margin:0 0 12px">That argues for a boring, well-documented stack over a novel one, a single deployable application over microservices, and a relational database with real transactions over anything looser.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">2. Technology stack</h2>
+<table style="width:100%;border-collapse:collapse;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;margin:0 0 16px">
+<thead><tr style="background:oklch(0.965 0.004 260)">
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260);width:20%">Layer</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260);width:26%">Choice</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Why</th>
+</tr></thead>
+<tbody>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Frontend</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">React 18 + TypeScript, Vite, Tailwind CSS</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Large hiring pool, strong offline/PWA tooling, and types catch money-handling mistakes at compile time.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">App shell</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Installable PWA (service worker, Workbox)</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">One codebase runs on counter laptop and staff phones, installs to the home screen, and works offline. No app-store review cycle.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Local store</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">IndexedDB via Dexie</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Holds the product catalogue and an outbox of unsynced sales; survives refresh and power loss.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Backend</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Node.js + TypeScript, Fastify, REST</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">One language across the stack, shared validation schemas, and REST is simpler to cache, log, and debug than GraphQL at this scale.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Database</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">PostgreSQL 16</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">ACID transactions for the sale-and-stock write, exact <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px">numeric</span> money types, and window functions that make reporting queries trivial.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Data access</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Prisma (schema + migrations)</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Versioned migrations and generated types; raw SQL stays available for reporting queries.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Auth</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Short-lived JWT + refresh token; staff PIN unlock</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">A cashier switching mid-shift should take two seconds, not a full password login. The device is trusted; the person is verified by PIN.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Hosting</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Managed container host + managed Postgres (Railway, Render, or Fly.io)</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Automated backups and TLS without a sysadmin. Choose a region close to the shop to keep latency low.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Files</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">S3-compatible object storage (Cloudflare R2)</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Product photos and exported PDFs; no egress fees.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Background jobs</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">pg-boss (queue inside Postgres)</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Nightly report rollups and alert emails without adding Redis to the operational surface.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Testing</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Vitest, Testing Library, Playwright</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Unit, component, and end-to-end coverage of the sale flow, which is the one path that must never break.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top;font-weight:500">Observability</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Sentry + structured logs (pino)</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">You will hear about a broken checkout from the tooling, not from a customer.</td></tr>
+</tbody>
+</table>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">2.1 Alternatives considered</h3>
+<ul style="margin:0 0 14px;padding-left:20px">
+<li style="margin-bottom:5px"><strong style="font-weight:600">A ready-made POS product.</strong> Cheaper to start and worth a look, but per-terminal subscriptions, weak offline behaviour, and no control over the data model make it a poor fit for a system you want to shape around your own shop.</li>
+<li style="margin-bottom:5px"><strong style="font-weight:600">Firebase / Firestore.</strong> Excellent offline sync out of the box, but no multi-row transactional guarantees of the kind stock deduction needs, and reporting queries become expensive and awkward.</li>
+<li style="margin-bottom:5px"><strong style="font-weight:600">React Native mobile app.</strong> Better hardware access, but doubles the surface area for a shop that mostly sells from one counter. Revisit if barcode scanning by phone camera becomes the primary input.</li>
+<li style="margin-bottom:5px"><strong style="font-weight:600">Supabase.</strong> A reasonable accelerator — it is Postgres underneath. Chosen against only because the sale write benefits from server-side logic in one place rather than split between database policies and client code.</li>
+</ul>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">3. Architecture</h2>
+<div style="border:1px solid oklch(0.86 0.005 260);border-radius:6px;padding:16px 18px;margin:0 0 14px;background:oklch(0.98 0.003 260);break-inside:avoid;orphans:3;widows:3">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.85;white-space:pre-wrap;color:oklch(0.3 0.012 260)">Counter PWA ─┐
+Phone PWA  ─┼─&gt; HTTPS / REST ─&gt; Fastify API ─┬─&gt; PostgreSQL (source of truth)
+Office web ─┘        (JWT auth)               ├─&gt; pg-boss jobs (rollups, alerts)
+     │                                        └─&gt; R2 object storage (photos, PDFs)
+     └─ IndexedDB cache + offline sale outbox
+</div>
+</div>
+<p style="margin:0 0 12px">A single Fastify service exposes the API, organised into modules by domain — catalogue, inventory, sales, purchasing, reporting, admin. Each module owns its routes, its validation schemas, and its service functions; modules talk to each other through service calls, not by reaching into one another's tables. That keeps a future split into separate services possible without forcing it now.</p>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">3.1 The sale write</h3>
+<p style="margin:0 0 10px">One database transaction does all of the following, or none of it: insert the sale header, insert sale lines with the price and cost captured at that moment, insert one stock movement per line, update each product's cached quantity, and record the payment rows. The transaction takes row locks in product-id order to avoid deadlocks between concurrent tills.</p>
+<p style="margin:0 0 12px">Every sale carries a client-generated UUID. The server treats that UUID as an idempotency key, so a sale replayed by an offline device that never saw the response is stored once, not twice. This single decision is what makes offline sync safe.</p>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">3.2 Offline and sync</h3>
+<ul style="margin:0 0 14px;padding-left:20px">
+<li style="margin-bottom:5px">On login the device pulls the full catalogue and caches it in IndexedDB, refreshing by changed-since timestamp afterwards.</li>
+<li style="margin-bottom:5px">Offline sales are written to a local outbox with their UUID and a device clock timestamp, and the UI shows a persistent "N sales waiting to sync" indicator.</li>
+<li style="margin-bottom:5px">On reconnect the outbox drains oldest-first with exponential backoff. Server time is authoritative for reporting; device time is retained for forensics.</li>
+<li style="margin-bottom:5px">Stock may legitimately go negative while offline. The server accepts the sale — it happened — and flags the product for review rather than rejecting reality.</li>
+<li style="margin-bottom:5px">Catalogue edits are online-only. This removes the hardest class of merge conflicts entirely.</li>
+</ul>
+
+<h3 style="font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;margin:22px 0 6px">3.3 Money and rounding</h3>
+<p style="margin:0 0 14px">All monetary values are stored as <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">numeric(12,2)</span> in Postgres and handled as integer minor units (pesewas) in application code. Floating point is never used for money. Cost of goods uses a moving weighted average recalculated on each receipt; the cost in effect at the time of a sale is copied onto the sale line so historical margin never shifts when prices change.</p>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">4. Third-party integrations</h2>
+<table style="width:100%;border-collapse:collapse;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;margin:0 0 16px">
+<thead><tr style="background:oklch(0.965 0.004 260)">
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Service</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Use</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Notes</th>
+</tr></thead>
+<tbody>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Paystack or Hubtel</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Mobile money and card collection</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Phase 2. Until then mobile money is recorded manually with a reference number. Reconcile by webhook against the sale's payment row.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">SMS gateway (Hubtel / Arkesel)</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Digital receipts, low-stock alerts</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Queued as background jobs; failures retried and never block a sale.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Resend or Postmark</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Daily summary email, password resets</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Transactional only.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Thermal printer</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Receipts</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Browser print to an 80mm stylesheet first; native ESC/POS via WebUSB only if print quality proves inadequate.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Barcode scanner</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Product lookup</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Treated as a keyboard device; no driver work. Camera scanning on phones via the Barcode Detection API with a ZXing fallback.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Sentry</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Error tracking</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Scrub customer phone numbers before send.</td></tr>
+</tbody>
+</table>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">5. API surface</h2>
+<p style="margin:0 0 10px">REST under <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">/api/v1</span>, JSON in and out, cursor pagination on list endpoints, and errors as a consistent <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">{ code, message, details }</span> shape. Request and response bodies are validated with shared Zod schemas.</p>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.9;background:oklch(0.97 0.004 260);border:1px solid oklch(0.9 0.005 260);border-radius:6px;padding:12px 14px;margin:0 0 14px;white-space:pre-wrap;break-inside:avoid">POST   /auth/login          POST /auth/pin-unlock
+GET    /products            POST /products            PATCH /products/:id
+GET    /products/lookup?barcode=
+POST   /sales               GET  /sales/:id           POST  /sales/:id/refund
+POST   /stock-movements     POST /stock-takes         POST  /stock-takes/:id/post
+GET    /purchase-orders     POST /purchase-orders     POST  /purchase-orders/:id/receive
+GET    /reports/daily       GET  /reports/products    GET   /reports/valuation
+POST   /sync/batch          GET  /sync/catalogue?since=</div>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">6. Security, backup, and performance</h2>
+<ul style="margin:0 0 14px;padding-left:20px">
+<li style="margin-bottom:5px">TLS everywhere; passwords hashed with Argon2id; PINs hashed and rate-limited with lockout after repeated failures.</li>
+<li style="margin-bottom:5px">Role checks in middleware on every route, with cost and margin fields stripped from responses for roles that cannot see them.</li>
+<li style="margin-bottom:5px">Every destructive or financial action writes an audit row: actor, action, entity, before and after values, timestamp, device.</li>
+<li style="margin-bottom:5px">Nightly automated database backups with 30-day retention, plus a weekly restore test. A one-click CSV export of all data prevents lock-in.</li>
+<li style="margin-bottom:5px">Performance targets: product search returns in under 150ms on a 5,000-SKU catalogue (Postgres trigram index); the sale write completes in under 300ms server-side; the app shell loads in under two seconds on a mid-range Android phone over 3G.</li>
+</ul>
+
+<h2 style="font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:600;margin:34px 0 10px;padding-top:12px;border-top:1px solid oklch(0.88 0.005 260)">7. Known risks</h2>
+<table style="width:100%;border-collapse:collapse;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;margin:0 0 8px">
+<thead><tr style="background:oklch(0.965 0.004 260)">
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Risk</th>
+<th style="text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid oklch(0.72 0.01 260)">Mitigation</th>
+</tr></thead>
+<tbody>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Offline sync produces duplicate or out-of-order sales</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Client UUID idempotency keys; server-authoritative timestamps; a sync log the owner can inspect.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Initial catalogue data is dirty or incomplete</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Import preview with validation and a per-row fix step; run a full stock take on day one to set the baseline.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Staff revert to the notebook under pressure</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Ruthless speed on the sale screen; a two-week parallel run; training on real stock.</td></tr>
+<tr><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Hosting region latency degrades the till</td><td style="padding:7px 9px;border-bottom:1px solid oklch(0.92 0.004 260);vertical-align:top">Optimistic local-first UI: the sale is confirmed locally and posted in the background regardless of latency.</td></tr>
+</tbody>
+</table>
+</doc-page>
+</x-dc>
+</body>
+</html>
