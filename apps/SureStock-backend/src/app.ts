@@ -14,6 +14,7 @@ import receiveRoutes from './modules/inventory/receive.routes.js';
 import adjustmentRoutes from './modules/inventory/adjustment.routes.js';
 import tillShiftRoutes from './modules/sales/till-shift.routes.js';
 import saleRoutes from './modules/sales/sale.routes.js';
+import reportsRoutes from './modules/reports/reports.routes.js';
 
 /**
  * Builds the Fastify instance without starting it — kept separate from
@@ -52,6 +53,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(adjustmentRoutes);
   await app.register(tillShiftRoutes);
   await app.register(saleRoutes);
+  await app.register(reportsRoutes);
 
   return app;
 }

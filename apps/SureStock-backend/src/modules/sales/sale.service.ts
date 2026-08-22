@@ -3,6 +3,7 @@ import type { prisma as PrismaClient } from '../../lib/prisma.js';
 import { generateId } from '../../lib/id.js';
 import { toDecimal, toPesewas } from '../../lib/money.js';
 import { HttpError, notFound, forbidden } from '../../lib/http-error.js';
+import { toCsv } from '../../lib/csv.js';
 import { verifyPin } from '../auth/service.js';
 import { postMovement } from '../inventory/movement.service.js';
 import type { CreateSaleBody, CreateRefundBody, ListSalesQuery, SalesFilter, SalesStatsQuery } from './sale.schemas.js';
@@ -573,8 +574,7 @@ export async function exportSalesCsv(prisma: typeof PrismaClient, locationId: st
     ];
   });
 
-  const escape = (cell: string) => (/[",\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell);
-  return [header, ...csvRows].map((row) => row.map(escape).join(',')).join('\r\n');
+  return toCsv([header, ...csvRows]);
 }
 
 /**

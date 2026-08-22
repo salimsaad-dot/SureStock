@@ -351,3 +351,56 @@ export interface TillShiftListResponse {
   totalCount: number
   totalPages: number
 }
+
+// ---- Reports ----
+
+export interface ReportsFilterParams {
+  dateFrom: string
+  dateTo: string
+  userId?: string
+  method?: PaymentMethod
+}
+
+export interface ReportsOverview {
+  totalSales: number
+  totalSalesChangePct: number | null
+  grossProfit: number
+  grossProfitChangePct: number | null
+  transactionCount: number
+  transactionCountChangePct: number | null
+  avgOrderValue: number
+  avgOrderValueChangePct: number | null
+  refundTotal: number
+  refundTotalChangePct: number | null
+  totalProductCount: number
+  outOfStockCount: number
+  lowStockCount: number
+  inventoryValue: number
+  totalPurchased: number
+}
+
+export interface ReportsTrendPoint {
+  date: string
+  totalSales: number
+}
+
+/** CHANGE never appears here — it's folded into CASH server-side (see reports.service.ts). */
+export interface PaymentBreakdownItem {
+  method: PaymentMethod
+  total: number
+}
+
+export interface ReportsProduct {
+  variantId: string
+  productId: string
+  productName: string
+  sku: string
+  qtySold: number
+  revenue: number
+}
+
+export interface ReportsProductsParams extends ReportsFilterParams {
+  direction?: 'top' | 'low'
+  limit?: number
+  categoryId?: string
+}
