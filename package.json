@@ -4,6 +4,9 @@
   "workspaces": [
     "apps/*"
   ],
+  "overrides": {
+    "mariadb": "^3.5.3"
+  },
   "scripts": {
     "dev": "npm run dev -w @surestock/api",
     "build": "npm run build -w @surestock/api",
@@ -14,6 +17,7 @@
     "build:web": "npm run build -w @surestock/web",
     "lint:web": "npm run lint -w @surestock/web",
     "typecheck:web": "npm run typecheck -w @surestock/web",
-    "test:web": "npm run test -w @surestock/web"
+    "test:web": "npm run test -w @surestock/web",
+    "test:e2e": "npm run test:e2e -w @surestock/web"
   }
 }
