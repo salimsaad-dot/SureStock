@@ -217,6 +217,7 @@ describe('product search and list', () => {
 
       const products = Array.from({ length: seedSize }, (_, i) => ({
         id: generateId(),
+        locationId,
         name: `${words[i % words.length]} Perf ${marker} ${i}`,
         unit: 'EACH' as const,
       }));

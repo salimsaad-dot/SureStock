@@ -124,10 +124,13 @@ export async function validateRows(
   mapping: ImportMapping,
 ): Promise<ValidationReport> {
   const [categories, suppliers, existingSkus, existingBarcodes] = await Promise.all([
-    prisma.category.findMany({ where: { archivedAt: null }, select: { id: true, name: true } }),
-    prisma.supplier.findMany({ where: { archivedAt: null }, select: { id: true, name: true } }),
+    prisma.category.findMany({ where: { locationId, archivedAt: null }, select: { id: true, name: true } }),
+    prisma.supplier.findMany({ where: { locationId, archivedAt: null }, select: { id: true, name: true } }),
     prisma.productVariant.findMany({ where: { locationId }, select: { sku: true } }),
-    prisma.productVariant.findMany({ where: { barcode: { not: null } }, select: { barcode: true } }),
+    // barcode is now @@unique([barcode, locationId]), not global — a
+    // barcode already used by a different shop is no longer a real
+    // conflict for this one.
+    prisma.productVariant.findMany({ where: { locationId, barcode: { not: null } }, select: { barcode: true } }),
   ]);
   const categoryByName = new Map(categories.map((c) => [c.name.toLowerCase(), c.id]));
   const supplierByName = new Map(suppliers.map((s) => [s.name.toLowerCase(), s.id]));
@@ -169,7 +172,7 @@ export async function validateRows(
     const barcodeRaw = cell(row, headers, mapping, 'barcode');
     const barcodeKey = barcodeRaw.toLowerCase();
     if (barcodeRaw) {
-      if (dbBarcodes.has(barcodeKey)) reasons.push(`Barcode "${barcodeRaw}" already belongs to another product.`);
+      if (dbBarcodes.has(barcodeKey)) reasons.push(`Barcode "${barcodeRaw}" already belongs to another product at this location.`);
       else if (seenBarcodesInFile.has(barcodeKey)) {
         reasons.push(`Barcode "${barcodeRaw}" is duplicated in this file (first seen on row ${seenBarcodesInFile.get(barcodeKey)}).`);
       } else {
@@ -263,6 +266,7 @@ export async function commitImport(
 
   const products = validRows.map((r) => ({
     id: generateId(),
+    locationId,
     name: r.data.name,
     description: r.data.description,
     categoryId: r.data.categoryId,

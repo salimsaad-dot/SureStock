@@ -7,31 +7,32 @@ function conflict(message: string, details?: unknown): HttpError {
   return new HttpError(409, 'CONFLICT', message, details);
 }
 
-export function listSuppliers(prisma: typeof PrismaClient, includeArchived: boolean) {
+/** Doc 6 T-30 follow-up (2026-08-25): Supplier used to be global across every shop — every read/write here now scopes through `locationId`, same as Category. */
+export function listSuppliers(prisma: typeof PrismaClient, locationId: string, includeArchived: boolean) {
   return prisma.supplier.findMany({
-    where: includeArchived ? {} : { archivedAt: null },
+    where: includeArchived ? { locationId } : { locationId, archivedAt: null },
     orderBy: { name: 'asc' },
   });
 }
 
-export function createSupplier(prisma: typeof PrismaClient, body: CreateSupplierBody) {
-  return prisma.supplier.create({ data: { id: generateId(), ...body } });
+export function createSupplier(prisma: typeof PrismaClient, locationId: string, body: CreateSupplierBody) {
+  return prisma.supplier.create({ data: { id: generateId(), locationId, ...body } });
 }
 
-export async function updateSupplier(prisma: typeof PrismaClient, id: string, body: UpdateSupplierBody) {
-  const existing = await prisma.supplier.findUnique({ where: { id } });
+export async function updateSupplier(prisma: typeof PrismaClient, locationId: string, id: string, body: UpdateSupplierBody) {
+  const existing = await prisma.supplier.findFirst({ where: { id, locationId } });
   if (!existing) throw notFound('Supplier not found.');
   return prisma.supplier.update({ where: { id }, data: body });
 }
 
-export async function archiveSupplier(prisma: typeof PrismaClient, id: string) {
-  const existing = await prisma.supplier.findUnique({ where: { id } });
+export async function archiveSupplier(prisma: typeof PrismaClient, locationId: string, id: string) {
+  const existing = await prisma.supplier.findFirst({ where: { id, locationId } });
   if (!existing) throw notFound('Supplier not found.');
   return prisma.supplier.update({ where: { id }, data: { archivedAt: new Date() } });
 }
 
-export async function restoreSupplier(prisma: typeof PrismaClient, id: string) {
-  const existing = await prisma.supplier.findUnique({ where: { id } });
+export async function restoreSupplier(prisma: typeof PrismaClient, locationId: string, id: string) {
+  const existing = await prisma.supplier.findFirst({ where: { id, locationId } });
   if (!existing) throw notFound('Supplier not found.');
   return prisma.supplier.update({ where: { id }, data: { archivedAt: null } });
 }
@@ -39,8 +40,8 @@ export async function restoreSupplier(prisma: typeof PrismaClient, id: string) {
 /** Same reasoning as category delete: the RESTRICT foreign keys (to
  * product and purchase_order) already enforce this; this check turns
  * that into a clear 409 instead of a raw SQL error. */
-export async function deleteSupplier(prisma: typeof PrismaClient, id: string) {
-  const existing = await prisma.supplier.findUnique({ where: { id } });
+export async function deleteSupplier(prisma: typeof PrismaClient, locationId: string, id: string) {
+  const existing = await prisma.supplier.findFirst({ where: { id, locationId } });
   if (!existing) throw notFound('Supplier not found.');
 
   const [productCount, purchaseOrderCount] = await Promise.all([

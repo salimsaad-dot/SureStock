@@ -54,13 +54,41 @@ function translateUniqueConstraintError(err: unknown): never {
   if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
     const constraintName = extractConstraintName(err);
     if (constraintName.includes('barcode')) {
-      throw conflict('That barcode is already used by another product.');
+      throw conflict('That barcode is already used by another product at this location.');
     }
     if (constraintName.includes('sku')) {
       throw conflict('That SKU is already used by another product at this location.');
     }
   }
   throw err;
+}
+
+/**
+ * Doc 6 T-30 follow-up (2026-08-25): Category/Supplier/TaxRate are now
+ * location-scoped, like ProductVariant always was — a product's
+ * catalogue-reference ids must belong to the same shop as the product
+ * itself, or a stale client (or a deliberate cross-tenant probe) could
+ * silently attach one shop's product to another shop's category. Treated
+ * as not-found, not forbidden, same posture as every other cross-tenant
+ * lookup in this codebase.
+ */
+async function assertCatalogueRefsBelongToLocation(
+  prisma: typeof PrismaClient,
+  locationId: string,
+  refs: { categoryId?: string | null; supplierId?: string | null; taxRateId?: string | null },
+) {
+  if (refs.categoryId) {
+    const category = await prisma.category.findFirst({ where: { id: refs.categoryId, locationId } });
+    if (!category) throw notFound('Category not found.');
+  }
+  if (refs.supplierId) {
+    const supplier = await prisma.supplier.findFirst({ where: { id: refs.supplierId, locationId } });
+    if (!supplier) throw notFound('Supplier not found.');
+  }
+  if (refs.taxRateId) {
+    const taxRate = await prisma.taxRate.findFirst({ where: { id: refs.taxRateId, locationId } });
+    if (!taxRate) throw notFound('Tax rate not found.');
+  }
 }
 
 /** cost price hidden from cashiers — Doc 6 T-06 — in the API response
@@ -152,11 +180,14 @@ export async function createProduct(
   role: UserRole,
   body: CreateProductBody,
 ) {
+  await assertCatalogueRefsBelongToLocation(prisma, locationId, body);
+
   try {
     const created = await prisma.$transaction(async (tx) => {
       const product = await tx.product.create({
         data: {
           id: generateId(),
+          locationId,
           name: body.name,
           description: body.description,
           categoryId: body.categoryId,
@@ -189,7 +220,7 @@ export async function addVariant(
   role: UserRole,
   input: VariantInput,
 ) {
-  const product = await prisma.product.findUnique({ where: { id: productId } });
+  const product = await prisma.product.findFirst({ where: { id: productId, locationId } });
   if (!product) throw notFound('Product not found.');
 
   try {
@@ -206,8 +237,8 @@ function computeMarginPercent(costPricePesewas: number, sellingPricePesewas: num
   return Math.round(((sellingPricePesewas - costPricePesewas) / sellingPricePesewas) * 1000) / 10;
 }
 
-export async function getProduct(prisma: typeof PrismaClient, id: string, role: UserRole) {
-  const product = await prisma.product.findUnique({ where: { id }, include: { variants: true } });
+export async function getProduct(prisma: typeof PrismaClient, locationId: string, id: string, role: UserRole) {
+  const product = await prisma.product.findFirst({ where: { id, locationId }, include: { variants: { where: { locationId } } } });
   if (!product) throw notFound('Product not found.');
   const serialized = serializeProduct(product, role);
 
@@ -372,7 +403,7 @@ export async function listProducts(
 
   // Full hydration only for the page actually being returned.
   const fullPage = await prisma.product.findMany({
-    where: { id: { in: pageIds } },
+    where: { id: { in: pageIds }, locationId },
     include: { variants: { where: { locationId } } },
   });
   const byId = new Map(fullPage.map((p) => [p.id, p]));
@@ -382,12 +413,12 @@ export async function listProducts(
 }
 
 export async function lookupByBarcode(prisma: typeof PrismaClient, locationId: string, role: UserRole, barcode: string) {
-  const variant = await prisma.productVariant.findUnique({ where: { barcode }, include: { product: true } });
-  // A variant belonging to another location isn't just filtered out of
-  // this result — it doesn't exist as far as this location's scanner is
-  // concerned, so the response is the same as a barcode that matches
-  // nothing at all, not a different kind of not-found.
-  if (!variant || variant.locationId !== locationId) throw notFound('No product with that barcode at this location.');
+  // barcode is now @@unique([barcode, locationId]), not globally unique
+  // (2026-08-25) — a real UPC can legitimately recur across shops, so
+  // this is always scoped to this location's own rows, never a bare
+  // barcode lookup that could return a match from a different shop.
+  const variant = await prisma.productVariant.findFirst({ where: { barcode, locationId }, include: { product: true } });
+  if (!variant) throw notFound('No product with that barcode at this location.');
   return serializeVariant(variant, role, variant.product.name);
 }
 
@@ -464,27 +495,39 @@ export async function getRecentProducts(prisma: typeof PrismaClient, locationId:
   return rows.map(serializeSellTile);
 }
 
-export async function updateProduct(prisma: typeof PrismaClient, id: string, role: UserRole, body: UpdateProductBody) {
-  const existing = await prisma.product.findUnique({ where: { id } });
+export async function updateProduct(
+  prisma: typeof PrismaClient,
+  locationId: string,
+  id: string,
+  role: UserRole,
+  body: UpdateProductBody,
+) {
+  const existing = await prisma.product.findFirst({ where: { id, locationId } });
   if (!existing) throw notFound('Product not found.');
+  await assertCatalogueRefsBelongToLocation(prisma, locationId, body);
 
   const updated = await prisma.product.update({
     where: { id },
     data: body,
-    include: { variants: true },
+    include: { variants: { where: { locationId } } },
   });
   return serializeProduct(updated, role);
 }
 
 export async function updateProductStatus(
   prisma: typeof PrismaClient,
+  locationId: string,
   id: string,
   role: UserRole,
   status: Product['status'],
 ) {
-  const existing = await prisma.product.findUnique({ where: { id } });
+  const existing = await prisma.product.findFirst({ where: { id, locationId } });
   if (!existing) throw notFound('Product not found.');
-  const updated = await prisma.product.update({ where: { id }, data: { status }, include: { variants: true } });
+  const updated = await prisma.product.update({
+    where: { id },
+    data: { status },
+    include: { variants: { where: { locationId } } },
+  });
   return serializeProduct(updated, role);
 }
 
@@ -499,12 +542,13 @@ export async function updateProductStatus(
  */
 export async function updateVariant(
   prisma: typeof PrismaClient,
+  locationId: string,
   variantId: string,
   userId: string,
   role: UserRole,
   body: UpdateVariantBody,
 ) {
-  const existing = await prisma.productVariant.findUnique({ where: { id: variantId } });
+  const existing = await prisma.productVariant.findFirst({ where: { id: variantId, locationId } });
   if (!existing) throw notFound('Variant not found.');
 
   const sellingPriceChanging = body.sellingPrice !== undefined && toPesewas(existing.sellingPrice) !== body.sellingPrice;

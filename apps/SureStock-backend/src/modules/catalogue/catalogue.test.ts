@@ -201,7 +201,7 @@ describe('catalogue routes (categories and suppliers)', () => {
 
       const productId = generateId();
       await app.prisma.product.create({
-        data: { id: productId, name: 'Test Product For Category Lock', unit: 'EACH', categoryId },
+        data: { id: productId, locationId, name: 'Test Product For Category Lock', unit: 'EACH', categoryId },
       });
       createdProductIds.push(productId);
 
@@ -266,7 +266,7 @@ describe('catalogue routes (categories and suppliers)', () => {
 
       const productId = generateId();
       await app.prisma.product.create({
-        data: { id: productId, name: 'Test Product For Supplier Lock', unit: 'EACH', supplierId },
+        data: { id: productId, locationId, name: 'Test Product For Supplier Lock', unit: 'EACH', supplierId },
       });
       createdProductIds.push(productId);
 

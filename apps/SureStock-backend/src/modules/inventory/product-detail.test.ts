@@ -67,7 +67,7 @@ describe('product detail: movement history, margin, days-of-cover (T-13)', () =>
   });
 
   it('margin is computed correctly and hidden from cashiers, same as cost price', async () => {
-    const product = await app.prisma.product.create({ data: { id: generateId(), name: 'Margin Test Product' } });
+    const product = await app.prisma.product.create({ data: { id: generateId(), locationId, name: 'Margin Test Product' } });
     // cost 600 (GH₵6.00), selling 1000 (GH₵10.00) -> margin = (1000-600)/1000 = 40%
     const variant = await app.prisma.productVariant.create({
       data: { id: generateId(), productId: product.id, sku: 'MARGIN-001', costPrice: 6, sellingPrice: 10, quantityOnHand: 0, locationId },
@@ -92,7 +92,7 @@ describe('product detail: movement history, margin, days-of-cover (T-13)', () =>
   });
 
   it('days-of-cover is null with no sales history, and a real estimate once SALE movements exist', async () => {
-    const product = await app.prisma.product.create({ data: { id: generateId(), name: 'Days Of Cover Test Product' } });
+    const product = await app.prisma.product.create({ data: { id: generateId(), locationId, name: 'Days Of Cover Test Product' } });
     const variant = await app.prisma.productVariant.create({
       data: { id: generateId(), productId: product.id, sku: 'DOC-001', costPrice: 1, sellingPrice: 2, quantityOnHand: 0, locationId },
     });
@@ -123,7 +123,7 @@ describe('product detail: movement history, margin, days-of-cover (T-13)', () =>
   });
 
   it('movement history is paginated, newest first, and filterable by reason', async () => {
-    const product = await app.prisma.product.create({ data: { id: generateId(), name: 'History Test Product' } });
+    const product = await app.prisma.product.create({ data: { id: generateId(), locationId, name: 'History Test Product' } });
     const variant = await app.prisma.productVariant.create({
       data: { id: generateId(), productId: product.id, sku: 'HIST-001', costPrice: 1, sellingPrice: 2, quantityOnHand: 0, locationId },
     });
@@ -172,7 +172,7 @@ describe('product detail: movement history, margin, days-of-cover (T-13)', () =>
   });
 
   it('unitCost is hidden from cashiers in movement history, same as everywhere else', async () => {
-    const product = await app.prisma.product.create({ data: { id: generateId(), name: 'History Cost Visibility Test' } });
+    const product = await app.prisma.product.create({ data: { id: generateId(), locationId, name: 'History Cost Visibility Test' } });
     const variant = await app.prisma.productVariant.create({
       data: { id: generateId(), productId: product.id, sku: 'HIST-COST-001', costPrice: 1, sellingPrice: 2, quantityOnHand: 0, locationId },
     });
@@ -196,7 +196,7 @@ describe('product detail: movement history, margin, days-of-cover (T-13)', () =>
   });
 
   it('stock on hand matches the ledger exactly, from the product-detail read path itself', async () => {
-    const product = await app.prisma.product.create({ data: { id: generateId(), name: 'Ledger Match Test Product' } });
+    const product = await app.prisma.product.create({ data: { id: generateId(), locationId, name: 'Ledger Match Test Product' } });
     const variant = await app.prisma.productVariant.create({
       data: { id: generateId(), productId: product.id, sku: 'LEDGER-MATCH-001', costPrice: 1, sellingPrice: 2, quantityOnHand: 0, locationId },
     });

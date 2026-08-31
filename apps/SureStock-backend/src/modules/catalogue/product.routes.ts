@@ -76,14 +76,14 @@ export default async function productRoutes(app: FastifyInstance) {
   app.get('/products/:id', { preHandler: readAny }, async (request) => {
     const user = accessUser(request);
     const { id } = productIdParamsSchema.parse(request.params);
-    return getProduct(app.prisma, id, user.role);
+    return getProduct(app.prisma, user.locationId, id, user.role);
   });
 
   app.patch('/products/:id', { preHandler: manage }, async (request) => {
     const user = accessUser(request);
     const { id } = productIdParamsSchema.parse(request.params);
     const body = parseBody(updateProductBodySchema, request.body);
-    return updateProduct(app.prisma, id, user.role, body);
+    return updateProduct(app.prisma, user.locationId, id, user.role, body);
   });
 
   // Doc 3 §4.3: "Discontinuing hides a product from the sell screen
@@ -94,7 +94,7 @@ export default async function productRoutes(app: FastifyInstance) {
     const user = accessUser(request);
     const { id } = productIdParamsSchema.parse(request.params);
     const { status } = parseBody(productStatusBodySchema, request.body);
-    return updateProductStatus(app.prisma, id, user.role, status);
+    return updateProductStatus(app.prisma, user.locationId, id, user.role, status);
   });
 
   app.post('/products/:id/variants', { preHandler: manage }, async (request, reply) => {
@@ -109,7 +109,7 @@ export default async function productRoutes(app: FastifyInstance) {
     const user = accessUser(request);
     const { variantId } = variantParamsSchema.parse(request.params);
     const body = parseBody(updateVariantBodySchema, request.body);
-    return updateVariant(app.prisma, variantId, user.sub, user.role, body);
+    return updateVariant(app.prisma, user.locationId, variantId, user.sub, user.role, body);
   });
 
   // Doc 6 T-13: paginated, filterable-by-reason movement history — same

@@ -344,7 +344,7 @@ describe('product and variant routes', () => {
     }
 
     it('ranks popular products by real units sold, not by creation order or alphabetically', async () => {
-      const category = await app.prisma.category.create({ data: { id: generateId(), name: `Popular Test Cat ${generateId()}` } });
+      const category = await app.prisma.category.create({ data: { id: generateId(), locationId, name: `Popular Test Cat ${generateId()}` } });
       const low = await makeProduct('Zzz Low Seller', `POP-LOW-${generateId()}`, 500, category.id);
       const high = await makeProduct('Aaa High Seller', `POP-HIGH-${generateId()}`, 500, category.id);
 

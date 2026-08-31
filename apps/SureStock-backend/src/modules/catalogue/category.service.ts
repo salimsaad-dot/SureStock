@@ -7,7 +7,15 @@ function conflict(message: string, details?: unknown): HttpError {
   return new HttpError(409, 'CONFLICT', message, details);
 }
 
-async function assertNoCycle(prisma: typeof PrismaClient, categoryId: string, proposedParentId: string) {
+/**
+ * Doc 6 T-30 follow-up (2026-08-25): Category used to be global across
+ * every shop — every read/write here now scopes through `locationId`, the
+ * same discipline `ProductVariant` already had from the start. A parent
+ * category from another shop is treated as not found, not forbidden —
+ * same "don't reveal cross-tenant existence" posture as every other
+ * cross-tenant lookup in this codebase.
+ */
+async function assertNoCycle(prisma: typeof PrismaClient, locationId: string, categoryId: string, proposedParentId: string) {
   if (proposedParentId === categoryId) {
     throw conflict('A category cannot be its own parent.');
   }
@@ -24,29 +32,30 @@ async function assertNoCycle(prisma: typeof PrismaClient, categoryId: string, pr
     }
     if (seen.has(current)) break; // pre-existing cycle, not this operation's problem
     seen.add(current);
-    const parent: { parentId: string | null } | null = await prisma.category.findUnique({
-      where: { id: current },
+    const parent: { parentId: string | null } | null = await prisma.category.findFirst({
+      where: { id: current, locationId },
       select: { parentId: true },
     });
     current = parent?.parentId ?? null;
   }
 }
 
-export function listCategories(prisma: typeof PrismaClient, includeArchived: boolean) {
+export function listCategories(prisma: typeof PrismaClient, locationId: string, includeArchived: boolean) {
   return prisma.category.findMany({
-    where: includeArchived ? {} : { archivedAt: null },
+    where: includeArchived ? { locationId } : { locationId, archivedAt: null },
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
   });
 }
 
-export async function createCategory(prisma: typeof PrismaClient, body: CreateCategoryBody) {
+export async function createCategory(prisma: typeof PrismaClient, locationId: string, body: CreateCategoryBody) {
   if (body.parentId) {
-    const parent = await prisma.category.findUnique({ where: { id: body.parentId } });
+    const parent = await prisma.category.findFirst({ where: { id: body.parentId, locationId } });
     if (!parent) throw notFound('Parent category not found.');
   }
   return prisma.category.create({
     data: {
       id: generateId(),
+      locationId,
       name: body.name,
       parentId: body.parentId ?? null,
       sortOrder: body.sortOrder ?? 0,
@@ -55,14 +64,14 @@ export async function createCategory(prisma: typeof PrismaClient, body: CreateCa
   });
 }
 
-export async function updateCategory(prisma: typeof PrismaClient, id: string, body: UpdateCategoryBody) {
-  const existing = await prisma.category.findUnique({ where: { id } });
+export async function updateCategory(prisma: typeof PrismaClient, locationId: string, id: string, body: UpdateCategoryBody) {
+  const existing = await prisma.category.findFirst({ where: { id, locationId } });
   if (!existing) throw notFound('Category not found.');
 
   if (body.parentId) {
-    const parent = await prisma.category.findUnique({ where: { id: body.parentId } });
+    const parent = await prisma.category.findFirst({ where: { id: body.parentId, locationId } });
     if (!parent) throw notFound('Parent category not found.');
-    await assertNoCycle(prisma, id, body.parentId);
+    await assertNoCycle(prisma, locationId, id, body.parentId);
   }
 
   return prisma.category.update({
@@ -79,14 +88,14 @@ export async function updateCategory(prisma: typeof PrismaClient, id: string, bo
   });
 }
 
-export async function archiveCategory(prisma: typeof PrismaClient, id: string) {
-  const existing = await prisma.category.findUnique({ where: { id } });
+export async function archiveCategory(prisma: typeof PrismaClient, locationId: string, id: string) {
+  const existing = await prisma.category.findFirst({ where: { id, locationId } });
   if (!existing) throw notFound('Category not found.');
   return prisma.category.update({ where: { id }, data: { archivedAt: new Date() } });
 }
 
-export async function restoreCategory(prisma: typeof PrismaClient, id: string) {
-  const existing = await prisma.category.findUnique({ where: { id } });
+export async function restoreCategory(prisma: typeof PrismaClient, locationId: string, id: string) {
+  const existing = await prisma.category.findFirst({ where: { id, locationId } });
   if (!existing) throw notFound('Category not found.');
   return prisma.category.update({ where: { id }, data: { archivedAt: null } });
 }
@@ -99,8 +108,8 @@ export async function restoreCategory(prisma: typeof PrismaClient, id: string) {
  * failure is a clear, actionable 409 instead of a raw SQL error leaking
  * up through the generic error handler.
  */
-export async function deleteCategory(prisma: typeof PrismaClient, id: string) {
-  const existing = await prisma.category.findUnique({ where: { id } });
+export async function deleteCategory(prisma: typeof PrismaClient, locationId: string, id: string) {
+  const existing = await prisma.category.findFirst({ where: { id, locationId } });
   if (!existing) throw notFound('Category not found.');
 
   const [productCount, childCount] = await Promise.all([
