@@ -12,3 +12,11 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .gstack/
+
+# deploy/backup.sh's default output location — real database dumps
+# contain real business/customer data and must never reach version
+# control, even accidentally from a local test run.
+/backups/
+
+# Playwright's own run-state scratch file, not a real test artifact.
+test-results/
