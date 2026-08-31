@@ -40,7 +40,7 @@ describe('refunds (T-19)', () => {
   }
 
   async function makeVariant(sku: string, sellingPricePesewas: number, costPricePesewas: number, quantity: number) {
-    const product = await app.prisma.product.create({ data: { id: generateId(), name: `Refund Test ${sku}` } });
+    const product = await app.prisma.product.create({ data: { id: generateId(), locationId, name: `Refund Test ${sku}` } });
     const variant = await app.prisma.productVariant.create({
       data: {
         id: generateId(),

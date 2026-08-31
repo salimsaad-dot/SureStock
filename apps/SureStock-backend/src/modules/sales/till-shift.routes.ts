@@ -37,6 +37,6 @@ export default async function tillShiftRoutes(app: FastifyInstance) {
     const user = accessUser(request);
     const { id } = tillShiftIdParamsSchema.parse(request.params);
     const body = parseBody(closeTillShiftBodySchema, request.body);
-    return closeTillShift(app.prisma, user.sub, id, body);
+    return closeTillShift(app.prisma, user.locationId, user.sub, id, body);
   });
 }

@@ -1,7 +1,9 @@
 import type { prisma as PrismaClient } from '../../lib/prisma.js';
 import { generateId } from '../../lib/id.js';
+import { toPesewas } from '../../lib/money.js';
 import { notFound } from '../../lib/http-error.js';
 import { postMovement } from './movement.service.js';
+import { notifyLowStock } from '../notifications/notification.service.js';
 import type { CreateAdjustmentBody } from './adjustment.schemas.js';
 
 /**
@@ -24,7 +26,7 @@ export async function createAdjustment(
   const auditId = generateId();
   const previousQuantity = variant.quantityOnHand.toNumber();
 
-  const { movement, variant: updated } = await prisma.$transaction(async (tx) => {
+  const { movement, variant: updated, crossedLowStock } = await prisma.$transaction(async (tx) => {
     const result = await postMovement(tx, {
       variantId: body.variantId,
       quantityDelta: body.quantityDelta,
@@ -32,6 +34,10 @@ export async function createAdjustment(
       userId,
       referenceType: 'adjustment',
       referenceId: auditId,
+      // So DAMAGE/EXPIRY/THEFT losses have a real cost basis for the
+      // Shrinkage report — this movement type never recorded one before
+      // (2026-08-24 fix).
+      unitCost: toPesewas(variant.costPrice),
       note: body.note,
     });
 
@@ -55,6 +61,13 @@ export async function createAdjustment(
 
     return result;
   });
+
+  // Outside the transaction on purpose — see notification.service.ts's
+  // own doc comment on why an SMS call must never happen inside a
+  // transaction that's holding a row lock.
+  if (crossedLowStock) {
+    notifyLowStock(prisma, locationId, [body.variantId]).catch(() => {});
+  }
 
   return {
     id: auditId,

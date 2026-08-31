@@ -64,7 +64,21 @@ export async function postMovement(tx: Prisma.TransactionClient, input: PostMove
     data: { quantityOnHand: { increment: input.quantityDelta } },
   });
 
-  return { movement, variant };
+  // Doc 3/mockup Notifications tab's "low stock alerts... when a product
+  // falls to or below its reorder point" — an edge trigger (crossed *this*
+  // movement), not a level check, so a variant sitting below its reorder
+  // point doesn't re-alert on every subsequent sale. Computed here, once,
+  // from data already in hand (no extra query) rather than duplicated in
+  // every caller that might decrease stock; a pure calculation, so it's
+  // safe to always compute even though most callers never look at it.
+  const before = variant.quantityOnHand.minus(input.quantityDelta);
+  const crossedLowStock =
+    input.quantityDelta < 0 &&
+    variant.reorderPoint !== null &&
+    before.greaterThan(variant.reorderPoint) &&
+    variant.quantityOnHand.lessThanOrEqualTo(variant.reorderPoint);
+
+  return { movement, variant, crossedLowStock };
 }
 
 interface MovementCursor {

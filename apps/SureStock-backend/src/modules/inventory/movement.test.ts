@@ -63,7 +63,7 @@ describe('stock movement ledger (T-10)', () => {
     });
 
     const product = await app.prisma.product.create({
-      data: { id: generateId(), name: 'Movement Test Product', unit: 'EACH' },
+      data: { id: generateId(), locationId, name: 'Movement Test Product', unit: 'EACH' },
     });
     productId = product.id;
   });

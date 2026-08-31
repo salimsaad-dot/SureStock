@@ -3,6 +3,7 @@ import type { prisma as PrismaClient } from '../../lib/prisma.js';
 import { generateId } from '../../lib/id.js';
 import { toDecimal, toPesewas } from '../../lib/money.js';
 import { HttpError, notFound } from '../../lib/http-error.js';
+import { notifyTillVariance } from '../notifications/notification.service.js';
 import type { OpenTillShiftBody, CloseTillShiftBody, ListTillShiftsQuery } from './till-shift.schemas.js';
 
 function conflict(message: string, details?: unknown): HttpError {
@@ -43,11 +44,6 @@ export async function getCurrentTillShift(prisma: typeof PrismaClient, userId: s
   return shift ? serializeTillShift(shift) : null;
 }
 
-// No Settings mechanism exists yet (T-29, Phase 6) to make this
-// per-location configurable — hardcoded interim default. Move to a real
-// setting once T-29 exists.
-const VARIANCE_ALERT_THRESHOLD_PESEWAS = 2000; // GH₵20.00
-
 /**
  * Doc 6 T-20: "expected cash computed from cash payments plus float
  * minus cash refunds." A refund (T-19) is its own Sale row with its own
@@ -55,9 +51,14 @@ const VARIANCE_ALERT_THRESHOLD_PESEWAS = 2000; // GH₵20.00
  * refund happened — so a plain sum of every CASH payment amount tied to
  * this shift's sales already nets sales against refunds correctly,
  * without a separate "minus refunds" term.
+ *
+ * The variance-alert threshold (Doc 6 T-29, Settings) is a real
+ * per-location value on `Location.tillVarianceThreshold` now — no
+ * longer a hardcoded interim constant.
  */
 export async function closeTillShift(
   prisma: typeof PrismaClient,
+  locationId: string,
   userId: string,
   tillShiftId: string,
   body: CloseTillShiftBody,
@@ -78,6 +79,8 @@ export async function closeTillShift(
   const countedCash = toDecimal(body.countedCash);
   const variance = countedCash.minus(expectedCash);
 
+  const location = await prisma.location.findUniqueOrThrow({ where: { id: locationId }, select: { tillVarianceThreshold: true } });
+
   const updated = await prisma.tillShift.update({
     where: { id: tillShiftId },
     data: { closedAt: new Date(), expectedCash, countedCash, variance, notes: body.notes },
@@ -87,7 +90,7 @@ export async function closeTillShift(
   // exists to actually deliver a notification, so this writes a real,
   // durable audit-log entry an owner-facing view can surface, rather
   // than faking a delivery channel that doesn't exist.
-  if (variance.abs().greaterThan(toDecimal(VARIANCE_ALERT_THRESHOLD_PESEWAS))) {
+  if (variance.abs().greaterThan(location.tillVarianceThreshold)) {
     await prisma.auditLog.create({
       data: {
         id: generateId(),
@@ -98,6 +101,17 @@ export async function closeTillShift(
         after: { variance: toPesewas(variance), expectedCash: toPesewas(expectedCash), countedCash: body.countedCash },
       },
     });
+
+    // Fire-and-forget: a real SMS provider call must never make this
+    // request wait on it (or fail the till close if the provider is
+    // down) — the durable audit_log entry above is already the source of
+    // truth this always lands regardless of delivery outcome.
+    notifyTillVariance(prisma, locationId, {
+      userId,
+      variance: toPesewas(variance),
+      expectedCash: toPesewas(expectedCash),
+      countedCash: body.countedCash,
+    }).catch(() => {});
   }
 
   return serializeTillShift(updated);

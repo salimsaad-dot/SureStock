@@ -16,7 +16,7 @@ describe('manual stock adjustments (T-12)', () => {
   let cashierToken: string;
 
   async function createVariantWithStock(sku: string, quantity: number) {
-    const product = await app.prisma.product.create({ data: { id: generateId(), name: `Adjustment Test ${sku}` } });
+    const product = await app.prisma.product.create({ data: { id: generateId(), locationId, name: `Adjustment Test ${sku}` } });
     const variant = await app.prisma.productVariant.create({
       data: { id: generateId(), productId: product.id, sku, costPrice: 100, sellingPrice: 200, quantityOnHand: 0, locationId },
     });

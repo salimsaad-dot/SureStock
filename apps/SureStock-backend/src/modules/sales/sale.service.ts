@@ -6,6 +6,7 @@ import { HttpError, notFound, forbidden } from '../../lib/http-error.js';
 import { toCsv } from '../../lib/csv.js';
 import { verifyPin } from '../auth/service.js';
 import { postMovement } from '../inventory/movement.service.js';
+import { notifyLowStock } from '../notifications/notification.service.js';
 import type { CreateSaleBody, CreateRefundBody, ListSalesQuery, SalesFilter, SalesStatsQuery } from './sale.schemas.js';
 
 function conflict(message: string, details?: unknown): HttpError {
@@ -74,10 +75,6 @@ function serializeSale(sale: SaleWithLinesAndPayments, role: UserRole, refundedB
   };
 }
 
-// No Settings mechanism exists yet (T-29) for a real per-location value —
-// hardcoded interim default, same as till-shift's variance threshold.
-const DISCOUNT_OVERRIDE_THRESHOLD_PERCENT = 10;
-
 /**
  * A cheap, non-locking pre-check so a request missing a required
  * override fails fast, before any row lock is taken. Uses a fresh,
@@ -85,18 +82,25 @@ const DISCOUNT_OVERRIDE_THRESHOLD_PERCENT = 10;
  * actually determines the charged amounts; a price changing in the
  * split second between this check and that read only affects whether
  * this specific check was exactly right, never the sale's correctness.
+ *
+ * The threshold itself (Doc 6 T-29, Settings) is a real per-location
+ * value on `Location.discountOverrideThresholdPercent` now — no longer
+ * a hardcoded interim constant.
  */
-async function discountRequiresOverride(prisma: typeof PrismaClient, body: CreateSaleBody): Promise<boolean> {
-  const variantIds = [...new Set(body.lines.map((l) => l.variantId))];
-  const variants = await prisma.productVariant.findMany({
-    where: { id: { in: variantIds } },
-    select: { id: true, sellingPrice: true },
-  });
+async function discountRequiresOverride(prisma: typeof PrismaClient, locationId: string, body: CreateSaleBody): Promise<boolean> {
+  const [location, variants] = await Promise.all([
+    prisma.location.findUniqueOrThrow({ where: { id: locationId }, select: { discountOverrideThresholdPercent: true } }),
+    prisma.productVariant.findMany({
+      where: { id: { in: [...new Set(body.lines.map((l) => l.variantId))] } },
+      select: { id: true, sellingPrice: true },
+    }),
+  ]);
   const priceById = new Map(variants.map((v) => [v.id, v.sellingPrice]));
+  const thresholdPercent = location.discountOverrideThresholdPercent;
 
   const exceeds = (discountPesewas: number, grossDecimal: Prisma.Decimal) =>
     grossDecimal.greaterThan(0) &&
-    toDecimal(discountPesewas).dividedBy(grossDecimal).times(100).greaterThan(DISCOUNT_OVERRIDE_THRESHOLD_PERCENT);
+    toDecimal(discountPesewas).dividedBy(grossDecimal).times(100).greaterThan(thresholdPercent);
 
   for (const line of body.lines) {
     if (!line.discountAmount) continue;
@@ -136,12 +140,27 @@ async function discountRequiresOverride(prisma: typeof PrismaClient, body: Creat
  *    now-locked variant row (Doc 2 §3.3: "price and cost captured at
  *    that moment").
  */
+export interface CreateSaleOptions {
+  /**
+   * Doc 2 §3.2: "stock may legitimately go negative while offline. The
+   * server accepts the sale — it happened — and flags the product for
+   * review rather than rejecting reality." Only `sync.service.ts`'s
+   * offline batch path sets this; `POST /sales`' own online path never
+   * does, so its existing reject-on-negative behavior (Doc 2 §3.1) is
+   * completely unchanged.
+   */
+  allowNegativeStock?: boolean;
+  /** Set by the offline sync path so `Sale.syncedAt` records when the replay actually happened, distinct from `soldAt` (the device's own clock at the moment of sale). */
+  syncedAt?: Date;
+}
+
 export async function createSale(
   prisma: typeof PrismaClient,
   locationId: string,
   userId: string,
   role: UserRole,
   body: CreateSaleBody,
+  options: CreateSaleOptions = {},
 ) {
   const existing = await prisma.sale.findUnique({ where: { id: body.id }, include: { lines: true, payments: true } });
   if (existing) return serializeSale(existing, role);
@@ -150,7 +169,7 @@ export async function createSale(
   if (!tillShift) throw conflict('Open a till shift before selling.');
 
   let approvedByManagerId: string | undefined;
-  if (await discountRequiresOverride(prisma, body)) {
+  if (await discountRequiresOverride(prisma, locationId, body)) {
     if (!body.managerOverride) {
       throw new HttpError(400, 'VALIDATION_ERROR', 'This discount requires manager approval — enter a manager PIN and a reason.');
     }
@@ -158,6 +177,8 @@ export async function createSale(
     if (manager.role === 'CASHIER') throw forbidden('Only a manager or owner can approve a discount override.');
     approvedByManagerId = manager.id;
   }
+
+  const lowStockVariantIds: string[] = [];
 
   try {
     const sale = await prisma.$transaction(async (tx) => {
@@ -189,6 +210,7 @@ export async function createSale(
         variantId: string;
         quantity: number;
       }> = [];
+      const flaggedNegativeStockLines: Array<{ variantId: string; sku: string; requested: number; available: number }> = [];
 
       for (const lineInput of body.lines) {
         const variant = locked.get(lineInput.variantId)!;
@@ -199,10 +221,18 @@ export async function createSale(
 
         const projected = variant.quantity_on_hand.minus(quantity);
         if (projected.lessThan(0)) {
-          throw conflict(`Not enough stock for ${variant.sku} — only ${variant.quantity_on_hand.toString()} available.`, {
+          if (!options.allowNegativeStock) {
+            throw conflict(`Not enough stock for ${variant.sku} — only ${variant.quantity_on_hand.toString()} available.`, {
+              variantId: variant.id,
+              available: variant.quantity_on_hand.toNumber(),
+              requested: lineInput.quantity,
+            });
+          }
+          flaggedNegativeStockLines.push({
             variantId: variant.id,
-            available: variant.quantity_on_hand.toNumber(),
+            sku: variant.sku,
             requested: lineInput.quantity,
+            available: variant.quantity_on_hand.toNumber(),
           });
         }
 
@@ -295,7 +325,7 @@ export async function createSale(
       }
 
       const receiptNumber = `RCT-${body.id.replace(/-/g, '').slice(-10).toUpperCase()}`;
-      const soldAt = new Date();
+      const soldAt = body.soldAt ?? new Date();
 
       const sale = await tx.sale.create({
         data: {
@@ -311,14 +341,32 @@ export async function createSale(
           total,
           costTotal,
           soldAt,
+          syncedAt: options.syncedAt,
           deviceId: body.deviceId,
         },
       });
 
+      // Doc 2 §3.2: "flags the product for review rather than rejecting
+      // reality" — written in the same transaction as the sale itself,
+      // so the flag and the fact it describes can never disagree about
+      // whether the sale actually happened.
+      for (const flagged of flaggedNegativeStockLines) {
+        await tx.reviewQueueItem.create({
+          data: {
+            id: generateId(),
+            type: 'NEGATIVE_STOCK',
+            saleId: sale.id,
+            variantId: flagged.variantId,
+            reason: `Offline sale of ${flagged.requested} unit(s) of ${flagged.sku} exceeded the ${flagged.available} on hand at the time — stock is now negative.`,
+            details: { requested: flagged.requested, available: flagged.available },
+          },
+        });
+      }
+
       await tx.saleLine.createMany({ data: lineRows.map((l) => l.data) });
 
       for (const line of lineRows) {
-        await postMovement(tx, {
+        const { crossedLowStock } = await postMovement(tx, {
           variantId: line.variantId,
           quantityDelta: -line.quantity,
           reason: 'SALE',
@@ -327,6 +375,7 @@ export async function createSale(
           referenceId: sale.id,
           unitCost: toPesewas(locked.get(line.variantId)!.cost_price),
         });
+        if (crossedLowStock) lowStockVariantIds.push(line.variantId);
       }
 
       const paymentRows: Prisma.PaymentUncheckedCreateInput[] = body.payments.map((p) => ({
@@ -361,6 +410,10 @@ export async function createSale(
 
       return tx.sale.findUniqueOrThrow({ where: { id: sale.id }, include: { lines: true, payments: true } });
     });
+
+    if (lowStockVariantIds.length > 0) {
+      notifyLowStock(prisma, locationId, lowStockVariantIds).catch(() => {});
+    }
 
     return serializeSale(sale, role);
   } catch (err) {
