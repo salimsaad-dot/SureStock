@@ -39,6 +39,13 @@ export const createSaleBodySchema = z.object({
   payments: z.array(paymentInputSchema).min(1, 'At least one payment is required.'),
   managerOverride: managerOverrideSchema.optional(),
   deviceId: z.string().optional(),
+  // Doc 2 §3.2: "server time is authoritative for reporting; device time
+  // is retained for forensics." Never sent by the online Sell screen
+  // (which always sells in real time) — only by the offline sync path
+  // (sync.service.ts), whose device clock timestamp is what a sale
+  // should actually report as having happened at, not whenever the
+  // batch happened to replay.
+  soldAt: z.coerce.date().optional(),
 });
 export type CreateSaleBody = z.infer<typeof createSaleBodySchema>;
 
