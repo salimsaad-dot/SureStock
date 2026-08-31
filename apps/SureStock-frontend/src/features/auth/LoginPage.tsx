@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { Button } from '../../components/Button'
 import { TextInput } from '../../components/TextInput'
@@ -28,7 +28,10 @@ export function LoginPage() {
     mutationFn: (values: LoginForm) => login(values.identifier, values.password),
     onSuccess: (session) => {
       setSession(session)
-      navigate('/', { replace: true })
+      // Doc 3 §6: "the owner lands on a dashboard, not the till" — a
+      // Manager still has Dashboard in the nav (see nav.ts), just isn't
+      // dropped there by default the way the Owner is.
+      navigate(session.user.role === 'OWNER' ? '/dashboard' : '/', { replace: true })
     },
   })
 
@@ -65,6 +68,13 @@ export function LoginPage() {
           Sign in
         </Button>
       </form>
+
+      <p className="mt-4 text-center font-display text-[13px] text-ink-muted">
+        New shop?{' '}
+        <Link to="/register" className="font-medium text-accent hover:text-accent-strong">
+          Create one
+        </Link>
+      </p>
     </main>
   )
 }
