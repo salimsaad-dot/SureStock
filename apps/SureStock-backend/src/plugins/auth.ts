@@ -4,6 +4,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { UserRole } from '@prisma/client';
 import { env } from '../config/env.js';
 import { unauthorized, forbidden } from '../lib/http-error.js';
+import { generateId } from '../lib/id.js';
 import type { AccessTokenPayload, RefreshTokenPayload } from '../types/jwt.js';
 
 /**
@@ -31,11 +32,24 @@ export default fp(async function authPlugin(app: FastifyInstance) {
       app.jwt.sign({ ...payload, kind: 'access' }, { expiresIn: env.JWT_ACCESS_TTL }),
   );
 
-  app.decorate('signRefreshToken', (userId: string) =>
-    app.jwt.sign({ sub: userId, kind: 'refresh' } satisfies RefreshTokenPayload, {
+  // Product-testing pass, 2026-08-26, gap #5: a refresh token used to be
+  // a purely stateless JWT — cryptographically valid until its own
+  // 30-day expiry with no way to kill one early, so "Sign out" only
+  // ever cleared client-side storage. Persisting a real row per issued
+  // token (its `jti` claim doubles as the row's id) is what makes
+  // `POST /auth/logout` (auth/routes.ts) a genuine server-side action
+  // instead of a client-only gesture — see the `RefreshToken` model's
+  // own doc comment in schema.prisma for why this deliberately doesn't
+  // also enforce single-use rotation.
+  app.decorate('signRefreshToken', async (userId: string) => {
+    const jti = generateId();
+    const token = app.jwt.sign({ sub: userId, kind: 'refresh', jti } satisfies RefreshTokenPayload, {
       expiresIn: env.JWT_REFRESH_TTL,
-    }),
-  );
+    });
+    const { exp } = app.jwt.decode<{ exp: number }>(token)!;
+    await app.prisma.refreshToken.create({ data: { id: jti, userId, expiresAt: new Date(exp * 1000) } });
+    return token;
+  });
 
   app.decorate('authenticate', async (request: FastifyRequest, _reply: FastifyReply) => {
     try {

@@ -131,6 +131,42 @@ enum StockTakeStatus {
   @@map("stock_take_status")
 }
 
+// Doc 6 T-23: a sale synced from an offline device either commits with a
+// flagged line (stock legitimately went negative — Doc 2 §3.2) or fails
+// server validation entirely and needs a human decision (NEGATIVE_STOCK
+// vs SYNC_VALIDATION_FAILURE respectively — see sync.service.ts).
+enum ReviewQueueItemType {
+  NEGATIVE_STOCK
+  SYNC_VALIDATION_FAILURE
+
+  @@map("review_queue_item_type")
+}
+
+// Doc 6 T-29 Notifications tab, built once a real SMS provider (Africa's
+// Talking) was picked. TEST is its own type — a deliberate user action
+// from the Settings UI to confirm the phone number/credentials actually
+// work, not tied to any of the three real alert conditions.
+enum NotificationType {
+  LOW_STOCK
+  TILL_VARIANCE
+  DAILY_SUMMARY
+  TEST
+
+  @@map("notification_type")
+}
+
+// NOT_CONFIGURED is distinct from FAILED: it means no AFRICASTALKING_API_KEY
+// is set at all (the provider-ready-but-not-wired-up state), vs. FAILED,
+// which means a real send attempt happened and the provider (or the lack
+// of a recipient phone number) rejected it.
+enum NotificationStatus {
+  SENT
+  FAILED
+  NOT_CONFIGURED
+
+  @@map("notification_status")
+}
+
 // ---------------------------------------------------------------------
 // Location & identity
 // ---------------------------------------------------------------------
@@ -140,20 +176,72 @@ model Location {
   name             String
   address          String?
   phone            String?
+  // Doc 6 T-29 (Settings): Business Profile tab fields not already
+  // covered above. No logo *upload* exists (same honest gap as
+  // Product.imageUrl / T-09) — logoUrl accepts a URL only.
+  email            String?
+  logoUrl          String?  @map("logo_url")
   timezone         String   @default("Africa/Accra")
   receiptHeader    String?  @map("receipt_header") @db.Text
   receiptFooter    String?  @map("receipt_footer") @db.Text
   currency         String   @default("GHS")
   defaultTaxRateId String?  @map("default_tax_rate_id") @db.Char(36)
+  // Settings-store fields, T-29. Previously hardcoded interim constants
+  // in sale.service.ts / till-shift.service.ts / auth/service.ts — those
+  // now read these real per-location values instead. Extending Location
+  // rather than a new generic key-value table: Location already *is*
+  // the one settings row in this single-location build (currency,
+  // timezone, receipt header/footer, tax rate already lived here before
+  // T-29 existed), and this codebase always uses typed columns.
+  discountOverrideThresholdPercent Decimal @default(10.00) @map("discount_override_threshold_percent") @db.Decimal(5, 2)
+  tillVarianceThreshold            Decimal @default(20.00) @map("till_variance_threshold") @db.Decimal(12, 2)
+  pinLockoutAttempts               Int     @default(5) @map("pin_lockout_attempts")
+  pinLockoutMinutes                Int     @default(5) @map("pin_lockout_minutes")
+  // Payment Methods tab: which tender types the Sell screen actually
+  // offers. One boolean per method (only 4 exist, a bounded set) rather
+  // than an array/JSON column — MySQL has no native array type Prisma
+  // can use here, and this stays consistent with "typed columns, not a
+  // blob" for a small fixed set.
+  cashEnabled        Boolean @default(true) @map("cash_enabled")
+  mobileMoneyEnabled Boolean @default(true) @map("mobile_money_enabled")
+  cardEnabled        Boolean @default(true) @map("card_enabled")
+  accountEnabled     Boolean @default(true) @map("account_enabled")
+  // Inventory tab: a default new products' reorder point/quantity
+  // prefill with, when they don't set their own. Not enforced
+  // server-side (reorderPoint/reorderQuantity stay optional per T-06) —
+  // purely a NewProductPage form-prefill convenience.
+  defaultReorderPoint    Decimal? @map("default_reorder_point") @db.Decimal(12, 3)
+  defaultReorderQuantity Decimal? @map("default_reorder_quantity") @db.Decimal(12, 3)
+  // Notifications tab. Real SMS via Africa's Talking (chosen for its
+  // Ghana/Africa-market rates and a free sandbox tier that needs no
+  // funded account to test against) — see notifications/sms-client.ts.
+  // notificationPhone is deliberately its own field, not a reuse of the
+  // Business Profile's own `phone` above: that's the shop's public
+  // contact number, this is specifically who gets paged for an alert,
+  // and they don't have to be the same number.
+  notifyLowStockEnabled     Boolean @default(false) @map("notify_low_stock_enabled")
+  notifyTillVarianceEnabled Boolean @default(false) @map("notify_till_variance_enabled")
+  notifyDailySummaryEnabled Boolean @default(false) @map("notify_daily_summary_enabled")
+  notificationPhone         String? @map("notification_phone")
   createdAt        DateTime @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt        DateTime @updatedAt @map("updated_at") @db.DateTime(3)
 
-  defaultTaxRate TaxRate?         @relation(fields: [defaultTaxRateId], references: [id])
-  users          User[]
-  variants       ProductVariant[]
-  stockTakes     StockTake[]
-  dailySummaries DailySummary[]
-  sales          Sale[]
+  // "LocationDefaultTaxRate" disambiguates this from TaxRate.location
+  // below — two independent relations between Location and TaxRate now
+  // (which tax rate a shop defaults to, vs. which shop owns a given tax
+  // rate row), so Prisma needs an explicit name on both sides of each.
+  defaultTaxRate    TaxRate?          @relation("LocationDefaultTaxRate", fields: [defaultTaxRateId], references: [id])
+  users             User[]
+  variants          ProductVariant[]
+  stockTakes        StockTake[]
+  dailySummaries    DailySummary[]
+  sales             Sale[]
+  notificationLogs  NotificationLog[]
+  categories        Category[]
+  suppliers         Supplier[]
+  products          Product[]
+  taxRates          TaxRate[]         @relation("LocationTaxRates")
+  purchaseOrders    PurchaseOrder[]
 
   @@map("location")
 }
@@ -194,9 +282,48 @@ model User {
   auditLogEntries    AuditLog[]
   purchaseOrdersMade PurchaseOrder[]
   stockTakesStarted  StockTake[]
+  reviewQueueItemsResolved ReviewQueueItem[]
+  refreshTokens      RefreshToken[]
 
   @@index([locationId])
   @@map("user")
+}
+
+/**
+ * Product-testing pass, 2026-08-26, gap #5: refresh tokens used to be
+ * purely stateless JWTs — cryptographically valid until their own
+ * 30-day expiry with no way to kill one early. `POST /auth/logout`
+ * (auth/routes.ts) revokes the specific row a caller's token maps to
+ * (its `id` is also that JWT's own `jti` claim, checked on every
+ * `POST /auth/refresh`). Deliberately does NOT revoke the old row every
+ * time a token is rotated on refresh (single-use rotation) — a real
+ * tradeoff, not an oversight: several components fetching data at once
+ * can each hit a 401 around the same moment and race to refresh with
+ * the same still-technically-valid token, and a single-use scheme would
+ * make the loser of that race spuriously log the user out. Multiple
+ * simultaneously-valid rows per user is the safer failure mode; the
+ * property this table actually needs to guarantee is "logout kills a
+ * token early," not "a token can only ever be used once."
+ */
+model RefreshToken {
+  id        String    @id @db.Char(36)
+  userId    String    @map("user_id") @db.Char(36)
+  expiresAt DateTime  @map("expires_at") @db.DateTime(3)
+  revokedAt DateTime? @map("revoked_at") @db.DateTime(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+
+  // Cascade, not this schema's usual Restrict-for-business-records
+  // default: a session artifact isn't a business record to protect from
+  // its owner's deletion the way a sale/audit-log/stock-movement row is
+  // — if a user is ever hard-deleted, its lingering token rows should go
+  // with it, not block the deletion. Found the hard way: several test
+  // files' cleanup deletes their fixture user directly, and Restrict
+  // (Prisma's default) started failing those the moment a real login
+  // during the test actually created a row here to reference.
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_token")
 }
 
 // ---------------------------------------------------------------------
@@ -205,6 +332,13 @@ model User {
 
 model Category {
   id         String    @id @db.Char(36)
+  // Doc 6 T-30 follow-up (2026-08-25): Category/Supplier/Product/TaxRate
+  // were global across every shop until now — harmless while only one
+  // real shop existed, a genuine cross-tenant leak the moment onboarding
+  // (T-30) let a second shop sign up. Every one of these four now carries
+  // its own locationId, and every service that reads/writes them scopes
+  // through it, the same way ProductVariant already did from the start.
+  locationId String    @map("location_id") @db.Char(36)
   name       String
   parentId   String?   @map("parent_id") @db.Char(36)
   sortOrder  Int       @default(0) @map("sort_order")
@@ -213,15 +347,19 @@ model Category {
   createdAt  DateTime  @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt  DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
 
-  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryTree")
-  products Product[]
+  location   Location    @relation(fields: [locationId], references: [id])
+  parent     Category?   @relation("CategoryTree", fields: [parentId], references: [id])
+  children   Category[]  @relation("CategoryTree")
+  products   Product[]
+  stockTakes StockTake[]
 
+  @@index([locationId])
   @@map("category")
 }
 
 model Supplier {
   id           String    @id @db.Char(36)
+  locationId   String    @map("location_id") @db.Char(36)
   name         String
   contactName  String?   @map("contact_name")
   phone        String?
@@ -234,14 +372,17 @@ model Supplier {
   createdAt    DateTime  @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt    DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
 
+  location       Location        @relation(fields: [locationId], references: [id])
   products       Product[]
   purchaseOrders PurchaseOrder[]
 
+  @@index([locationId])
   @@map("supplier")
 }
 
 model TaxRate {
   id          String   @id @db.Char(36)
+  locationId  String   @map("location_id") @db.Char(36)
   name        String
   rate        Decimal  @db.Decimal(5, 4)
   isInclusive Boolean  @default(true) @map("is_inclusive")
@@ -249,14 +390,21 @@ model TaxRate {
   createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.DateTime(3)
 
-  products  Product[]
-  locations Location[]
+  // Two distinct relations to Location, hence the explicit names: this
+  // one is "which shop owns this tax rate row" (new); `defaultForLocations`
+  // below is the pre-existing, unrelated "which shop(s) picked this as
+  // their one default tax rate" back-relation from Location.defaultTaxRate.
+  location            Location   @relation("LocationTaxRates", fields: [locationId], references: [id])
+  defaultForLocations Location[] @relation("LocationDefaultTaxRate")
+  products            Product[]
 
+  @@index([locationId])
   @@map("tax_rate")
 }
 
 model Product {
   id           String        @id @db.Char(36)
+  locationId   String        @map("location_id") @db.Char(36)
   name         String
   description  String?       @db.Text
   categoryId   String?       @map("category_id") @db.Char(36)
@@ -270,12 +418,16 @@ model Product {
   createdAt    DateTime      @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt    DateTime      @updatedAt @map("updated_at") @db.DateTime(3)
 
+  location Location          @relation(fields: [locationId], references: [id])
   // RESTRICT, not the Prisma default: Doc 6 T-05 requires "a category in
   // use cannot be deleted" — silently orphaning products to no category
   // (SET NULL) would satisfy the letter of a delete succeeding while
   // breaking every screen that filters by category. Supplier gets the
   // same treatment for the same reason, and to match purchase_order's
-  // existing RESTRICT on supplier_id.
+  // existing RESTRICT on supplier_id. Every service-layer create/update
+  // also validates the referenced category/supplier/taxRate belongs to
+  // this same product's locationId — the FK alone can't express that
+  // cross-table constraint.
   category Category?        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   supplier Supplier?        @relation(fields: [supplierId], references: [id], onDelete: Restrict)
   taxRate  TaxRate?         @relation(fields: [taxRateId], references: [id])
@@ -289,6 +441,7 @@ model Product {
   // typo-tolerant like pg_trgm was (see that migration's comment) — at
   // <=5,000 rows that's a comfort gap, not a performance one; a plain
   // LIKE '%term%' scan is already sub-150ms at this table size.
+  @@index([locationId])
   @@fulltext([name], map: "product_name_fulltext")
   @@map("product")
 }
@@ -297,7 +450,14 @@ model ProductVariant {
   id              String    @id @db.Char(36)
   productId       String    @map("product_id") @db.Char(36)
   sku             String
-  barcode         String?   @unique
+  // Was globally @unique — a real UPC barcode for a common product (e.g.
+  // a Coke can) legitimately recurs across independent shops, so this
+  // moved to the same @@unique([x, locationId]) shape as sku below
+  // (2026-08-25, alongside the Category/Supplier/Product/TaxRate
+  // locationId fix — MySQL's per-column NULL semantics mean multiple
+  // barcode-less variants, even within one location, still coexist fine,
+  // same as before).
+  barcode         String?   @map("barcode")
   variantName     String?   @map("variant_name")
   costPrice       Decimal   @map("cost_price") @db.Decimal(12, 2)
   sellingPrice    Decimal   @map("selling_price") @db.Decimal(12, 2)
@@ -318,8 +478,10 @@ model ProductVariant {
   priceHistory       PriceHistory[]
   purchaseOrderLines PurchaseOrderLine[]
   stockTakeLines     StockTakeLine[]
+  reviewQueueItems   ReviewQueueItem[]
 
   @@unique([sku, locationId])
+  @@unique([barcode, locationId])
   // NOTE: Doc 5 specifies a Postgres *partial* index
   // (WHERE quantity_on_hand <= reorder_point) so the low-stock list stays
   // instant regardless of catalogue size. MySQL has no filtered index;
@@ -415,8 +577,9 @@ model Sale {
   refundOf  Sale?     @relation("SaleRefund", fields: [refundOfSaleId], references: [id])
   refunds   Sale[]    @relation("SaleRefund")
 
-  lines    SaleLine[]
-  payments Payment[]
+  lines            SaleLine[]
+  payments         Payment[]
+  reviewQueueItems ReviewQueueItem[]
 
   @@index([locationId, soldAt])
   @@index([tillShiftId])
@@ -515,8 +678,25 @@ model PriceHistory {
 
 model PurchaseOrder {
   id           String              @id @db.Char(36)
+  // A true DB-assigned sequence, not a UUID fragment like receipts
+  // (`RCT-<id fragment>`) — the Purchasing mockup shows human-facing
+  // sequential order numbers (PO-1024, PO-1023...), a deliberate product
+  // decision distinct from receipts, which never needed to look
+  // sequential. Display value (`PO-${1000 + orderSeq}`) is computed at
+  // serialization time, not stored, matching this codebase's existing
+  // preference for deriving display strings over duplicating them.
+  orderSeq     Int                 @unique @default(autoincrement()) @map("order_seq")
+  // Found while fixing the Category/Supplier/Product/TaxRate isolation
+  // gap (2026-08-25): PurchaseOrder had no locationId at all — its own
+  // code comment called this a deliberate "single-location build"
+  // simplification, scoping instead through a PO's first line's
+  // variant.locationId as a fragile proxy, and `listPurchaseOrders` had
+  // no scoping whatsoever (every shop's POs, suppliers, and costs were
+  // visible to any Manager/Owner, anywhere). Same bug class as the
+  // named four tables, found adjacent to them — fixed in the same pass
+  // rather than left half-done.
+  locationId   String              @map("location_id") @db.Char(36)
   supplierId   String              @map("supplier_id") @db.Char(36)
-  orderNumber  String              @unique @map("order_number")
   status       PurchaseOrderStatus @default(DRAFT)
   expectedDate DateTime?           @map("expected_date") @db.Date
   totalCost    Decimal?            @map("total_cost") @db.Decimal(12, 2)
@@ -524,11 +704,13 @@ model PurchaseOrder {
   createdAt    DateTime            @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt    DateTime            @updatedAt @map("updated_at") @db.DateTime(3)
 
+  location Location            @relation(fields: [locationId], references: [id])
   supplier Supplier            @relation(fields: [supplierId], references: [id])
   creator  User                @relation(fields: [createdBy], references: [id])
   lines    PurchaseOrderLine[]
 
   @@index([supplierId, status])
+  @@index([locationId])
   @@map("purchase_order")
 }
 
@@ -555,12 +737,17 @@ model StockTake {
   id         String          @id @db.Char(36)
   locationId String          @map("location_id") @db.Char(36)
   scope      StockTakeScope
+  // Only set when scope = CATEGORY — Doc 3 §4.2: "choose full shop or a
+  // category." Doc 5's own field list never named this column, an
+  // oversight this migration corrects rather than repeats.
+  categoryId String?         @map("category_id") @db.Char(36)
   status     StockTakeStatus @default(IN_PROGRESS)
   startedBy  String          @map("started_by") @db.Char(36)
   startedAt  DateTime        @map("started_at") @db.DateTime(3)
   postedAt   DateTime?       @map("posted_at") @db.DateTime(3)
 
   location Location        @relation(fields: [locationId], references: [id])
+  category Category?       @relation(fields: [categoryId], references: [id])
   starter  User            @relation(fields: [startedBy], references: [id])
   lines    StockTakeLine[]
 
@@ -581,6 +768,7 @@ model StockTakeLine {
   stockTake StockTake      @relation(fields: [stockTakeId], references: [id], onDelete: Cascade)
   variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
 
+  @@unique([stockTakeId, variantId])
   @@index([variantId])
   @@map("stock_take_line")
 }
@@ -606,6 +794,64 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([userId, createdAt])
   @@map("audit_log")
+}
+
+/**
+ * Doc 6 T-23. Distinct from `AuditLog` on purpose: AuditLog is an
+ * append-only historical record with no resolution state, and a review
+ * queue is a workflow — something an owner works through and closes out,
+ * not just a fact that happened. Two producers, both from the offline
+ * sync path (`sync.service.ts`): a NEGATIVE_STOCK row is created
+ * alongside a sale that committed anyway (Doc 2 §3.2: "the server
+ * accepts the sale — it happened"); a SYNC_VALIDATION_FAILURE row is
+ * created *instead of* a sale when replay hits a real error nobody was
+ * present to react to live (a missing manager override, a variant that
+ * no longer exists) — `details` carries the raw attempted sale body so
+ * the owner has enough context to resolve it by hand.
+ */
+model ReviewQueueItem {
+  id             String              @id @db.Char(36)
+  type           ReviewQueueItemType
+  saleId         String?             @map("sale_id") @db.Char(36)
+  variantId      String?             @map("variant_id") @db.Char(36)
+  reason         String              @db.Text
+  details        Json?
+  createdAt      DateTime            @default(now()) @map("created_at") @db.DateTime(3)
+  resolvedAt     DateTime?           @map("resolved_at") @db.DateTime(3)
+  resolvedBy     String?             @map("resolved_by") @db.Char(36)
+  resolutionNote String?             @map("resolution_note") @db.Text
+
+  sale     Sale?           @relation(fields: [saleId], references: [id])
+  variant  ProductVariant? @relation(fields: [variantId], references: [id])
+  resolver User?           @relation(fields: [resolvedBy], references: [id])
+
+  @@index([resolvedAt])
+  @@map("review_queue_item")
+}
+
+/**
+ * Every SMS *attempt* — sent, failed, or never-configured — gets a
+ * durable row here, on purpose: SMS delivery isn't observable any other
+ * way (no webhook/delivery-receipt handling exists), so this is the
+ * Notifications tab's own equivalent of AuditLog's "durable record
+ * beyond a delivery channel that doesn't exist" pattern (see
+ * TILL_VARIANCE_ALERT in till-shift.service.ts) — except here a channel
+ * *does* exist, so this also records whether it actually worked.
+ */
+model NotificationLog {
+  id               String              @id @db.Char(36)
+  locationId       String              @map("location_id") @db.Char(36)
+  type             NotificationType
+  recipientPhone   String              @map("recipient_phone")
+  message          String              @db.Text
+  status           NotificationStatus
+  providerResponse String?             @map("provider_response") @db.Text
+  createdAt        DateTime            @default(now()) @map("created_at") @db.DateTime(3)
+
+  location Location @relation(fields: [locationId], references: [id])
+
+  @@index([locationId, createdAt])
+  @@map("notification_log")
 }
 
 model DailySummary {

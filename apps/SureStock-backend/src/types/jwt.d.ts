@@ -10,6 +10,8 @@ export interface AccessTokenPayload {
 export interface RefreshTokenPayload {
   sub: string;
   kind: 'refresh';
+  /** Also the `RefreshToken.id` row this token maps to — how `/auth/refresh` and `/auth/logout` find it to check/revoke. */
+  jti: string;
 }
 
 declare module '@fastify/jwt' {

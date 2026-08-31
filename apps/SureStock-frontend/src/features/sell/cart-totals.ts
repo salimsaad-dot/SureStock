@@ -26,17 +26,17 @@ export function computeCartTotals(lines: CartLine[], cartDiscountAmount: number)
   return { subtotal, discountTotal, total }
 }
 
-// No Settings mechanism exists yet — mirrors the backend's own hardcoded
-// interim default in sale.service.ts exactly. Keep these in sync.
-export const DISCOUNT_OVERRIDE_THRESHOLD_PERCENT = 10
+// The real threshold now comes from GET /settings/checkout (Doc 6 T-29) —
+// callers fetch it and pass it in, rather than this module guessing at a
+// value that could drift from the backend's own per-location setting.
 
-export function lineExceedsThreshold(unitPrice: number, quantity: number, discountAmount: number): boolean {
+export function lineExceedsThreshold(unitPrice: number, quantity: number, discountAmount: number, thresholdPercent: number): boolean {
   const gross = unitPrice * quantity
   if (gross <= 0 || discountAmount <= 0) return false
-  return (discountAmount / gross) * 100 > DISCOUNT_OVERRIDE_THRESHOLD_PERCENT
+  return (discountAmount / gross) * 100 > thresholdPercent
 }
 
-export function cartDiscountExceedsThreshold(subtotal: number, cartDiscountAmount: number): boolean {
+export function cartDiscountExceedsThreshold(subtotal: number, cartDiscountAmount: number, thresholdPercent: number): boolean {
   if (subtotal <= 0 || cartDiscountAmount <= 0) return false
-  return (cartDiscountAmount / subtotal) * 100 > DISCOUNT_OVERRIDE_THRESHOLD_PERCENT
+  return (cartDiscountAmount / subtotal) * 100 > thresholdPercent
 }

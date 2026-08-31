@@ -228,4 +228,72 @@ describe('auth routes', () => {
     // Restore for any later test in this file that expects an active cashier.
     await app.prisma.user.update({ where: { id: cashierId }, data: { isActive: true } });
   });
+
+  describe('registration (T-30 step 1)', () => {
+    const registeredLocationIds: string[] = [];
+
+    afterAll(async () => {
+      await app.prisma.user.deleteMany({ where: { locationId: { in: registeredLocationIds } } });
+      await app.prisma.location.deleteMany({ where: { id: { in: registeredLocationIds } } });
+    });
+
+    it('creates a real Location and a real OWNER, and logs them straight in', async () => {
+      const email = `new-shop-${generateId()}@test.surestock.local`;
+      const res = await app.inject({
+        method: 'POST',
+        url: '/auth/register',
+        payload: { shopName: 'Brand New Shop', ownerName: 'New Owner', email, password: 'a-real-password-123' },
+      });
+
+      expect(res.statusCode).toBe(201);
+      const body = res.json();
+      expect(typeof body.accessToken).toBe('string');
+      expect(typeof body.refreshToken).toBe('string');
+      expect(body.user.role).toBe('OWNER');
+      registeredLocationIds.push(body.user.locationId);
+
+      const location = await app.prisma.location.findUnique({ where: { id: body.user.locationId } });
+      expect(location?.name).toBe('Brand New Shop');
+
+      // The new owner's own token actually works against a real authenticated route.
+      const whoami = await app.inject({ method: 'GET', url: '/auth/staff', headers: { authorization: `Bearer ${body.accessToken}` } });
+      expect(whoami.statusCode).toBe(200);
+      expect(whoami.json()).toHaveLength(1);
+      expect(whoami.json()[0].name).toBe('New Owner');
+    });
+
+    it('rejects a duplicate email rather than silently colliding two shops', async () => {
+      const email = `dup-shop-${generateId()}@test.surestock.local`;
+      const first = await app.inject({
+        method: 'POST',
+        url: '/auth/register',
+        payload: { shopName: 'First Shop', ownerName: 'First Owner', email, password: 'a-real-password-123' },
+      });
+      expect(first.statusCode).toBe(201);
+      registeredLocationIds.push(first.json().user.locationId);
+
+      const second = await app.inject({
+        method: 'POST',
+        url: '/auth/register',
+        payload: { shopName: 'Second Shop', ownerName: 'Second Owner', email, password: 'a-different-password' },
+      });
+      expect(second.statusCode).toBe(409);
+    });
+
+    it('requires at least an email or a phone number, and a password of real length', async () => {
+      const noContact = await app.inject({
+        method: 'POST',
+        url: '/auth/register',
+        payload: { shopName: 'No Contact Shop', ownerName: 'Owner', password: 'a-real-password-123' },
+      });
+      expect(noContact.statusCode).toBe(400);
+
+      const shortPassword = await app.inject({
+        method: 'POST',
+        url: '/auth/register',
+        payload: { shopName: 'Short Password Shop', ownerName: 'Owner', email: `short-${generateId()}@test.surestock.local`, password: 'short' },
+      });
+      expect(shortPassword.statusCode).toBe(400);
+    });
+  });
 });

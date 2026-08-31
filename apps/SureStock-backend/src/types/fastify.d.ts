@@ -7,7 +7,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     prisma: typeof prisma;
     signAccessToken: (payload: Omit<AccessTokenPayload, 'kind'>) => string;
-    signRefreshToken: (userId: string) => string;
+    signRefreshToken: (userId: string) => Promise<string>;
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     requireRole: (...roles: UserRole[]) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
