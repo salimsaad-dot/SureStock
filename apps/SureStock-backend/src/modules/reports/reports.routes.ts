@@ -1,6 +1,14 @@
 import type { FastifyInstance } from 'fastify';
-import { reportsFilterSchema, reportsProductsQuerySchema } from './reports.schemas.js';
-import { getReportsOverview, getReportsTrend, getPaymentBreakdown, getReportsProducts, exportReportsCsv } from './reports.service.js';
+import { reportsFilterSchema, reportsProductsQuerySchema, shrinkageQuerySchema, staffActivityQuerySchema } from './reports.schemas.js';
+import {
+  getReportsOverview,
+  getReportsTrend,
+  getPaymentBreakdown,
+  getReportsProducts,
+  getShrinkageReport,
+  getStaffActivity,
+  exportReportsCsv,
+} from './reports.service.js';
 import { accessUser } from '../../lib/auth-context.js';
 
 export default async function reportsRoutes(app: FastifyInstance) {
@@ -32,6 +40,18 @@ export default async function reportsRoutes(app: FastifyInstance) {
     const user = accessUser(request);
     const query = reportsProductsQuerySchema.parse(request.query);
     return getReportsProducts(app.prisma, user.locationId, query);
+  });
+
+  app.get('/reports/shrinkage', { preHandler: manage }, async (request) => {
+    const user = accessUser(request);
+    const filter = shrinkageQuerySchema.parse(request.query);
+    return getShrinkageReport(app.prisma, user.locationId, filter);
+  });
+
+  app.get('/reports/staff-activity', { preHandler: manage }, async (request) => {
+    const user = accessUser(request);
+    const filter = staffActivityQuerySchema.parse(request.query);
+    return getStaffActivity(app.prisma, user.locationId, filter);
   });
 
   app.get('/reports/export', { preHandler: manage }, async (request, reply) => {

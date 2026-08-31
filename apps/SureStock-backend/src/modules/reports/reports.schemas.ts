@@ -22,3 +22,12 @@ export const reportsProductsQuerySchema = reportsFilterSchema.extend({
   categoryId: z.string().min(1).optional(),
 });
 export type ReportsProductsQuery = z.infer<typeof reportsProductsQuerySchema>;
+
+// Shrinkage (T-26) has no payment method of its own — reuses
+// reportsFilterSchema's shape for dateFrom/dateTo/userId only, `method`
+// is simply never read by the service.
+export const shrinkageQuerySchema = reportsFilterSchema;
+export type ShrinkageQuery = z.infer<typeof shrinkageQuerySchema>;
+
+export const staffActivityQuerySchema = reportsFilterSchema;
+export type StaffActivityQuery = z.infer<typeof staffActivityQuerySchema>;

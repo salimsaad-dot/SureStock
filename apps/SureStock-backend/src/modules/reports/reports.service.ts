@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 import type { prisma as PrismaClient } from '../../lib/prisma.js';
 import { toPesewas } from '../../lib/money.js';
 import { toCsv } from '../../lib/csv.js';
-import type { ReportsFilter, ReportsProductsQuery } from './reports.schemas.js';
+import type { ReportsFilter, ReportsProductsQuery, ShrinkageQuery, StaffActivityQuery } from './reports.schemas.js';
 
 function buildSaleWhere(locationId: string, filter: ReportsFilter, dateFrom: Date, dateTo: Date): Prisma.SaleWhereInput {
   const where: Prisma.SaleWhereInput = { locationId, soldAt: { gte: dateFrom, lte: dateTo } };
@@ -26,7 +26,7 @@ interface PeriodAggregate {
  * `grossProfit` nets over *every* row including refunds, since a
  * refunded sale's cost basis really did come back too.
  */
-async function aggregatePeriod(
+export async function aggregatePeriod(
   prisma: typeof PrismaClient,
   locationId: string,
   filter: ReportsFilter,
@@ -57,7 +57,7 @@ async function aggregatePeriod(
 }
 
 /** `null` (not 0 or Infinity) when the prior period had nothing to compare against — an honest "can't say," not a fabricated percentage. */
-function pctChange(current: number, prior: number): number | null {
+export function pctChange(current: number, prior: number): number | null {
   if (prior === 0) return current === 0 ? 0 : null;
   return ((current - prior) / prior) * 100;
 }
@@ -71,7 +71,7 @@ function pctChange(current: number, prior: number): number | null {
  * yet" caveat from the Inventory redesign, closed here at least for
  * Reports (worth pointing `useInventoryStats` at this too later).
  */
-async function getInventorySnapshot(prisma: typeof PrismaClient, locationId: string) {
+export async function getInventorySnapshot(prisma: typeof PrismaClient, locationId: string) {
   const products = await prisma.product.findMany({
     where: { status: 'ACTIVE', variants: { some: { locationId, archivedAt: null } } },
     select: { variants: { where: { locationId, archivedAt: null }, select: { quantityOnHand: true, reorderPoint: true, costPrice: true } } },
@@ -100,8 +100,8 @@ async function getInventorySnapshot(prisma: typeof PrismaClient, locationId: str
   };
 }
 
-/** Read from the ledger's own `PURCHASE_RECEIVED` movements — deliberately decoupled from the Purchasing feature (T-28), which doesn't exist yet, so this works today. */
-async function getTotalPurchased(prisma: typeof PrismaClient, locationId: string, dateFrom: Date, dateTo: Date): Promise<number> {
+/** Read from the ledger's own `PURCHASE_RECEIVED` movements — also reused by the Purchasing module's own stats (both want the same "money actually spent on stock" figure, computed the same way). */
+export async function getTotalPurchased(prisma: typeof PrismaClient, locationId: string, dateFrom: Date, dateTo: Date): Promise<number> {
   const rows = await prisma.$queryRaw<{ total: Prisma.Decimal | null }[]>(Prisma.sql`
     SELECT SUM(sm.quantity_delta * sm.unit_cost) AS total
     FROM stock_movement sm
@@ -236,14 +236,191 @@ export async function getReportsProducts(prisma: typeof PrismaClient, locationId
   }));
 }
 
+interface ShrinkageRow {
+  user_id: string;
+  user_name: string;
+  bucket: 'DAMAGE' | 'EXPIRY' | 'UNEXPLAINED_VARIANCE';
+  loss_value: Prisma.Decimal;
+}
+
+const SHRINKAGE_TYPES = ['DAMAGE', 'EXPIRY', 'UNEXPLAINED_VARIANCE'] as const;
+export type ShrinkageType = (typeof SHRINKAGE_TYPES)[number];
+
+/**
+ * Doc 1 §3.4: "Losses to damage, expiry, and unexplained variance, by
+ * period and by staff." "Unexplained variance" means a stock take
+ * finding *less* stock than the ledger expects (a negative
+ * `STOCK_TAKE_ADJUSTMENT`) — not till cash variance, which Doc 1 lists
+ * under Staff activity's own metrics below, a distinct report from this
+ * one. Valued at each movement's own recorded `unit_cost` when present,
+ * falling back to the variant's *current* `cost_price` for any older row
+ * from before this movement type ever captured one (see the 2026-08-24
+ * fix in `adjustment.service.ts`/`stock-take.service.ts` — before that,
+ * every DAMAGE/EXPIRY/STOCK_TAKE_ADJUSTMENT row had a null `unit_cost`).
+ */
+export async function getShrinkageReport(prisma: typeof PrismaClient, locationId: string, filter: ShrinkageQuery) {
+  const rows = await prisma.$queryRaw<ShrinkageRow[]>(Prisma.sql`
+    SELECT sm.user_id, u.name AS user_name,
+      CASE WHEN sm.reason = 'STOCK_TAKE_ADJUSTMENT' THEN 'UNEXPLAINED_VARIANCE' ELSE sm.reason END AS bucket,
+      SUM(ABS(sm.quantity_delta) * COALESCE(sm.unit_cost, pv.cost_price)) AS loss_value
+    FROM stock_movement sm
+    JOIN product_variant pv ON pv.id = sm.variant_id
+    JOIN user u ON u.id = sm.user_id
+    WHERE pv.location_id = ${locationId}
+      AND sm.occurred_at BETWEEN ${filter.dateFrom} AND ${filter.dateTo}
+      AND (sm.reason IN ('DAMAGE', 'EXPIRY') OR (sm.reason = 'STOCK_TAKE_ADJUSTMENT' AND sm.quantity_delta < 0))
+      ${filter.userId ? Prisma.sql`AND sm.user_id = ${filter.userId}` : Prisma.empty}
+    GROUP BY sm.user_id, u.name, bucket
+  `);
+
+  const byTypeTotals: Record<ShrinkageType, number> = { DAMAGE: 0, EXPIRY: 0, UNEXPLAINED_VARIANCE: 0 };
+  const byStaffMap = new Map<string, { userId: string; userName: string; damageTotal: number; expiryTotal: number; varianceTotal: number }>();
+
+  for (const row of rows) {
+    const value = toPesewas(row.loss_value);
+    byTypeTotals[row.bucket] += value;
+
+    const staff = byStaffMap.get(row.user_id) ?? { userId: row.user_id, userName: row.user_name, damageTotal: 0, expiryTotal: 0, varianceTotal: 0 };
+    if (row.bucket === 'DAMAGE') staff.damageTotal += value;
+    else if (row.bucket === 'EXPIRY') staff.expiryTotal += value;
+    else staff.varianceTotal += value;
+    byStaffMap.set(row.user_id, staff);
+  }
+
+  const byStaff = [...byStaffMap.values()]
+    .map((s) => ({ ...s, total: s.damageTotal + s.expiryTotal + s.varianceTotal }))
+    .sort((a, b) => b.total - a.total);
+  const byType = SHRINKAGE_TYPES.map((type) => ({ type, total: byTypeTotals[type] }));
+
+  return { totalLoss: byType.reduce((sum, t) => sum + t.total, 0), byType, byStaff };
+}
+
+interface StaffActivityRow {
+  user_id: string;
+  user_name: string;
+  role: string;
+  sales_count: number | string;
+  sales_total: Prisma.Decimal;
+  discounts_total: Prisma.Decimal;
+  refunds_count: number | string;
+  refunds_total: Prisma.Decimal;
+}
+
+interface StaffShiftRow {
+  user_id: string;
+  user_name: string;
+  role: string;
+  shift_count: number | string;
+  total_variance: Prisma.Decimal | null;
+}
+
+/**
+ * Doc 1 §3.4: "Sales per cashier, discounts given, refunds processed,
+ * till variances." One row per staff member who had any sale, refund,
+ * or till shift in range — same "only show what actually happened"
+ * pattern as the Top/Low products tables below, not a full roster
+ * padded with zero rows for staff who didn't work this period.
+ * "Refunds processed" means the staff member who *processed* the
+ * refund (the refund sale's own `userId`), which can differ from
+ * whoever rang up the original sale — that's the real, auditable fact
+ * this metric is for.
+ */
+export async function getStaffActivity(prisma: typeof PrismaClient, locationId: string, filter: StaffActivityQuery) {
+  const methodFilter = filter.method
+    ? Prisma.sql`AND EXISTS (SELECT 1 FROM payment p WHERE p.sale_id = s.id AND p.method = ${filter.method})`
+    : Prisma.empty;
+
+  const [salesRows, shiftRows] = await Promise.all([
+    prisma.$queryRaw<StaffActivityRow[]>(Prisma.sql`
+      SELECT s.user_id, u.name AS user_name, u.role,
+        SUM(CASE WHEN s.refund_of_sale_id IS NULL THEN 1 ELSE 0 END) AS sales_count,
+        SUM(CASE WHEN s.refund_of_sale_id IS NULL THEN s.total ELSE 0 END) AS sales_total,
+        SUM(CASE WHEN s.refund_of_sale_id IS NULL THEN s.discount_total ELSE 0 END) AS discounts_total,
+        SUM(CASE WHEN s.refund_of_sale_id IS NOT NULL THEN 1 ELSE 0 END) AS refunds_count,
+        SUM(CASE WHEN s.refund_of_sale_id IS NOT NULL THEN ABS(s.total) ELSE 0 END) AS refunds_total
+      FROM sale s
+      JOIN user u ON u.id = s.user_id
+      WHERE s.location_id = ${locationId} AND s.sold_at BETWEEN ${filter.dateFrom} AND ${filter.dateTo}
+        ${filter.userId ? Prisma.sql`AND s.user_id = ${filter.userId}` : Prisma.empty}
+        ${methodFilter}
+      GROUP BY s.user_id, u.name, u.role
+    `),
+    prisma.$queryRaw<StaffShiftRow[]>(Prisma.sql`
+      SELECT ts.user_id, u.name AS user_name, u.role,
+        COUNT(*) AS shift_count,
+        SUM(ts.variance) AS total_variance
+      FROM till_shift ts
+      JOIN user u ON u.id = ts.user_id
+      WHERE u.location_id = ${locationId} AND ts.closed_at BETWEEN ${filter.dateFrom} AND ${filter.dateTo}
+        ${filter.userId ? Prisma.sql`AND ts.user_id = ${filter.userId}` : Prisma.empty}
+      GROUP BY ts.user_id, u.name, u.role
+    `),
+  ]);
+
+  interface Row {
+    userId: string;
+    userName: string;
+    role: string;
+    salesCount: number;
+    salesTotal: number;
+    discountsTotal: number;
+    refundsCount: number;
+    refundsTotal: number;
+    shiftCount: number;
+    totalVariance: number;
+  }
+
+  const rowsByUser = new Map<string, Row>();
+  for (const r of salesRows) {
+    rowsByUser.set(r.user_id, {
+      userId: r.user_id,
+      userName: r.user_name,
+      role: r.role,
+      salesCount: Number(r.sales_count),
+      salesTotal: toPesewas(r.sales_total),
+      discountsTotal: toPesewas(r.discounts_total),
+      refundsCount: Number(r.refunds_count),
+      refundsTotal: toPesewas(r.refunds_total),
+      shiftCount: 0,
+      totalVariance: 0,
+    });
+  }
+  for (const r of shiftRows) {
+    const shiftCount = Number(r.shift_count);
+    const totalVariance = toPesewas(r.total_variance ?? new Prisma.Decimal(0));
+    const existing = rowsByUser.get(r.user_id);
+    if (existing) {
+      existing.shiftCount = shiftCount;
+      existing.totalVariance = totalVariance;
+    } else {
+      rowsByUser.set(r.user_id, {
+        userId: r.user_id,
+        userName: r.user_name,
+        role: r.role,
+        salesCount: 0,
+        salesTotal: 0,
+        discountsTotal: 0,
+        refundsCount: 0,
+        refundsTotal: 0,
+        shiftCount,
+        totalVariance,
+      });
+    }
+  }
+
+  return [...rowsByUser.values()].sort((a, b) => b.salesTotal - a.salesTotal);
+}
+
 /** Doc 3 App Flow §5-style "Export report," extended to Reports — one CSV, every section, matching the single button in the mockup rather than a control per chart/table. */
 export async function exportReportsCsv(prisma: typeof PrismaClient, locationId: string, filter: ReportsFilter) {
-  const [overview, trend, paymentBreakdown, topProducts, lowProducts] = await Promise.all([
+  const [overview, trend, paymentBreakdown, topProducts, lowProducts, shrinkage, staffActivity] = await Promise.all([
     getReportsOverview(prisma, locationId, filter),
     getReportsTrend(prisma, locationId, filter),
     getPaymentBreakdown(prisma, locationId, filter),
     getReportsProducts(prisma, locationId, { ...filter, direction: 'top', limit: 10 }),
     getReportsProducts(prisma, locationId, { ...filter, direction: 'low', limit: 10 }),
+    getShrinkageReport(prisma, locationId, filter),
+    getStaffActivity(prisma, locationId, filter),
   ]);
 
   const cedis = (pesewas: number) => (pesewas / 100).toFixed(2);
@@ -278,6 +455,28 @@ export async function exportReportsCsv(prisma: typeof PrismaClient, locationId: 
     ['Low / Slow Moving Products'],
     ['Product', 'SKU', 'Qty Sold', 'Revenue (GH₵)'],
     ...lowProducts.map((p) => [p.productName, p.sku, String(p.qtySold), cedis(p.revenue)]),
+    [],
+    ['Shrinkage'],
+    ['Type', 'Loss (GH₵)'],
+    ...shrinkage.byType.map((t) => [t.type, cedis(t.total)]),
+    [],
+    ['Shrinkage By Staff'],
+    ['Staff', 'Damage (GH₵)', 'Expiry (GH₵)', 'Unexplained Variance (GH₵)', 'Total (GH₵)'],
+    ...shrinkage.byStaff.map((s) => [s.userName, cedis(s.damageTotal), cedis(s.expiryTotal), cedis(s.varianceTotal), cedis(s.total)]),
+    [],
+    ['Staff Activity'],
+    ['Staff', 'Role', 'Sales Count', 'Sales Total (GH₵)', 'Discounts Given (GH₵)', 'Refunds Processed', 'Refunds Total (GH₵)', 'Till Shifts', 'Till Variance (GH₵)'],
+    ...staffActivity.map((s) => [
+      s.userName,
+      s.role,
+      String(s.salesCount),
+      cedis(s.salesTotal),
+      cedis(s.discountsTotal),
+      String(s.refundsCount),
+      cedis(s.refundsTotal),
+      String(s.shiftCount),
+      cedis(s.totalVariance),
+    ]),
   ];
 
   return toCsv(rows);

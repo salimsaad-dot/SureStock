@@ -15,6 +15,15 @@ import { formatRangeLabel, presetRange, priorPeriodRange } from './date-range'
 import { PaymentMethodDonut } from './PaymentMethodDonut'
 import { ReportsProductsTable } from './ReportsProductsTable'
 import { SalesTrendChart } from './SalesTrendChart'
+import { ShrinkageTab } from './ShrinkageTab'
+import { StaffActivityTab } from './StaffActivityTab'
+
+const TABS = [
+  { value: 'overview', label: 'Overview' },
+  { value: 'shrinkage', label: 'Shrinkage' },
+  { value: 'staff', label: 'Staff activity' },
+] as const
+type ReportsTab = (typeof TABS)[number]['value']
 
 const METHOD_OPTIONS: { value: PaymentMethod | ''; label: string }[] = [
   { value: '', label: 'All methods' },
@@ -28,6 +37,7 @@ const METHOD_OPTIONS: { value: PaymentMethod | ''; label: string }[] = [
 export function ReportsPage() {
   const show = useToast()
   const filtersRef = useRef<HTMLDetailsElement>(null)
+  const [tab, setTab] = useState<ReportsTab>('overview')
   const [{ dateFrom, dateTo }, setRange] = useState(() => presetRange('7D'))
   const [userId, setUserId] = useState('')
   const [method, setMethod] = useState<PaymentMethod | ''>('')
@@ -128,6 +138,37 @@ export function ReportsPage() {
         </div>
       </div>
 
+      <div className="mt-4 flex gap-1 border-b border-border">
+        {TABS.map((t) => (
+          <button
+            key={t.value}
+            type="button"
+            onClick={() => setTab(t.value)}
+            className={
+              tab === t.value
+                ? 'border-b-2 border-accent px-3 py-2 font-display text-sm font-semibold text-accent-strong'
+                : 'border-b-2 border-transparent px-3 py-2 font-display text-sm text-ink-muted hover:text-ink'
+            }
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'shrinkage' && (
+        <div className="mt-4">
+          <ShrinkageTab filters={filters} />
+        </div>
+      )}
+
+      {tab === 'staff' && (
+        <div className="mt-4">
+          <StaffActivityTab filters={filters} />
+        </div>
+      )}
+
+      {tab === 'overview' && (
+      <>
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-5">
         <StatCard
           icon={<Wallet className="h-5 w-5" aria-hidden="true" />}
@@ -211,6 +252,8 @@ export function ReportsPage() {
         <StatCard icon={<DollarSign className="h-5 w-5" aria-hidden="true" />} label="Inventory value" value={formatPesewas(overview?.inventoryValue ?? 0)} sublabel="at cost" tone="accent" />
         <StatCard icon={<Truck className="h-5 w-5" aria-hidden="true" />} label="Total purchased" value={formatPesewas(overview?.totalPurchased ?? 0)} sublabel="this period" tone="neutral" />
       </div>
+      </>
+      )}
     </main>
   )
 }

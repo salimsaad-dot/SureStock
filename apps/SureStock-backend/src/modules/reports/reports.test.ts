@@ -110,7 +110,15 @@ describe('reports (Reports screen)', () => {
 
   it('only Manager/Owner can reach any reports endpoint, not Cashier', async () => {
     const { dateFrom, dateTo } = todayRange();
-    for (const path of ['/reports/overview', '/reports/trend', '/reports/payment-breakdown', '/reports/products', '/reports/export']) {
+    for (const path of [
+      '/reports/overview',
+      '/reports/trend',
+      '/reports/payment-breakdown',
+      '/reports/products',
+      '/reports/shrinkage',
+      '/reports/staff-activity',
+      '/reports/export',
+    ]) {
       const res = await app.inject({
         method: 'GET',
         url: `${path}?dateFrom=${dateFrom}&dateTo=${dateTo}`,
@@ -270,8 +278,8 @@ describe('reports (Reports screen)', () => {
   });
 
   it('top/low products can be scoped to one category', async () => {
-    const { token } = await makeLocationWithOwner('Products Category Shop');
-    const category = await app.prisma.category.create({ data: { id: generateId(), name: `Reports Cat ${generateId()}` } });
+    const { token, locationId: catLocationId } = await makeLocationWithOwner('Products Category Shop');
+    const category = await app.prisma.category.create({ data: { id: generateId(), locationId: catLocationId, name: `Reports Cat ${generateId()}` } });
     const inCategory = await makeProduct(token, 'In Category Item', `CAT-IN-${generateId()}`, 1000, 400, 20);
     await app.prisma.product.update({ where: { id: inCategory.productId }, data: { categoryId: category.id } });
     const outOfCategory = await makeProduct(token, 'Out Of Category Item', `CAT-OUT-${generateId()}`, 1000, 400, 20);
@@ -299,8 +307,151 @@ describe('reports (Reports screen)', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.headers['content-type']).toContain('text/csv');
-    for (const section of ['Summary', 'Sales Over Time', 'Sales By Payment Method', 'Top Selling Products', 'Low / Slow Moving Products']) {
+    for (const section of [
+      'Summary',
+      'Sales Over Time',
+      'Sales By Payment Method',
+      'Top Selling Products',
+      'Low / Slow Moving Products',
+      'Shrinkage',
+      'Shrinkage By Staff',
+      'Staff Activity',
+    ]) {
       expect(res.body).toContain(section);
     }
+  });
+
+  it('shrinkage values damage and expiry at cost, and only counts a stock-take shortfall (not an overage) as unexplained variance', async () => {
+    const { token } = await makeLocationWithOwner('Shrinkage Test Shop');
+    const shortfall = await makeProduct(token, 'Shortfall Widget', `SHRINK-SHORT-${generateId()}`, 1000, 500, 50);
+    const overage = await makeProduct(token, 'Overage Widget', `SHRINK-OVER-${generateId()}`, 1000, 500, 10);
+
+    // 3 units damaged + 2 expired, at GH₵5.00 cost each = GH₵15 + GH₵10.
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: '/inventory/adjustments',
+          headers: { authorization: `Bearer ${token}` },
+          payload: { variantId: shortfall.variantId, quantityDelta: -3, reasonCode: 'DAMAGE', note: 'crushed' },
+        })
+      ).statusCode,
+    ).toBe(201);
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: '/inventory/adjustments',
+          headers: { authorization: `Bearer ${token}` },
+          payload: { variantId: shortfall.variantId, quantityDelta: -2, reasonCode: 'EXPIRY', note: 'past date' },
+        })
+      ).statusCode,
+    ).toBe(201);
+
+    // Stock take: shortfall widget counts 5 under its now-45 expected
+    // quantity (unexplained variance); overage widget counts 5 over its
+    // 10 expected quantity — a gain, never counted as shrinkage.
+    const take = (await app.inject({ method: 'POST', url: '/stock-takes', headers: { authorization: `Bearer ${token}` }, payload: { scope: 'FULL' } })).json();
+    const detail = (await app.inject({ method: 'GET', url: `/stock-takes/${take.id}`, headers: { authorization: `Bearer ${token}` } })).json();
+    const shortfallLine = detail.lines.find((l: { variantId: string }) => l.variantId === shortfall.variantId);
+    const overageLine = detail.lines.find((l: { variantId: string }) => l.variantId === overage.variantId);
+    expect(shortfallLine.expectedQuantity).toBe(45);
+
+    await app.inject({
+      method: 'PATCH',
+      url: `/stock-takes/${take.id}/lines/${shortfallLine.id}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: { countedQuantity: 40, reason: 'unexplained shortfall' },
+    });
+    await app.inject({
+      method: 'PATCH',
+      url: `/stock-takes/${take.id}/lines/${overageLine.id}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: { countedQuantity: 15, reason: 'found extra stock' },
+    });
+    expect((await app.inject({ method: 'POST', url: `/stock-takes/${take.id}/post`, headers: { authorization: `Bearer ${token}` } })).statusCode).toBe(200);
+
+    const { dateFrom, dateTo } = todayRange();
+    const res = await app.inject({ method: 'GET', url: `/reports/shrinkage?dateFrom=${dateFrom}&dateTo=${dateTo}`, headers: { authorization: `Bearer ${token}` } });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+
+    expect(body.byType.find((t: { type: string }) => t.type === 'DAMAGE')?.total).toBe(1500);
+    expect(body.byType.find((t: { type: string }) => t.type === 'EXPIRY')?.total).toBe(1000);
+    // 5 units short * GH₵5.00 cost — the overage line contributes nothing.
+    expect(body.byType.find((t: { type: string }) => t.type === 'UNEXPLAINED_VARIANCE')?.total).toBe(2500);
+    expect(body.totalLoss).toBe(5000);
+
+    expect(body.byStaff).toHaveLength(1);
+    expect(body.byStaff[0]).toMatchObject({ damageTotal: 1500, expiryTotal: 1000, varianceTotal: 2500, total: 5000 });
+  });
+
+  it('staff activity aggregates sales, discounts, refunds processed, and till variance per staff member', async () => {
+    const { token, ownerId } = await makeLocationWithOwner('Staff Activity Shop');
+    const { variantId } = await makeProduct(token, 'Staff Widget', `STAFF-${generateId()}`, 1000, 400, 50);
+
+    const shift = (await app.inject({ method: 'POST', url: '/till-shifts', headers: { authorization: `Bearer ${token}` }, payload: { openingFloat: 0 } })).json();
+
+    // GH₵20 subtotal, GH₵1 (5%) discount — under the 10% override threshold.
+    const sale1 = await app.inject({
+      method: 'POST',
+      url: '/sales',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        id: generateId(),
+        lines: [{ variantId, quantity: 2 }],
+        cartDiscountAmount: 100,
+        cartDiscountReason: 'loyalty',
+        payments: [{ method: 'CASH', amount: 1900 }],
+      },
+    });
+    expect(sale1.statusCode).toBe(201);
+
+    const sale2 = await app.inject({
+      method: 'POST',
+      url: '/sales',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { id: generateId(), lines: [{ variantId, quantity: 1 }], payments: [{ method: 'CASH', amount: 1000 }] },
+    });
+    expect(sale2.statusCode).toBe(201);
+
+    const refund = await app.inject({
+      method: 'POST',
+      url: `/sales/${sale2.json().id}/refund`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: { id: generateId(), lines: [{ saleLineId: sale2.json().lines[0].id, quantity: 1, restock: true }], method: 'CASH', reason: 'test refund' },
+    });
+    expect(refund.statusCode).toBe(201);
+
+    const closed = (
+      await app.inject({
+        method: 'POST',
+        url: `/till-shifts/${shift.id}/close`,
+        headers: { authorization: `Bearer ${token}` },
+        payload: { countedCash: 0, notes: 'staff activity test' },
+      })
+    ).json();
+
+    const { dateFrom, dateTo } = todayRange();
+    const res = await app.inject({
+      method: 'GET',
+      url: `/reports/staff-activity?dateFrom=${dateFrom}&dateTo=${dateTo}`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const row = res.json().find((r: { userId: string }) => r.userId === ownerId);
+
+    expect(row).toMatchObject({
+      role: 'OWNER',
+      salesCount: 2,
+      salesTotal: 2900, // GH₵19 + GH₵10
+      discountsTotal: 100,
+      refundsCount: 1,
+      refundsTotal: 1000,
+      shiftCount: 1,
+    });
+    // The report's own aggregate should agree exactly with what the
+    // close endpoint itself just computed, not a re-derived guess.
+    expect(row.totalVariance).toBe(closed.variance);
   });
 });
