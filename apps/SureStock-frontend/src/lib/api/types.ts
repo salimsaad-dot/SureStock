@@ -267,6 +267,8 @@ export interface CreateSaleBody {
   payments: PaymentInput[]
   managerOverride?: ManagerOverrideInput
   deviceId?: string
+  /** Only ever set by the offline sync path (lib/offline/) — the device's own clock at the moment of charging, never sent by an online charge. */
+  soldAt?: string
 }
 
 export interface RefundLineInput {
@@ -403,4 +405,484 @@ export interface ReportsProductsParams extends ReportsFilterParams {
   direction?: 'top' | 'low'
   limit?: number
   categoryId?: string
+}
+
+export type ShrinkageType = 'DAMAGE' | 'EXPIRY' | 'UNEXPLAINED_VARIANCE'
+
+export interface ShrinkageByType {
+  type: ShrinkageType
+  total: number
+}
+
+export interface ShrinkageByStaff {
+  userId: string
+  userName: string
+  damageTotal: number
+  expiryTotal: number
+  varianceTotal: number
+  total: number
+}
+
+export interface ShrinkageReport {
+  totalLoss: number
+  byType: ShrinkageByType[]
+  byStaff: ShrinkageByStaff[]
+}
+
+export interface StaffActivityRow {
+  userId: string
+  userName: string
+  role: UserRole
+  salesCount: number
+  salesTotal: number
+  discountsTotal: number
+  refundsCount: number
+  refundsTotal: number
+  shiftCount: number
+  totalVariance: number
+}
+
+// ---- Dashboard (T-25) ----
+
+export type AttentionItemType = 'LOW_STOCK' | 'OUT_OF_STOCK' | 'TILL_VARIANCE' | 'REVIEW_QUEUE'
+
+export interface AttentionItem {
+  type: AttentionItemType
+  label: string
+  count: number
+  linkPath: string
+}
+
+export interface DashboardResponse {
+  todayRevenue: number
+  todayRevenueChangePct: number | null
+  todayTransactions: number
+  todayTransactionsChangePct: number | null
+  todayGrossProfit: number
+  todayGrossProfitChangePct: number | null
+  cashInDrawer: number
+  trend: ReportsTrendPoint[]
+  attention: AttentionItem[]
+  topSellers: ReportsProduct[]
+}
+
+// ---- Onboarding (T-30) ----
+
+export type OnboardingStepKey = 'SHOP_PROFILE' | 'CATEGORIES' | 'PRODUCTS' | 'OPENING_STOCK' | 'INVITE_STAFF' | 'HARDWARE_TEST'
+
+export interface OnboardingStep {
+  key: OnboardingStepKey
+  label: string
+  done: boolean
+  required: boolean
+  linkPath: string
+}
+
+export interface OnboardingStatus {
+  steps: OnboardingStep[]
+  isComplete: boolean
+}
+
+// ---- Audit log (T-31) ----
+
+export interface AuditLogEntry {
+  id: string
+  userId: string | null
+  userName: string | null
+  action: string
+  entityType: string
+  entityId: string
+  before: unknown
+  after: unknown
+  ip: string | null
+  deviceId: string | null
+  createdAt: string
+}
+
+export interface AuditLogListParams {
+  userId?: string
+  action?: string
+  dateFrom?: string
+  dateTo?: string
+  page?: number
+  pageSize?: number
+}
+
+export interface AuditLogListResponse {
+  items: AuditLogEntry[]
+  page: number
+  pageSize: number
+  totalCount: number
+  totalPages: number
+  availableActions: string[]
+}
+
+// ---- Purchasing (T-28) ----
+
+export type PurchaseOrderStatus = 'DRAFT' | 'SENT' | 'PARTIAL' | 'RECEIVED' | 'CANCELLED'
+
+export interface PurchaseOrderLine {
+  id: string
+  variantId: string
+  sku: string
+  productName: string
+  variantName: string | null
+  quantityOrdered: number
+  quantityReceived: number
+  unitCost: number
+  lineTotal: number
+}
+
+export interface PurchaseOrder {
+  id: string
+  orderNumber: string
+  supplierId: string
+  supplierName: string
+  status: PurchaseOrderStatus
+  expectedDate: string | null
+  totalCost: number | null
+  itemCount: number
+  createdBy: string
+  createdByName: string
+  createdAt: string
+  updatedAt: string
+  lines: PurchaseOrderLine[]
+}
+
+export interface PurchaseOrderLineInput {
+  variantId: string
+  quantityOrdered: number
+  unitCost: number
+}
+
+export interface CreatePurchaseOrderBody {
+  supplierId: string
+  expectedDate?: string
+  lines: PurchaseOrderLineInput[]
+}
+
+export interface ReceivePurchaseOrderLineInput {
+  lineId: string
+  quantityReceived: number
+  unitCost?: number
+  batchCode?: string
+  expiryDate?: string
+}
+
+export interface ReceivePurchaseOrderBody {
+  lines: ReceivePurchaseOrderLineInput[]
+}
+
+export interface ListPurchaseOrdersParams {
+  status?: PurchaseOrderStatus
+  supplierId?: string
+  dateFrom?: string
+  dateTo?: string
+  page?: number
+  pageSize?: number
+}
+
+export interface PurchaseOrderListResponse {
+  items: PurchaseOrder[]
+  page: number
+  pageSize: number
+  totalCount: number
+  totalPages: number
+}
+
+export interface PurchaseOrderStatusBucket {
+  orders: number
+  total: number
+}
+
+export interface PurchaseOrderStats {
+  draft: PurchaseOrderStatusBucket
+  pending: PurchaseOrderStatusBucket
+  partiallyReceived: PurchaseOrderStatusBucket
+  received: PurchaseOrderStatusBucket
+  totalPurchased: number
+  periodFrom: string
+  periodTo: string
+}
+
+export interface RestockRecommendation {
+  variantId: string
+  sku: string
+  productName: string
+  variantName: string | null
+  quantityOnHand: number
+  reorderPoint: number
+  suggestedQuantity: number | null
+  costPrice: number
+  supplierId: string | null
+  supplierName: string | null
+}
+
+// ---- Settings (T-29) ----
+
+export interface LocationSettings {
+  id: string
+  name: string
+  address: string | null
+  phone: string | null
+  email: string | null
+  logoUrl: string | null
+  receiptHeader: string | null
+  receiptFooter: string | null
+  currency: string
+  timezone: string
+  defaultTaxRateId: string | null
+  discountOverrideThresholdPercent: number
+  tillVarianceThreshold: number
+  pinLockoutAttempts: number
+  pinLockoutMinutes: number
+  cashEnabled: boolean
+  mobileMoneyEnabled: boolean
+  cardEnabled: boolean
+  accountEnabled: boolean
+  defaultReorderPoint: number | null
+  defaultReorderQuantity: number | null
+  notifyLowStockEnabled: boolean
+  notifyTillVarianceEnabled: boolean
+  notifyDailySummaryEnabled: boolean
+  notificationPhone: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type UpdateLocationSettingsBody = Partial<
+  Omit<LocationSettings, 'id' | 'defaultTaxRateId' | 'createdAt' | 'updatedAt'>
+>
+
+/** Cashier-safe subset the Sell screen's payment sheet reads — no receipt/security/profile fields. */
+export interface CheckoutSettings {
+  cashEnabled: boolean
+  mobileMoneyEnabled: boolean
+  cardEnabled: boolean
+  accountEnabled: boolean
+  discountOverrideThresholdPercent: number
+}
+
+// ---- Notifications (SMS via Africa's Talking) ----
+
+export type NotificationType = 'LOW_STOCK' | 'TILL_VARIANCE' | 'DAILY_SUMMARY' | 'TEST'
+export type NotificationStatus = 'SENT' | 'FAILED' | 'NOT_CONFIGURED'
+
+export interface NotificationLogEntry {
+  id: string
+  type: NotificationType
+  recipientPhone: string
+  message: string
+  status: NotificationStatus
+  providerResponse: string | null
+  createdAt: string
+}
+
+export interface StaffAdmin {
+  id: string
+  name: string
+  email: string | null
+  phone: string | null
+  role: UserRole
+  isActive: boolean
+  lastLoginAt: string | null
+  createdAt: string
+}
+
+export interface CreateStaffBody {
+  name: string
+  email?: string
+  phone?: string
+  password: string
+  pin?: string
+  role: UserRole
+}
+
+export interface UpdateStaffBody {
+  name?: string
+  email?: string | null
+  phone?: string | null
+  role?: UserRole
+  isActive?: boolean
+}
+
+export interface ResetCredentialsBody {
+  password?: string
+  pin?: string
+}
+
+// ---- Stock take (T-27) ----
+
+export type StockTakeScope = 'FULL' | 'CATEGORY'
+export type StockTakeStatus = 'IN_PROGRESS' | 'POSTED' | 'ABANDONED'
+
+export interface StockTake {
+  id: string
+  locationId: string
+  scope: StockTakeScope
+  categoryId: string | null
+  categoryName: string | null
+  status: StockTakeStatus
+  startedBy: string
+  startedByName: string
+  startedAt: string
+  postedAt: string | null
+  lineCount?: number
+}
+
+export interface StockTakeLine {
+  id: string
+  variantId: string
+  sku: string
+  productName: string
+  variantName: string | null
+  expectedQuantity: number
+  countedQuantity: number | null
+  variance: number | null
+  /** Integer pesewas, like every other money field. */
+  varianceValue: number | null
+  reason: string | null
+}
+
+export interface StockTakeDetail extends StockTake {
+  lines: StockTakeLine[]
+  page: number
+  pageSize: number
+  totalCount: number
+  totalPages: number
+}
+
+export interface StartStockTakeBody {
+  scope: StockTakeScope
+  categoryId?: string
+}
+
+export interface UpdateStockTakeLineBody {
+  countedQuantity?: number
+  reason?: string
+}
+
+export interface ListStockTakesParams {
+  status?: StockTakeStatus
+  page?: number
+  pageSize?: number
+}
+
+export interface StockTakeListResponse {
+  items: StockTake[]
+  page: number
+  pageSize: number
+  totalCount: number
+  totalPages: number
+}
+
+export interface StockTakeAdjustment {
+  variantId: string
+  sku: string
+  countedQuantity: number
+  previousQuantity: number
+  delta: number
+}
+
+export interface PostedStockTake extends StockTake {
+  adjustments: StockTakeAdjustment[]
+}
+
+// ---- Offline sync (T-21, T-22) ----
+
+/** GET /sync/catalogue's per-row shapes — deliberately narrower than Category/Supplier/Product/Variant above (no quantityOnHand — see sync.service.ts's own doc comment on why). */
+export interface CategoryDelta {
+  id: string
+  name: string
+  parentId: string | null
+  sortOrder: number | null
+  colour: string | null
+  archivedAt: string | null
+  updatedAt: string
+}
+
+export interface SupplierDelta {
+  id: string
+  name: string
+  archivedAt: string | null
+  updatedAt: string
+}
+
+export interface VariantDelta {
+  id: string
+  productId: string
+  sku: string
+  barcode: string | null
+  variantName: string | null
+  sellingPrice: number
+  /** Absent for CASHIER, same rule as the live Variant type. */
+  costPrice?: number
+  archivedAt: string | null
+  updatedAt: string
+}
+
+export interface ProductDelta {
+  id: string
+  name: string
+  categoryId: string | null
+  supplierId: string | null
+  unit: ProductUnit
+  taxRateId: string | null
+  isPerishable: boolean
+  imageUrl: string | null
+  status: ProductStatus
+  archivedAt: string | null
+  updatedAt: string
+  variants: VariantDelta[]
+}
+
+export interface SyncCatalogueResponse {
+  serverTime: string
+  categories: CategoryDelta[]
+  suppliers: SupplierDelta[]
+  products: ProductDelta[]
+}
+
+export interface SyncBatchResult {
+  id: string
+  status: 'ok' | 'review'
+  message?: string
+}
+
+export interface SyncBatchResponse {
+  results: SyncBatchResult[]
+}
+
+// ---- Review queue (T-23) ----
+
+export type ReviewQueueItemType = 'NEGATIVE_STOCK' | 'SYNC_VALIDATION_FAILURE'
+
+export interface ReviewQueueItem {
+  id: string
+  type: ReviewQueueItemType
+  saleId: string | null
+  saleReceiptNumber: string | null
+  variantId: string | null
+  variantSku: string | null
+  reason: string
+  details: unknown
+  createdAt: string
+  resolvedAt: string | null
+  resolvedBy: string | null
+  resolvedByName: string | null
+  resolutionNote: string | null
+}
+
+export interface ListReviewQueueParams {
+  status?: 'open' | 'resolved' | 'all'
+  page?: number
+  pageSize?: number
+}
+
+export interface ReviewQueueListResponse {
+  items: ReviewQueueItem[]
+  page: number
+  pageSize: number
+  totalCount: number
+  totalPages: number
 }
