@@ -22,6 +22,18 @@ export default fp(async function errorHandlerPlugin(app: FastifyInstance) {
       });
     }
 
+    // A real gap found alongside the empty-JSON-body bug (T-32, 2026-08-25):
+    // Fastify's own body-parsing failures (malformed JSON, the custom
+    // parser above) already carry a correct 4xx `.statusCode` — this used
+    // to fall straight through to the generic 500 below regardless,
+    // masking a genuine client mistake as a server fault.
+    if (typeof error.statusCode === 'number' && error.statusCode >= 400 && error.statusCode < 500) {
+      return reply.code(error.statusCode).send({
+        code: 'BAD_REQUEST',
+        message: error.message || 'The request could not be processed.',
+      });
+    }
+
     request.log.error({ err: error }, 'unhandled error');
     return reply.code(500).send({
       code: 'INTERNAL_ERROR',
