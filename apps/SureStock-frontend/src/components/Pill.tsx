@@ -1,12 +1,14 @@
 import type { ReactNode } from 'react'
 import { cn } from '../lib/cn'
 
-export type PillVariant = 'success' | 'warning' | 'danger'
+export type PillVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral'
 
 const variantClasses: Record<PillVariant, string> = {
   success: 'bg-success-wash text-success',
   warning: 'bg-warning-wash text-warning',
   danger: 'bg-danger-wash text-danger',
+  info: 'bg-accent-wash text-accent-strong',
+  neutral: 'bg-surface-sunken text-ink-muted',
 }
 
 export interface PillProps {

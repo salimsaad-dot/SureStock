@@ -73,7 +73,7 @@ describe('receive stock (T-11)', () => {
     // Start: 20 units on hand at GH₵5.00. Receive 10 more at GH₵8.00.
     // Expected new cost: (20×500 + 10×800) / 30 = 18000/30 = 600 pesewas
     // (GH₵6.00). Expected new quantity: 30.
-    const product = await app.prisma.product.create({ data: { id: generateId(), name: 'Moving Average Test Product' } });
+    const product = await app.prisma.product.create({ data: { id: generateId(), locationId, name: 'Moving Average Test Product' } });
     const variant = await app.prisma.productVariant.create({
       data: {
         id: generateId(),
@@ -126,7 +126,7 @@ describe('receive stock (T-11)', () => {
 
   it('receiving a perishable product captures a batch with expiry', async () => {
     const product = await app.prisma.product.create({
-      data: { id: generateId(), name: 'Perishable Receive Test', isPerishable: true },
+      data: { id: generateId(), locationId, name: 'Perishable Receive Test', isPerishable: true },
     });
     const variant = await app.prisma.productVariant.create({
       data: {
@@ -167,7 +167,7 @@ describe('receive stock (T-11)', () => {
   });
 
   it('a non-perishable product does not get a batch row even if one is not requested', async () => {
-    const product = await app.prisma.product.create({ data: { id: generateId(), name: 'Non-Perishable Receive Test' } });
+    const product = await app.prisma.product.create({ data: { id: generateId(), locationId, name: 'Non-Perishable Receive Test' } });
     const variant = await app.prisma.productVariant.create({
       data: {
         id: generateId(),
@@ -192,7 +192,7 @@ describe('receive stock (T-11)', () => {
   });
 
   it('multiple lines in one call share a single goods-received reference and commit together', async () => {
-    const product = await app.prisma.product.create({ data: { id: generateId(), name: 'Multi-Line Receive Test' } });
+    const product = await app.prisma.product.create({ data: { id: generateId(), locationId, name: 'Multi-Line Receive Test' } });
     const variantA = await app.prisma.productVariant.create({
       data: { id: generateId(), productId: product.id, sku: 'MULTI-A', costPrice: 0, sellingPrice: 100, quantityOnHand: 0, locationId },
     });
@@ -221,7 +221,7 @@ describe('receive stock (T-11)', () => {
   });
 
   it('a cashier cannot receive stock', async () => {
-    const product = await app.prisma.product.create({ data: { id: generateId(), name: 'Cashier Receive Test' } });
+    const product = await app.prisma.product.create({ data: { id: generateId(), locationId, name: 'Cashier Receive Test' } });
     const variant = await app.prisma.productVariant.create({
       data: { id: generateId(), productId: product.id, sku: 'CASHIER-RCV-001', costPrice: 0, sellingPrice: 100, quantityOnHand: 0, locationId },
     });

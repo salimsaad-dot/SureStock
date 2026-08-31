@@ -28,6 +28,89 @@ function computeMovingAverageCost(
   return totalValue.dividedBy(totalQty);
 }
 
+export interface ReceiveVariantLineInput {
+  variantId: string;
+  quantity: number;
+  unitCost: Pesewas;
+  batchCode?: string;
+  expiryDate?: Date;
+  note?: string;
+  userId: string;
+  referenceType: string;
+  referenceId: string;
+  occurredAt: Date;
+}
+
+/**
+ * The one place a single variant's stock actually gets received — the
+ * moving-average cost recalculation, perishable batch creation, and the
+ * `postMovement()` ledger write. Extracted so T-28 (Purchasing, PO-linked
+ * receiving) can share this exact logic with T-11's own standalone
+ * receive endpoint below instead of a second copy drifting out of sync;
+ * the two differ only in what `referenceType`/`referenceId` they stamp
+ * and what they do with the PO-line bookkeeping afterward, which is the
+ * caller's concern, not this function's.
+ */
+export async function receiveVariantLine(
+  tx: Prisma.TransactionClient,
+  locationId: string,
+  input: ReceiveVariantLineInput,
+) {
+  const variant = await tx.productVariant.findUnique({
+    where: { id: input.variantId },
+    include: { product: true },
+  });
+  if (!variant || variant.locationId !== locationId) {
+    throw notFound(`Variant ${input.variantId} not found.`);
+  }
+
+  const newCost = computeMovingAverageCost(variant.quantityOnHand, variant.costPrice, input.quantity, input.unitCost);
+
+  let batchId: string | undefined;
+  if (variant.product.isPerishable) {
+    const batch = await tx.batch.create({
+      data: {
+        id: generateId(),
+        variantId: variant.id,
+        batchCode: input.batchCode ?? `RCV-${input.occurredAt.toISOString().slice(0, 10)}-${variant.sku}`,
+        expiryDate: input.expiryDate,
+        quantityReceived: input.quantity,
+        quantityRemaining: input.quantity,
+        unitCost: toDecimal(input.unitCost),
+      },
+    });
+    batchId = batch.id;
+  }
+
+  const { variant: updated } = await postMovement(tx, {
+    variantId: variant.id,
+    quantityDelta: input.quantity,
+    reason: 'PURCHASE_RECEIVED',
+    userId: input.userId,
+    referenceType: input.referenceType,
+    referenceId: input.referenceId,
+    unitCost: input.unitCost,
+    batchId,
+    note: input.note,
+    occurredAt: input.occurredAt,
+  });
+
+  await tx.productVariant.update({ where: { id: variant.id }, data: { costPrice: newCost } });
+
+  return {
+    variantId: variant.id,
+    sku: variant.sku,
+    productId: variant.productId,
+    productName: variant.product.name,
+    quantityReceived: input.quantity,
+    previousCostPrice: toPesewas(variant.costPrice),
+    newCostPrice: toPesewas(newCost),
+    quantityOnHand: updated.quantityOnHand.toNumber(),
+    batchId: batchId ?? null,
+    expiryDate: input.expiryDate ?? null,
+  };
+}
+
 /**
  * Receives one or more lines in a single goods-received event — every
  * line's stock_movement shares one generated `referenceId` so they read
@@ -49,59 +132,20 @@ export async function receiveStock(
   const lines = await prisma.$transaction(async (tx) => {
     const results = [];
     for (const line of body.lines) {
-      const variant = await tx.productVariant.findUnique({
-        where: { id: line.variantId },
-        include: { product: true },
-      });
-      if (!variant || variant.locationId !== locationId) {
-        throw notFound(`Variant ${line.variantId} not found.`);
-      }
-
-      const newCost = computeMovingAverageCost(variant.quantityOnHand, variant.costPrice, line.quantity, line.unitCost);
-
-      let batchId: string | undefined;
-      if (variant.product.isPerishable) {
-        const batch = await tx.batch.create({
-          data: {
-            id: generateId(),
-            variantId: variant.id,
-            batchCode: line.batchCode ?? `RCV-${receivedAt.toISOString().slice(0, 10)}-${variant.sku}`,
-            expiryDate: line.expiryDate,
-            quantityReceived: line.quantity,
-            quantityRemaining: line.quantity,
-            unitCost: toDecimal(line.unitCost),
-          },
-        });
-        batchId = batch.id;
-      }
-
-      const { variant: updated } = await postMovement(tx, {
-        variantId: variant.id,
-        quantityDelta: line.quantity,
-        reason: 'PURCHASE_RECEIVED',
-        userId,
-        referenceType: 'goods_received',
-        referenceId: receiptId,
-        unitCost: line.unitCost,
-        batchId,
-        note: line.note,
-        occurredAt: receivedAt,
-      });
-
-      await tx.productVariant.update({ where: { id: variant.id }, data: { costPrice: newCost } });
-
-      results.push({
-        variantId: variant.id,
-        sku: variant.sku,
-        productId: variant.productId,
-        productName: variant.product.name,
-        quantityReceived: line.quantity,
-        previousCostPrice: toPesewas(variant.costPrice),
-        newCostPrice: toPesewas(newCost),
-        quantityOnHand: updated.quantityOnHand.toNumber(),
-        batchId: batchId ?? null,
-        expiryDate: line.expiryDate ?? null,
-      });
+      results.push(
+        await receiveVariantLine(tx, locationId, {
+          variantId: line.variantId,
+          quantity: line.quantity,
+          unitCost: line.unitCost,
+          batchCode: line.batchCode,
+          expiryDate: line.expiryDate,
+          note: line.note,
+          userId,
+          referenceType: 'goods_received',
+          referenceId: receiptId,
+          occurredAt: receivedAt,
+        }),
+      );
     }
     return results;
   });
