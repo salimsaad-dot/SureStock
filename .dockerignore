@@ -1,0 +1,22 @@
+node_modules
+**/node_modules
+dist
+**/dist
+build
+**/build
+coverage
+**/coverage
+storybook-static
+**/storybook-static
+.env
+.env.*
+!.env.example
+*.log
+.git
+.gstack
+.claude
+Document request form
+Hi-Fi Screens
+surestock-pages
+apps/SureStock-frontend/e2e
+apps/SureStock-backend/scripts

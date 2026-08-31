@@ -1,0 +1,127 @@
+# Product-testing pass, 2026-08-28, gap #7: the first way this project
+# can actually run the way it would in production — as built images
+# against a real MariaDB, not a manually-started `npm run dev` process
+# against XAMPP. Also directly serves another still-open item on the
+# same list: re-verifying the test suite against a prod-like environment
+# (`docker compose run --rm backend-test`, added below).
+#
+# MariaDB, not MySQL — matching what this project has actually been
+# built and tested against throughout (see progress.md's own carried-
+# forward note on why that distinction matters here: the append-only
+# triggers rely on a MariaDB-specific privilege-model quirk).
+#
+# Local use only: passwords below are placeholders on purpose, fine for
+# a throwaway compose network with no ports exposed beyond localhost —
+# `deploy/db-setup.sql` is the real hardening script for an actual
+# production host, not this file.
+
+services:
+  db:
+    image: mariadb:10.4
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: local-compose-root-password
+      MARIADB_DATABASE: surestock
+      MARIADB_USER: surestock_app
+      MARIADB_PASSWORD: local-compose-app-password
+    # schema.prisma's own header comment: every DateTime column is
+    # stored naive, so the server's session time zone must be UTC or
+    # timestamps silently corrupt — set at the server level here so it
+    # can never be forgotten the way a per-connection setting could be.
+    command: --default-time-zone=+00:00
+    ports:
+      - '127.0.0.1:3307:3306' # 3307, not 3306 — avoids colliding with a real local MySQL/XAMPP instance also running on this machine
+    volumes:
+      - surestock-db-data:/var/lib/mysql
+      - ./deploy/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-off: `docker compose run --rm migrate`. Runs `prisma migrate
+  # deploy` — never `migrate dev` (that's a local-dev-only command that
+  # builds a shadow database this user isn't even granted CREATE
+  # DATABASE for, deliberately, per deploy/db-setup.sql's own reasoning).
+  migrate:
+    build:
+      context: .
+      dockerfile: deploy/backend.Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # The compose-network MariaDB doesn't have deploy/db-setup.sql's
+      # two-user split applied (mariadb's own MARIADB_USER above already
+      # gets full rights on its one database) — real production still
+      # needs that script; this compose file's job is proving the
+      # container topology works, not re-deriving least-privilege from
+      # scratch inside a throwaway local network.
+      MIGRATE_DATABASE_URL: mysql://surestock_app:local-compose-app-password@db:3306/surestock
+    entrypoint: ['npx', 'prisma', 'migrate', 'deploy']
+
+  # One-off: `docker compose run --rm backend-test` — the money-critical
+  # suite (ledger property tests, concurrent-sale locking, cross-tenant
+  # isolation) against a real containerized MariaDB instead of this
+  # machine's XAMPP install, the actual "prod-like environment" the
+  # still-open item on this same punch list asks for. Targets the
+  # pre-prune `build` stage of the same Dockerfile the real `backend`
+  # service uses — that's the one with devDependencies (vitest, the
+  # `prisma` CLI) still present; the runtime stage deliberately doesn't
+  # have them.
+  backend-test:
+    build:
+      context: .
+      dockerfile: deploy/backend.Dockerfile
+      target: build
+    depends_on:
+      db:
+        condition: service_healthy
+    working_dir: /app/apps/SureStock-backend
+    environment:
+      NODE_ENV: test
+      DATABASE_URL: mysql://surestock_app:local-compose-app-password@db:3306/surestock_test
+      TEST_DATABASE_URL: mysql://surestock_app:local-compose-app-password@db:3306/surestock_test
+      MIGRATE_DATABASE_URL: mysql://surestock_app:local-compose-app-password@db:3306/surestock_test
+      JWT_SECRET: local-compose-only-jwt-secret-not-for-real-use-00000000
+    entrypoint: ['sh', '-c', 'npx prisma migrate deploy && npm run test']
+
+  backend:
+    build:
+      context: .
+      dockerfile: deploy/backend.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: '4000'
+      DATABASE_URL: mysql://surestock_app:local-compose-app-password@db:3306/surestock
+      # Generate real ones for anything beyond this local compose
+      # network — see deploy/db-setup.sql and .env.example for what
+      # "real" means for each of these.
+      JWT_SECRET: local-compose-only-jwt-secret-not-for-real-use-00000000
+      CORS_ORIGIN: http://localhost:8080
+    ports:
+      - '127.0.0.1:4000:4000'
+
+  frontend:
+    build:
+      context: .
+      dockerfile: deploy/frontend.Dockerfile
+      args:
+        # Must be reachable from the *browser*, not from inside the
+        # compose network — Vite bakes this into the built JS at image-
+        # build time, so it has to be the host-published backend port,
+        # never the internal service name `backend`.
+        VITE_API_BASE_URL: http://localhost:4000
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - '127.0.0.1:8080:80'
+
+volumes:
+  surestock-db-data:
