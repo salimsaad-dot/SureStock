@@ -1,11 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { Button } from '../../components/Button'
 import { TextInput } from '../../components/TextInput'
 import { createProduct, listCategories, listSuppliers } from '../../lib/api/catalogue'
+import { getInventoryDefaults } from '../../lib/api/settings'
 import { ApiError, type ProductUnit } from '../../lib/api/types'
 import { parseCedisToPesewas } from '../../lib/money'
 
@@ -40,18 +42,41 @@ export function NewProductPage() {
   const queryClient = useQueryClient()
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: () => listCategories() })
   const { data: suppliers } = useQuery({ queryKey: ['suppliers'], queryFn: () => listSuppliers() })
+  // Doc 3/mockup Settings' Inventory tab: a default reorder point/quantity to prefill new variant rows with, when the shop has set one.
+  const { data: inventoryDefaults } = useQuery({ queryKey: ['settings', 'inventory-defaults'], queryFn: getInventoryDefaults })
+  const newVariantDefaults = {
+    ...emptyVariant,
+    reorderPoint: inventoryDefaults?.defaultReorderPoint?.toString() ?? '',
+    reorderQuantity: inventoryDefaults?.defaultReorderQuantity?.toString() ?? '',
+  }
 
   const {
     register,
     control,
     handleSubmit,
     setError,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<ProductForm>({
     resolver: zodResolver(productSchema),
     defaultValues: { name: '', description: '', categoryId: '', supplierId: '', unit: 'EACH', isPerishable: false, variants: [emptyVariant] },
   })
   const { fields, append, remove } = useFieldArray({ control, name: 'variants' })
+
+  // The very first variant row exists before inventoryDefaults has loaded
+  // (useForm's defaultValues run synchronously on mount) — backfill it
+  // once the fetch resolves, but only if the user hasn't already typed
+  // something into it.
+  useEffect(() => {
+    if (!inventoryDefaults) return
+    if (getValues('variants.0.reorderPoint') === '' && inventoryDefaults.defaultReorderPoint !== null) {
+      setValue('variants.0.reorderPoint', inventoryDefaults.defaultReorderPoint.toString())
+    }
+    if (getValues('variants.0.reorderQuantity') === '' && inventoryDefaults.defaultReorderQuantity !== null) {
+      setValue('variants.0.reorderQuantity', inventoryDefaults.defaultReorderQuantity.toString())
+    }
+  }, [inventoryDefaults, getValues, setValue])
 
   const mutation = useMutation({
     mutationFn: (values: ProductForm) => {
@@ -167,7 +192,7 @@ export function NewProductPage() {
           </div>
         ))}
 
-        <Button type="button" variant="secondary" onClick={() => append(emptyVariant)}>
+        <Button type="button" variant="secondary" onClick={() => append(newVariantDefaults)}>
           Add another variant
         </Button>
 
