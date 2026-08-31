@@ -36,7 +36,8 @@ export function PinUnlockPage() {
     mutationFn: (enteredPin: string) => pinUnlock(userId!, enteredPin),
     onSuccess: (session) => {
       setSession(session)
-      navigate('/', { replace: true })
+      // Doc 3 §6: "the owner lands on a dashboard, not the till" — same landing rule as a full login (LoginPage.tsx).
+      navigate(session.user.role === 'OWNER' ? '/dashboard' : '/', { replace: true })
     },
     onError: (error) => {
       if (isLockedError(error)) {

@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { AlertTriangle, Package, XCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '../../components/Button'
 import { StatCard } from '../../components/StatCard'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow, TableSkeleton } from '../../components/Table'
@@ -36,10 +36,14 @@ export function InventoryPage() {
   const role = useAuthStore((s) => s.session?.user.role)
   const canManage = role === 'OWNER' || role === 'MANAGER'
 
+  // Seeded from the URL once on mount — lets a deep link from the
+  // Dashboard's "Needs attention" list (e.g. `?stockLevel=LOW`) land
+  // pre-filtered instead of on the unfiltered list.
+  const [searchParams] = useSearchParams()
   const [q, setQ] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [status, setStatus] = useState<ProductStatus | ''>('')
-  const [stockLevel, setStockLevel] = useState<StockLevel | ''>('')
+  const [stockLevel, setStockLevel] = useState<StockLevel | ''>(() => (searchParams.get('stockLevel') as StockLevel | null) ?? '')
   const [pageSize, setPageSize] = useState(20)
 
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: () => listCategories() })
@@ -85,6 +89,11 @@ export function InventoryPage() {
             <Link to="/inventory/import">
               <Button variant="secondary" size="default">
                 Import
+              </Button>
+            </Link>
+            <Link to="/inventory/stock-take">
+              <Button variant="secondary" size="default">
+                Stock take
               </Button>
             </Link>
             <Link to="/inventory/new">
