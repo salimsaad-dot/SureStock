@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vite.dev/config/
 import path from 'node:path';
@@ -11,10 +12,43 @@ const dirname = import.meta.dirname;
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    // T-21: installable PWA shell. Precaches only the app's own built
+    // assets (JS/CSS/the HTML shell) so the app can boot offline — API
+    // calls are deliberately left alone (navigateFallbackDenylist below
+    // plus no runtimeCaching entry for /api) since the real offline data
+    // layer is the Dexie cache in src/lib/offline/, not a second,
+    // independently-stale HTTP cache that could disagree with it.
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      workbox: {
+        navigateFallbackDenylist: [/^\/api\//],
+      },
+      manifest: {
+        name: 'SureStock',
+        short_name: 'SureStock',
+        description: 'SureStock inventory and point-of-sale system',
+        theme_color: '#7e14ff',
+        background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
+        // SVG-only icons — the existing brand mark, not a dedicated
+        // 192/512 PNG export (a real design task, not attempted here;
+        // same honest gap as Product.imageUrl/Location.logoUrl having
+        // no upload). Chromium/Firefox install prompts accept this;
+        // iOS Safari's installability doesn't, a known limitation.
+        icons: [{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
+      },
+    }),
+  ],
   server: {
-    // The backend (paused at end of Phase 1) has no CORS plugin configured yet.
-    // Proxying here keeps the dev flow same-origin without touching it.
+    // The backend does have a real CORS plugin now (2026-08-26), which
+    // already allows any localhost origin outside production — this proxy
+    // is kept anyway since same-origin in dev means one less moving part
+    // to think about, not a workaround for a missing capability anymore.
     proxy: {
       '/api': {
         target: 'http://localhost:4000',

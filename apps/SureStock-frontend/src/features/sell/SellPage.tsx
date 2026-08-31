@@ -4,6 +4,7 @@ import { getPopularProducts, getRecentProducts, lookupByBarcode } from '../../li
 import { getCurrentTillShift } from '../../lib/api/sales'
 import { ApiError, type PaymentMethod, type Sale } from '../../lib/api/types'
 import { useAuthStore } from '../../lib/auth-store'
+import { lookupBarcodeOffline } from '../../lib/offline/catalogue-cache'
 import { useToast } from '../../lib/toast-store'
 import { CartPanel } from './CartPanel'
 import { CategoryTiles } from './CategoryTiles'
@@ -50,9 +51,27 @@ export function SellPage() {
             role === 'CASHIER' ? `No product with that barcode — ask a manager.` : `No product with that barcode — check spelling or add it to inventory.`,
             'error',
           )
-        } else {
-          show('Could not look up that barcode.', 'error')
+          return
         }
+        if (err instanceof ApiError) {
+          show('Could not look up that barcode.', 'error')
+          return
+        }
+        // Not an ApiError — a genuine network failure, fall back to the offline cache.
+        const cached = await lookupBarcodeOffline(code)
+        if (!cached) {
+          show('Offline and no cached match for that barcode.', 'error')
+          return
+        }
+        addLine({
+          variantId: cached.id,
+          productId: cached.productId,
+          sku: cached.sku,
+          productName: cached.productName,
+          variantName: cached.variantName,
+          unitPrice: cached.sellingPrice,
+        })
+        show('Added to cart (offline — stock level unavailable).')
       }
     },
     [addLine, role, show],
@@ -130,6 +149,7 @@ export function SellPage() {
       {paymentOpen && (
         <PaymentSheet
           initialMethod={preferredMethod}
+          tillShiftId={shift.id}
           onClose={() => setPaymentOpen(false)}
           onSuccess={(sale) => {
             setPaymentOpen(false)

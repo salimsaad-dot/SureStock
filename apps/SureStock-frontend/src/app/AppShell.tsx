@@ -3,7 +3,10 @@ import type { ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { cn } from '../lib/cn'
 import { useAuthStore } from '../lib/auth-store'
+import { useOfflineSync } from '../lib/offline/use-offline-sync'
+import { logout } from '../lib/api/auth'
 import { navItemsForRole } from './nav'
+import { SyncStatusPill } from './SyncStatusPill'
 
 /** Persistent left sidebar >1024px, bottom bar below that (Blueprint §05 breakpoints table). */
 export function AppShell({ children }: { children: ReactNode }) {
@@ -11,6 +14,26 @@ export function AppShell({ children }: { children: ReactNode }) {
   const clearSession = useAuthStore((s) => s.clearSession)
   const navigate = useNavigate()
   const items = session ? navItemsForRole(session.user.role) : []
+
+  useOfflineSync(Boolean(session))
+
+  // Product-testing pass, 2026-08-26, gap #5: revoke server-side first,
+  // best-effort — clearing local state and navigating away must never
+  // hang or fail just because the network call did. Either way, the
+  // user's own goal ("I'm signed out of this device") is satisfied by
+  // the client-side clear alone; the server call is what makes it also
+  // true for anyone who might have the old token.
+  async function handleSignOut() {
+    if (session) {
+      try {
+        await logout(session.refreshToken)
+      } catch {
+        // Network down, token already invalid, etc. — sign out locally regardless.
+      }
+    }
+    clearSession()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <div className="flex min-h-svh flex-col lg:flex-row">
@@ -23,6 +46,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <p className="font-display text-sm font-bold text-ink">SureStock</p>
             <p className="font-display text-[11px] text-ink-faint">Inventory Management</p>
           </div>
+        </div>
+        <div className="px-4">
+          <SyncStatusPill />
         </div>
         <nav className="flex flex-1 flex-col gap-1 px-3">
           {items.map((item) => {
@@ -57,16 +83,17 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
           <button
             type="button"
-            onClick={() => {
-              clearSession()
-              navigate('/login', { replace: true })
-            }}
+            onClick={() => void handleSignOut()}
             className="mt-1 w-full rounded-md px-3 py-1.5 text-left font-display text-[13px] text-ink-muted hover:bg-surface-sunken"
           >
             Sign out
           </button>
         </div>
       </aside>
+
+      <div className="flex justify-end border-b border-border bg-surface-raised px-4 py-2 lg:hidden">
+        <SyncStatusPill />
+      </div>
 
       <div className="flex-1 pb-16 lg:pb-0">{children}</div>
 

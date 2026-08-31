@@ -4,16 +4,20 @@ import { Button } from '../../components/Button'
 import { TextInput } from '../../components/TextInput'
 import { getStaff } from '../../lib/api/auth'
 import { createSale } from '../../lib/api/sales'
-import { ApiError, type CreateSaleBody, type PaymentMethod, type Sale } from '../../lib/api/types'
+import { getCheckoutSettings } from '../../lib/api/settings'
+import { ApiError, type CreateSaleBody, type PaymentInput, type PaymentMethod, type Sale } from '../../lib/api/types'
+import { useAuthStore } from '../../lib/auth-store'
 import { formatPesewas, parseCedisToPesewas } from '../../lib/money'
+import { buildLocalSale } from '../../lib/offline/local-sale'
+import { enqueueSale } from '../../lib/offline/outbox'
 import { cartDiscountExceedsThreshold, computeCartTotals, lineExceedsThreshold } from './cart-totals'
 import { useCartStore } from './cart-store'
 
-const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
-  { value: 'CASH', label: 'Cash' },
-  { value: 'MOBILE_MONEY', label: 'Mobile money' },
-  { value: 'CARD', label: 'Card' },
-  { value: 'ACCOUNT', label: 'Account' },
+const ALL_PAYMENT_METHODS: { value: PaymentMethod; label: string; settingsKey: 'cashEnabled' | 'mobileMoneyEnabled' | 'cardEnabled' | 'accountEnabled' }[] = [
+  { value: 'CASH', label: 'Cash', settingsKey: 'cashEnabled' },
+  { value: 'MOBILE_MONEY', label: 'Mobile money', settingsKey: 'mobileMoneyEnabled' },
+  { value: 'CARD', label: 'Card', settingsKey: 'cardEnabled' },
+  { value: 'ACCOUNT', label: 'Account', settingsKey: 'accountEnabled' },
 ]
 
 interface PaymentLine {
@@ -25,12 +29,16 @@ export function PaymentSheet({
   onClose,
   onSuccess,
   initialMethod = 'CASH',
+  tillShiftId,
 }: {
   onClose: () => void
   onSuccess: (sale: Sale) => void
   /** Pre-selected on the main Sell screen before Charge — split tender is still available here, this just skips the obvious first click for the common single-tender case. */
   initialMethod?: PaymentMethod
+  /** T-22: needed to synthesize a local receipt if the charge has to be queued offline — see completeOffline() below. */
+  tillShiftId: string
 }) {
+  const session = useAuthStore((s) => s.session)
   const lines = useCartStore((s) => s.lines)
   const cartDiscountAmount = useCartStore((s) => s.cartDiscountAmount)
   const cartDiscountReason = useCartStore((s) => s.cartDiscountReason)
@@ -47,32 +55,32 @@ export function PaymentSheet({
   const { data: staff } = useQuery({ queryKey: ['auth', 'staff'], queryFn: getStaff, enabled: needsOverride })
   const managers = staff?.filter((s) => s.role !== 'CASHIER') ?? []
 
+  const { data: checkoutSettings } = useQuery({ queryKey: ['settings', 'checkout'], queryFn: getCheckoutSettings })
+  const PAYMENT_METHODS = checkoutSettings
+    ? ALL_PAYMENT_METHODS.filter((m) => checkoutSettings[m.settingsKey])
+    : ALL_PAYMENT_METHODS
+  const discountThresholdPercent = checkoutSettings?.discountOverrideThresholdPercent ?? 10
+
   const paidTotal = payments.reduce((sum, p) => sum + (parseCedisToPesewas(p.amountInput) ?? 0), 0)
   const changeDue = Math.max(0, paidTotal - totals.total)
   const hasCash = payments.some((p) => p.method === 'CASH')
 
-  const mutation = useMutation({
-    mutationFn: (body: CreateSaleBody) => createSale(body),
-    onSuccess: (sale) => {
-      clearCart()
-      onSuccess(sale)
-    },
-    onError: (err) => setFormError(err instanceof ApiError ? err.message : 'Something went wrong.'),
-  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const mutation = useMutation({ mutationFn: (body: CreateSaleBody) => createSale(body) })
 
   function updatePayment(index: number, patch: Partial<PaymentLine>) {
     setPayments((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)))
   }
 
   function addPayment() {
-    setPayments((prev) => [...prev, { method: 'CASH', amountInput: '' }])
+    setPayments((prev) => [...prev, { method: PAYMENT_METHODS[0]?.value ?? 'CASH', amountInput: '' }])
   }
 
   function removePayment(index: number) {
     setPayments((prev) => prev.filter((_, i) => i !== index))
   }
 
-  function submit() {
+  async function submit() {
     setFormError(null)
     if (paidTotal < totals.total) {
       setFormError('Payments do not cover the total yet.')
@@ -84,8 +92,8 @@ export function PaymentSheet({
     }
 
     const requiresOverride =
-      lines.some((l) => lineExceedsThreshold(l.unitPrice, l.quantity, l.discountAmount)) ||
-      cartDiscountExceedsThreshold(totals.subtotal, cartDiscountAmount)
+      lines.some((l) => lineExceedsThreshold(l.unitPrice, l.quantity, l.discountAmount, discountThresholdPercent)) ||
+      cartDiscountExceedsThreshold(totals.subtotal, cartDiscountAmount, discountThresholdPercent)
 
     if (requiresOverride && !needsOverride) {
       setNeedsOverride(true)
@@ -95,6 +103,9 @@ export function PaymentSheet({
       setFormError('Select a manager, enter their 4-digit PIN, and give a reason.')
       return
     }
+
+    const paymentInputs: PaymentInput[] = payments.map((p) => ({ method: p.method, amount: parseCedisToPesewas(p.amountInput) ?? 0 }))
+    const wasOffline = !navigator.onLine
 
     const body: CreateSaleBody = {
       id: crypto.randomUUID(),
@@ -106,10 +117,53 @@ export function PaymentSheet({
       })),
       cartDiscountAmount: cartDiscountAmount || undefined,
       cartDiscountReason: cartDiscountReason || undefined,
-      payments: payments.map((p) => ({ method: p.method, amount: parseCedisToPesewas(p.amountInput) ?? 0 })),
+      payments: paymentInputs,
       ...(requiresOverride ? { managerOverride: { managerId, managerPin, reason: overrideReason } } : {}),
+      // T-22: a sale queued offline should report as having happened when
+      // it was actually charged, not whenever the batch replays later.
+      ...(wasOffline ? { soldAt: new Date().toISOString() } : {}),
     }
-    mutation.mutate(body)
+
+    // Doc 2 §3.2: an offline charge still counts — the sale happened, it
+    // just hasn't reached the server yet. Queues locally and shows the
+    // same real receipt number the server will eventually record.
+    async function completeOffline() {
+      await enqueueSale(body)
+      const sale = buildLocalSale({
+        body,
+        lines,
+        totals,
+        payments: paymentInputs,
+        changeDue,
+        userId: session!.user.id,
+        tillShiftId,
+        locationId: session!.user.locationId,
+      })
+      clearCart()
+      onSuccess(sale)
+    }
+
+    setIsSubmitting(true)
+    try {
+      if (wasOffline) {
+        await completeOffline()
+        return
+      }
+      const sale = await mutation.mutateAsync(body)
+      clearCart()
+      onSuccess(sale)
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setFormError(err.message)
+      } else {
+        // navigator.onLine said we had a connection, but the request
+        // itself failed to reach the server — treat it the same as a
+        // charge that started offline rather than losing the sale.
+        await completeOffline()
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -196,7 +250,7 @@ export function PaymentSheet({
           </p>
         )}
 
-        <Button size="speed" className="mt-6 w-full" isLoading={mutation.isPending} onClick={submit}>
+        <Button size="speed" className="mt-6 w-full" isLoading={isSubmitting} onClick={submit}>
           {needsOverride ? 'Approve and charge' : `Charge ${formatPesewas(totals.total)}`}
         </Button>
       </div>
