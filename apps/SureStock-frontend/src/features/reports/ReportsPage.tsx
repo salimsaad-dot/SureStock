@@ -2,7 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, DollarSign, Download, Package, Receipt, RotateCcw, ShoppingCart, TrendingUp, Truck, Wallet, XCircle } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { Button } from '../../components/Button'
+import { PageContainer } from '../../components/PageContainer'
+import { PageHeader } from '../../components/PageHeader'
 import { StatCard } from '../../components/StatCard'
+import { Tabs } from '../../components/Tabs'
 import { getStaff } from '../../lib/api/auth'
 import { listCategories } from '../../lib/api/catalogue'
 import { exportReportsCsv, getPaymentBreakdown, getReportsOverview, getReportsTrend } from '../../lib/api/reports'
@@ -72,88 +75,73 @@ export function ReportsPage() {
   }
 
   return (
-    <main className="p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Reports</h1>
-          <p className="mt-0.5 font-body text-sm text-ink-muted">Gain insights into your sales, inventory and business performance.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <DateRangePicker dateFrom={dateFrom} dateTo={dateTo} onChange={({ dateFrom: f, dateTo: t }) => setRange({ dateFrom: f, dateTo: t })} />
-          <details ref={filtersRef} className="relative inline-block">
-            <summary
-              className={`flex h-11 list-none items-center gap-2 rounded-md border px-3 font-display text-sm font-medium [&::-webkit-details-marker]:hidden ${
-                hasActiveFilters ? 'border-accent text-accent-strong' : 'border-border-strong text-ink'
-              }`}
-            >
-              Filters {hasActiveFilters && '•'}
-            </summary>
-            <div className="absolute right-0 z-10 mt-1 w-64 rounded-md border border-border bg-surface-raised p-3 shadow-lg">
-              <label className="flex flex-col gap-1.5">
-                <span className="font-display text-[12.5px] font-medium text-ink">Staff</span>
-                <select
-                  className="h-10 rounded-md border border-border-strong bg-surface px-2 font-display text-sm text-ink"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                >
-                  <option value="">All staff</option>
-                  {staff?.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="mt-3 flex flex-col gap-1.5">
-                <span className="font-display text-[12.5px] font-medium text-ink">Payment method</span>
-                <select
-                  className="h-10 rounded-md border border-border-strong bg-surface px-2 font-display text-sm text-ink"
-                  value={method}
-                  onChange={(e) => setMethod(e.target.value as PaymentMethod | '')}
-                >
-                  {METHOD_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {hasActiveFilters && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUserId('')
-                    setMethod('')
-                  }}
-                  className="mt-3 font-display text-[12.5px] font-medium text-accent hover:text-accent-strong"
-                >
-                  Clear filters
-                </button>
-              )}
-            </div>
-          </details>
-          <Button isLoading={exporting} onClick={handleExport}>
-            <Download className="h-4 w-4" aria-hidden="true" /> Export report
-          </Button>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Reports"
+        subtitle="Gain insights into your sales, inventory and business performance."
+        actions={
+          <>
+            <DateRangePicker dateFrom={dateFrom} dateTo={dateTo} onChange={({ dateFrom: f, dateTo: t }) => setRange({ dateFrom: f, dateTo: t })} />
+            <details ref={filtersRef} className="relative inline-block">
+              <summary
+                className={`flex h-11 list-none items-center gap-2 rounded-md border px-3 font-display text-sm font-medium [&::-webkit-details-marker]:hidden ${
+                  hasActiveFilters ? 'border-accent text-accent-strong' : 'border-border-strong text-ink'
+                }`}
+              >
+                Filters {hasActiveFilters && '•'}
+              </summary>
+              <div className="absolute right-0 z-10 mt-1 w-64 rounded-md border border-border bg-surface-raised p-3 shadow-lg">
+                <label className="flex flex-col gap-1.5">
+                  <span className="font-display text-[12.5px] font-medium text-ink">Staff</span>
+                  <select
+                    className="h-10 rounded-md border border-border-strong bg-surface px-2 font-display text-sm text-ink"
+                    value={userId}
+                    onChange={(e) => setUserId(e.target.value)}
+                  >
+                    <option value="">All staff</option>
+                    {staff?.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="mt-3 flex flex-col gap-1.5">
+                  <span className="font-display text-[12.5px] font-medium text-ink">Payment method</span>
+                  <select
+                    className="h-10 rounded-md border border-border-strong bg-surface px-2 font-display text-sm text-ink"
+                    value={method}
+                    onChange={(e) => setMethod(e.target.value as PaymentMethod | '')}
+                  >
+                    {METHOD_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserId('')
+                      setMethod('')
+                    }}
+                    className="mt-3 font-display text-[12.5px] font-medium text-accent hover:text-accent-strong"
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+            </details>
+            <Button isLoading={exporting} onClick={handleExport}>
+              <Download className="h-4 w-4" aria-hidden="true" /> Export report
+            </Button>
+          </>
+        }
+      />
 
-      <div className="mt-4 flex gap-1 border-b border-border">
-        {TABS.map((t) => (
-          <button
-            key={t.value}
-            type="button"
-            onClick={() => setTab(t.value)}
-            className={
-              tab === t.value
-                ? 'border-b-2 border-accent px-3 py-2 font-display text-sm font-semibold text-accent-strong'
-                : 'border-b-2 border-transparent px-3 py-2 font-display text-sm text-ink-muted hover:text-ink'
-            }
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <Tabs className="mt-4" tabs={TABS.map((t) => ({ key: t.value, label: t.label }))} active={tab} onChange={(key) => setTab(key as ReportsTab)} />
 
       {tab === 'shrinkage' && (
         <div className="mt-4">
@@ -169,7 +157,7 @@ export function ReportsPage() {
 
       {tab === 'overview' && (
       <>
-      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
         <StatCard
           icon={<Wallet className="h-5 w-5" aria-hidden="true" />}
           label="Total Sales"
@@ -208,14 +196,14 @@ export function ReportsPage() {
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="rounded-lg border border-border bg-surface-raised p-4 lg:col-span-2">
-          <h2 className="font-display text-sm font-semibold text-ink">Sales over time</h2>
-          <div className="mt-2">
+        <div className="rounded-lg border border-border bg-surface-raised p-5 lg:col-span-2">
+          <h2 className="font-display text-lg font-semibold text-ink">Sales over time</h2>
+          <div className="mt-3">
             <SalesTrendChart data={trend ?? []} />
           </div>
         </div>
         <div className="rounded-lg border border-border bg-surface-raised p-4">
-          <h2 className="font-display text-sm font-semibold text-ink">Sales by payment method</h2>
+          <h2 className="font-display text-lg font-semibold text-ink">Sales by payment method</h2>
           <div className="mt-2">
             <PaymentMethodDonut data={paymentBreakdown ?? []} />
           </div>
@@ -245,7 +233,7 @@ export function ReportsPage() {
         <ReportsProductsTable title="Low / slow moving products" params={{ ...filters, direction: 'low', limit: 5, categoryId: categoryId || undefined }} />
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
         <StatCard icon={<XCircle className="h-5 w-5" aria-hidden="true" />} label="Out of stock" value={overview?.outOfStockCount ?? 0} sublabel="products" tone="danger" />
         <StatCard icon={<AlertTriangle className="h-5 w-5" aria-hidden="true" />} label="Low stock" value={overview?.lowStockCount ?? 0} sublabel="products" tone="warning" />
         <StatCard icon={<Package className="h-5 w-5" aria-hidden="true" />} label="Total products" value={overview?.totalProductCount ?? 0} sublabel="products" tone="neutral" />
@@ -254,6 +242,6 @@ export function ReportsPage() {
       </div>
       </>
       )}
-    </main>
+    </PageContainer>
   )
 }
