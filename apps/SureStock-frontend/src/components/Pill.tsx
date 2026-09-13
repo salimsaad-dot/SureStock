@@ -24,7 +24,7 @@ export function Pill({ variant, children }: PillProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-1 font-display text-[10.5px] font-semibold uppercase tracking-wide',
+        'inline-flex items-center rounded-full px-2.5 py-0.5 font-display text-[10.5px] font-semibold uppercase tracking-wide',
         variantClasses[variant],
       )}
     >

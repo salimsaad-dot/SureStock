@@ -1,10 +1,17 @@
 import { useEffect, useRef } from 'react'
 import { cn } from '../lib/cn'
-import { useToastStore } from '../lib/toast-store'
+import { useToastStore, type ToastVariant } from '../lib/toast-store'
 
 const AUTO_DISMISS_MS = 4000
 
-function ToastTile({ id, message, variant }: { id: string; message: string; variant: 'default' | 'error' }) {
+const VARIANT_CLASSES: Record<ToastVariant, string> = {
+  default: 'border-border bg-surface-raised text-ink',
+  success: 'border-success bg-success-wash text-success',
+  warning: 'border-warning bg-warning-wash text-warning',
+  error: 'border-danger bg-danger-wash text-danger',
+}
+
+function ToastTile({ id, message, variant }: { id: string; message: string; variant: ToastVariant }) {
   const dismiss = useToastStore((s) => s.dismiss)
   const remainingRef = useRef(AUTO_DISMISS_MS)
   const startedAtRef = useRef(Date.now())
@@ -37,9 +44,7 @@ function ToastTile({ id, message, variant }: { id: string; message: string; vari
       className={cn(
         'pointer-events-auto flex items-center gap-3 rounded-lg border px-4 py-3 font-display text-sm shadow-lg',
         'transition-all duration-[var(--motion-sheet)] ease-out',
-        variant === 'error'
-          ? 'border-danger bg-danger-wash text-danger'
-          : 'border-border bg-surface-raised text-ink',
+        VARIANT_CLASSES[variant],
       )}
     >
       <span className="flex-1">{message}</span>

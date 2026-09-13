@@ -21,7 +21,7 @@ export function TableRow({ className, ...props }: HTMLAttributes<HTMLTableRowEle
   return (
     <tr
       className={cn(
-        'border-b border-border last:border-none hover:bg-surface-sunken',
+        'border-b border-border last:border-none transition-colors duration-[var(--motion-state)] ease-out hover:bg-surface-sunken',
         className,
       )}
       {...props}
@@ -33,7 +33,7 @@ export function TableHead({ className, ...props }: ThHTMLAttributes<HTMLTableCel
   return (
     <th
       className={cn(
-        'whitespace-nowrap px-3 py-2.5 text-left text-[11.5px] font-semibold uppercase tracking-wide text-ink-muted',
+        'whitespace-nowrap px-3 py-3 text-left text-[11.5px] font-semibold uppercase tracking-wide text-ink',
         className,
       )}
       {...props}
@@ -41,8 +41,13 @@ export function TableHead({ className, ...props }: ThHTMLAttributes<HTMLTableCel
   )
 }
 
+/**
+ * Money/quantity columns: add `text-right tabular-nums` at the call site
+ * (no dedicated prop here — Table stays variant-free by design). Action
+ * columns: right-align via the same convention for consistency.
+ */
 export function TableCell({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
-  return <td className={cn('px-3 py-2.5 text-ink', className)} {...props} />
+  return <td className={cn('px-3 py-3 text-ink', className)} {...props} />
 }
 
 /** Skeleton rows matching real row height — no layout shift when data arrives (Blueprint §06). */

@@ -56,7 +56,7 @@ export function StatCard({ icon, label, value, sublabel, tone, active, onClick, 
         </span>
         <span className="flex flex-col">
           <span className="font-display text-[13px] text-ink-muted">{label}</span>
-          <span className="font-mono text-2xl font-semibold tabular-nums text-ink">{value}</span>
+          <span className="font-mono text-[28px] font-bold leading-none tabular-nums text-ink">{value}</span>
           {comparison ? (
             <ComparisonLine {...comparison} />
           ) : (

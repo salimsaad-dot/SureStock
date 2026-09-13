@@ -30,7 +30,7 @@ export function Pagination({ page, pageSize, totalCount, totalPages, onPageChang
           type="button"
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-ink-muted hover:bg-surface-sunken disabled:opacity-40"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-ink-muted transition-colors duration-[var(--motion-state)] ease-out hover:bg-surface-sunken disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
           aria-label="Previous page"
         >
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -45,7 +45,7 @@ export function Pagination({ page, pageSize, totalCount, totalPages, onPageChang
               className={
                 p === page
                   ? 'flex h-8 w-8 items-center justify-center rounded-md bg-accent font-mono text-[13px] font-semibold text-white'
-                  : 'flex h-8 w-8 items-center justify-center rounded-md font-mono text-[13px] text-ink-muted hover:bg-surface-sunken'
+                  : 'flex h-8 w-8 items-center justify-center rounded-md font-mono text-[13px] text-ink-muted transition-colors duration-[var(--motion-state)] ease-out hover:bg-surface-sunken'
               }
             >
               {p}
@@ -56,7 +56,7 @@ export function Pagination({ page, pageSize, totalCount, totalPages, onPageChang
           type="button"
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-ink-muted hover:bg-surface-sunken disabled:opacity-40"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-ink-muted transition-colors duration-[var(--motion-state)] ease-out hover:bg-surface-sunken disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
           aria-label="Next page"
         >
           <ChevronRight className="h-4 w-4" aria-hidden="true" />

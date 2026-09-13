@@ -14,11 +14,11 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-accent text-white hover:bg-accent-strong disabled:hover:bg-accent',
+    'bg-accent text-white hover:bg-accent-strong active:bg-accent-strong disabled:hover:bg-accent',
   secondary:
-    'bg-transparent border border-border-strong text-ink hover:bg-surface-sunken',
+    'bg-transparent border border-border-strong text-ink hover:bg-surface-sunken active:bg-surface-sunken',
   danger:
-    'bg-transparent border border-danger text-danger hover:bg-danger-wash',
+    'bg-transparent border border-danger text-danger hover:bg-danger-wash active:bg-danger-wash',
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -38,9 +38,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         aria-busy={isLoading}
         className={cn(
           'relative inline-flex items-center justify-center gap-2 rounded-md font-display font-semibold',
-          'transition-colors duration-[var(--motion-state)] ease-out',
+          'transition-[background-color,border-color,color,transform] duration-[var(--motion-state)] ease-out',
+          'active:scale-[0.97]',
           'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-          'disabled:cursor-not-allowed disabled:opacity-50',
+          'disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100',
           variantClasses[variant],
           sizeClasses[size],
           className,
