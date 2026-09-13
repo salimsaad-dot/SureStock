@@ -12,7 +12,7 @@ export function StaffActivityTab({ filters }: { filters: ReportsFilterParams }) 
 
   return (
     <div className="rounded-lg border border-border bg-surface-raised p-4">
-      <h2 className="font-display text-sm font-semibold text-ink">Staff activity</h2>
+      <h2 className="font-display text-lg font-semibold text-ink">Staff activity</h2>
       <div className="mt-3">
         <Table>
           <TableHeader>

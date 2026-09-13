@@ -36,7 +36,7 @@ export function ShrinkageTab({ filters }: { filters: ReportsFilterParams }) {
 
       <div className="mt-4 rounded-lg border border-border bg-surface-raised p-4">
         <div className="flex items-baseline justify-between">
-          <h2 className="font-display text-sm font-semibold text-ink">By staff member</h2>
+          <h2 className="font-display text-lg font-semibold text-ink">By staff member</h2>
           <p className="font-mono text-sm font-semibold text-ink">Total: {formatPesewas(data?.totalLoss ?? 0)}</p>
         </div>
         <div className="mt-3">
