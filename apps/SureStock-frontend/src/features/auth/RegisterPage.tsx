@@ -43,7 +43,7 @@ export function RegisterPage() {
     <main className="mx-auto flex min-h-svh max-w-sm flex-col justify-center p-6">
       <p className="font-mono text-xs uppercase tracking-wide text-accent">SureStock</p>
       <h1 className="mt-2 font-display text-2xl font-bold text-ink">Create your shop</h1>
-      <p className="mt-1 font-body text-sm text-ink-muted">Takes about fifteen minutes, plus adding your catalogue.</p>
+      <p className="mt-1 font-display text-sm text-ink-muted">Takes about fifteen minutes, plus adding your catalogue.</p>
 
       <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit((values) => mutation.mutate(values))}>
         <TextInput label="Shop name" error={errors.shopName?.message} {...registerField('shopName')} />

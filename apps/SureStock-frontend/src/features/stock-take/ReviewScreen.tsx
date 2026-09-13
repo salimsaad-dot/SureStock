@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Button } from '../../components/Button'
+import { PageContainer } from '../../components/PageContainer'
 import { TextInput } from '../../components/TextInput'
 import { getDiscrepancies, postStockTake, updateStockTakeLine } from '../../lib/api/stock-take'
 import { ApiError, type PostedStockTake, type StockTakeLine } from '../../lib/api/types'
@@ -59,14 +60,14 @@ export function ReviewScreen({
 
   if (isLoading || !discrepancies) {
     return (
-      <main className="p-6">
+      <PageContainer maxWidth="2xl">
         <p className="font-display text-sm text-ink-muted">Loading…</p>
-      </main>
+      </PageContainer>
     )
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl p-6">
+    <PageContainer maxWidth="2xl">
       <h1 className="font-display text-xl font-bold text-ink">Review variances</h1>
       <p className="mt-1 font-display text-sm text-ink-muted">Only discrepancies are shown, largest value impact first. Each needs a reason before posting.</p>
 
@@ -123,6 +124,6 @@ export function ReviewScreen({
       <Button size="speed" className="mt-6 w-full" isLoading={postMutation.isPending} onClick={handlePost}>
         Post adjustments
       </Button>
-    </main>
+    </PageContainer>
   )
 }

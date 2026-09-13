@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { PageContainer } from '../../components/PageContainer'
 import { getStaff } from '../../lib/api/auth'
 
 export function StaffPickerPage() {
@@ -10,7 +11,7 @@ export function StaffPickerPage() {
   })
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
+    <PageContainer maxWidth="2xl">
       <p className="font-mono text-xs uppercase tracking-wide text-accent">Switch user</p>
       <h1 className="mt-2 font-display text-2xl font-bold text-ink">Who's this?</h1>
 
@@ -32,6 +33,6 @@ export function StaffPickerPage() {
           </button>
         ))}
       </div>
-    </main>
+    </PageContainer>
   )
 }

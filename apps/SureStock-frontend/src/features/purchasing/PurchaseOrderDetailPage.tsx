@@ -1,7 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { Button } from '../../components/Button'
+import { PageContainer } from '../../components/PageContainer'
+import { PageHeader } from '../../components/PageHeader'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/Table'
 import { cancelPurchaseOrder, getPurchaseOrder, sendPurchaseOrder } from '../../lib/api/purchasing'
 import type { PurchaseOrder } from '../../lib/api/types'
@@ -68,17 +70,17 @@ export function PurchaseOrderDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="p-6">
+      <PageContainer>
         <p className="text-ink-muted">Loading…</p>
-      </main>
+      </PageContainer>
     )
   }
 
   if (!po) {
     return (
-      <main className="p-6">
+      <PageContainer>
         <p className="text-danger">Purchase order not found.</p>
-      </main>
+      </PageContainer>
     )
   }
 
@@ -88,19 +90,17 @@ export function PurchaseOrderDetailPage() {
   const canReceive = po.status === 'SENT' || po.status === 'PARTIAL'
 
   return (
-    <main className="p-6">
-      <Link to="/purchasing" className="font-display text-[13px] text-ink-muted hover:text-ink">
-        ← Back to purchasing
-      </Link>
-
-      <div className="mt-2 flex flex-wrap items-center gap-3">
-        <h1 className="font-display text-2xl font-bold text-ink">{po.orderNumber}</h1>
-        <PurchaseOrderStatusPill status={po.status} />
-      </div>
-      <p className="mt-0.5 font-body text-sm text-ink-muted">
-        {po.supplierName} · Ordered {new Date(po.createdAt).toLocaleDateString()} by {po.createdByName}
-        {po.expectedDate && ` · Expected ${new Date(po.expectedDate).toLocaleDateString()}`}
-      </p>
+    <PageContainer>
+      <PageHeader
+        variant="detail"
+        title={po.orderNumber}
+        subtitle={`${po.supplierName} · Ordered ${new Date(po.createdAt).toLocaleDateString()} by ${po.createdByName}${
+          po.expectedDate ? ` · Expected ${new Date(po.expectedDate).toLocaleDateString()}` : ''
+        }`}
+        backTo="/purchasing"
+        backLabel="Back to purchasing"
+        statusPill={<PurchaseOrderStatusPill status={po.status} />}
+      />
 
       <div className="mt-6">
         <Table>
@@ -156,6 +156,6 @@ export function PurchaseOrderDetailPage() {
 
       {editOpen && <PurchaseOrderFormDialog existing={po} onClose={() => setEditOpen(false)} onSuccess={handleEditSuccess} />}
       {receiveOpen && <ReceivePurchaseOrderDialog po={po} onClose={() => setReceiveOpen(false)} onSuccess={handleReceiveSuccess} />}
-    </main>
+    </PageContainer>
   )
 }

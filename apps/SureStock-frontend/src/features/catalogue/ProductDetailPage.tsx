@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { PageContainer } from '../../components/PageContainer'
+import { PageHeader } from '../../components/PageHeader'
 import { Pill } from '../../components/Pill'
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '../../components/Table'
 import { getProduct, listCategories, listSuppliers, updateProductStatus } from '../../lib/api/catalogue'
@@ -29,37 +31,39 @@ export function ProductDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="p-6">
+      <PageContainer>
         <p className="text-ink-muted">Loading…</p>
-      </main>
+      </PageContainer>
     )
   }
 
   if (!product) {
     return (
-      <main className="p-6">
+      <PageContainer>
         <p className="text-danger">Product not found.</p>
-      </main>
+      </PageContainer>
     )
   }
 
   const categoryName = categories?.find((c) => c.id === product.categoryId)?.name
   const supplierName = suppliers?.find((s) => s.id === product.supplierId)?.name
 
+  const statusPill =
+    (product.status === 'ACTIVE' && <Pill variant="success">Active</Pill>) ||
+    (product.status === 'SEASONAL' && <Pill variant="warning">Seasonal</Pill>) ||
+    (product.status === 'DISCONTINUED' && <Pill variant="danger">Discontinued</Pill>) ||
+    undefined
+
   return (
-    <main className="p-6">
-      <Link to="/inventory" className="font-display text-[13px] text-ink-muted hover:text-ink">
-        ← Back to inventory
-      </Link>
-
-      <div className="mt-2 flex flex-wrap items-center gap-3">
-        <h1 className="font-display text-2xl font-bold text-ink">{product.name}</h1>
-        {product.status === 'ACTIVE' && <Pill variant="success">Active</Pill>}
-        {product.status === 'SEASONAL' && <Pill variant="warning">Seasonal</Pill>}
-        {product.status === 'DISCONTINUED' && <Pill variant="danger">Discontinued</Pill>}
-      </div>
-
-      {product.description && <p className="mt-2 max-w-xl text-ink-muted">{product.description}</p>}
+    <PageContainer>
+      <PageHeader
+        variant="detail"
+        title={product.name}
+        subtitle={product.description || undefined}
+        backTo="/inventory"
+        backLabel="Back to inventory"
+        statusPill={statusPill}
+      />
 
       <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-2 font-display text-sm">
         <div>
@@ -117,6 +121,6 @@ export function ProductDetailPage() {
           </TableBody>
         </Table>
       </div>
-    </main>
+    </PageContainer>
   )
 }

@@ -2,6 +2,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Button } from '../../components/Button'
+import { PageContainer } from '../../components/PageContainer'
+import { PageHeader } from '../../components/PageHeader'
 import { getSale } from '../../lib/api/sales'
 import type { Sale } from '../../lib/api/types'
 import { useToast } from '../../lib/toast-store'
@@ -43,33 +45,32 @@ export function SaleDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="p-6">
+      <PageContainer>
         <p className="text-ink-muted">Loading…</p>
-      </main>
+      </PageContainer>
     )
   }
 
   if (!sale) {
     return (
-      <main className="p-6">
+      <PageContainer>
         <p className="text-danger">Sale not found.</p>
-      </main>
+      </PageContainer>
     )
   }
 
   const canRefund = !sale.refundOfSaleId && sale.status !== 'REFUNDED' && sale.status !== 'VOID'
 
   return (
-    <main className="p-6">
-      <Link to="/sales" className="font-display text-[13px] text-ink-muted hover:text-ink">
-        ← Back to sales
-      </Link>
-
-      <div className="mt-2 flex flex-wrap items-center gap-3">
-        <h1 className="font-display text-2xl font-bold text-ink">{sale.receiptNumber}</h1>
-        <SaleStatusPill status={sale.status} />
-      </div>
-      <p className="mt-0.5 font-body text-sm text-ink-muted">{new Date(sale.soldAt).toLocaleString()}</p>
+    <PageContainer>
+      <PageHeader
+        variant="detail"
+        title={sale.receiptNumber}
+        subtitle={new Date(sale.soldAt).toLocaleString()}
+        backTo="/sales"
+        backLabel="Back to sales"
+        statusPill={<SaleStatusPill status={sale.status} />}
+      />
 
       {sale.refundOfSaleId && (
         <p className="mt-2 font-display text-[13px] text-ink-muted">
@@ -97,6 +98,6 @@ export function SaleDetailPage() {
       </div>
 
       {refundOpen && <RefundDialog sale={sale} onClose={() => setRefundOpen(false)} onSuccess={handleRefundSuccess} />}
-    </main>
+    </PageContainer>
   )
 }

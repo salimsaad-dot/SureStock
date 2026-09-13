@@ -3,6 +3,8 @@ import { CheckCircle2, Circle, Printer, ScanLine } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../components/Button'
+import { PageContainer } from '../../components/PageContainer'
+import { PageHeader } from '../../components/PageHeader'
 import { createCategory } from '../../lib/api/catalogue'
 import { getOnboardingStatus } from '../../lib/api/onboarding'
 import type { OnboardingStepKey } from '../../lib/api/types'
@@ -42,11 +44,11 @@ export function OnboardingPage() {
   const doneCount = requiredSteps.filter((s) => s.done).length
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
-      <h1 className="font-display text-2xl font-bold text-ink">Set up your shop</h1>
-      <p className="mt-0.5 font-body text-sm text-ink-muted">
-        {data ? `${doneCount} of ${requiredSteps.length} steps complete.` : 'Loading…'} Every step is skippable and you can come back anytime.
-      </p>
+    <PageContainer maxWidth="2xl">
+      <PageHeader
+        title="Set up your shop"
+        subtitle={`${data ? `${doneCount} of ${requiredSteps.length} steps complete.` : 'Loading…'} Every step is skippable and you can come back anytime.`}
+      />
 
       <div className="mt-6 flex flex-col gap-3">
         {steps.map((step) => {
@@ -64,7 +66,7 @@ export function OnboardingPage() {
                     {copy.title}
                     {!step.required && <span className="ml-2 font-display text-[11px] font-normal text-ink-faint">Optional</span>}
                   </p>
-                  <p className="mt-0.5 font-body text-[13px] text-ink-muted">{copy.description}</p>
+                  <p className="mt-0.5 font-display text-[13px] text-ink-muted">{copy.description}</p>
 
                   {step.key === 'CATEGORIES' && !step.done && (
                     <Button variant="secondary" className="mt-3" isLoading={addStarterCategories.isPending} onClick={() => addStarterCategories.mutate()}>
@@ -102,6 +104,6 @@ export function OnboardingPage() {
           </Link>
         </div>
       )}
-    </main>
+    </PageContainer>
   )
 }

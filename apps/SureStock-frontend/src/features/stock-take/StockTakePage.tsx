@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { CheckCircle2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../../components/Button'
@@ -45,6 +46,9 @@ export function StockTakePage() {
     const adjustedCount = posted.adjustments.filter((a) => a.delta !== 0).length
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-success-wash text-success">
+          <CheckCircle2 className="h-6 w-6" aria-hidden="true" />
+        </span>
         <p className="font-display text-lg font-semibold text-ink">Stock take posted.</p>
         <p className="font-display text-sm text-ink-muted">
           {adjustedCount === 0 ? 'No adjustments were needed — everything matched.' : `${adjustedCount} item${adjustedCount === 1 ? '' : 's'} adjusted.`}
