@@ -103,20 +103,20 @@ export function BusinessProfileTab({ settings, onSave, saving }: SettingsTabProp
         <h3 className="font-display text-sm font-semibold text-ink">Business summary</h3>
         <dl className="mt-3 flex flex-col gap-2 font-display text-[13px]">
           <div className="flex justify-between gap-3">
-            <dt className="text-ink-muted">Business name</dt>
-            <dd className="text-right text-ink">{settings.name}</dd>
+            <dt className="flex-none text-ink-muted">Business name</dt>
+            <dd className="min-w-0 break-words text-right text-ink">{settings.name}</dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt className="text-ink-muted">Currency</dt>
-            <dd className="text-right text-ink">{settings.currency}</dd>
+            <dt className="flex-none text-ink-muted">Currency</dt>
+            <dd className="min-w-0 break-words text-right text-ink">{settings.currency}</dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt className="text-ink-muted">Time zone</dt>
-            <dd className="text-right text-ink">{settings.timezone}</dd>
+            <dt className="flex-none text-ink-muted">Time zone</dt>
+            <dd className="min-w-0 break-words text-right text-ink">{settings.timezone}</dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt className="text-ink-muted">Created</dt>
-            <dd className="text-right text-ink">{new Date(settings.createdAt).toLocaleDateString()}</dd>
+            <dt className="flex-none text-ink-muted">Created</dt>
+            <dd className="min-w-0 break-words text-right text-ink">{new Date(settings.createdAt).toLocaleDateString()}</dd>
           </div>
         </dl>
       </div>

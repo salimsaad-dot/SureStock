@@ -64,8 +64,8 @@ export function ReceivePurchaseOrderDialog({
             return (
               <li key={line.id} className="rounded-lg border border-border p-3">
                 <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-display text-sm text-ink">
+                  <div className="min-w-0">
+                    <p className="break-words font-display text-sm text-ink">
                       {line.productName}
                       {line.variantName ? ` — ${line.variantName}` : ''}
                     </p>
@@ -81,7 +81,7 @@ export function ReceivePurchaseOrderDialog({
                     step="any"
                     value={draft.quantityReceived}
                     onChange={(e) => updateDraft(line.id, Math.min(remaining, Math.max(0, Number(e.target.value))))}
-                    className="h-10 w-20 rounded-md border border-border-strong bg-surface-raised px-2 text-right font-mono text-sm text-ink"
+                    className="h-10 w-20 flex-none rounded-md border border-border-strong bg-surface-raised px-2 text-right font-mono text-sm text-ink"
                     aria-label={`Quantity received for ${line.productName}`}
                   />
                 </div>

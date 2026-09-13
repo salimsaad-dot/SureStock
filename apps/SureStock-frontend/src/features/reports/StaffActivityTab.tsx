@@ -33,15 +33,20 @@ export function StaffActivityTab({ filters }: { filters: ReportsFilterParams }) 
             {!isLoading && rows.length === 0 && <TableEmpty columns={9} message="No staff activity in this range." />}
             {rows.map((r) => (
               <TableRow key={r.userId}>
-                <TableCell className="font-medium text-ink">{r.userName}</TableCell>
-                <TableCell className="font-mono text-[11.5px] uppercase text-ink-faint">{r.role}</TableCell>
-                <TableCell className="font-mono tabular-nums">{r.salesCount}</TableCell>
-                <TableCell className="font-mono tabular-nums">{formatPesewas(r.salesTotal)}</TableCell>
-                <TableCell className="font-mono tabular-nums">{formatPesewas(r.discountsTotal)}</TableCell>
-                <TableCell className="font-mono tabular-nums">{r.refundsCount}</TableCell>
-                <TableCell className="font-mono tabular-nums">{formatPesewas(r.refundsTotal)}</TableCell>
-                <TableCell className="font-mono tabular-nums">{r.shiftCount}</TableCell>
-                <TableCell className={cn('font-mono tabular-nums', r.totalVariance < 0 ? 'text-danger' : r.totalVariance > 0 ? 'text-success' : undefined)}>
+                <TableCell className="whitespace-nowrap font-medium text-ink">{r.userName}</TableCell>
+                <TableCell className="whitespace-nowrap font-mono text-[11.5px] uppercase text-ink-faint">{r.role}</TableCell>
+                <TableCell className="whitespace-nowrap font-mono tabular-nums">{r.salesCount}</TableCell>
+                <TableCell className="whitespace-nowrap font-mono tabular-nums">{formatPesewas(r.salesTotal)}</TableCell>
+                <TableCell className="whitespace-nowrap font-mono tabular-nums">{formatPesewas(r.discountsTotal)}</TableCell>
+                <TableCell className="whitespace-nowrap font-mono tabular-nums">{r.refundsCount}</TableCell>
+                <TableCell className="whitespace-nowrap font-mono tabular-nums">{formatPesewas(r.refundsTotal)}</TableCell>
+                <TableCell className="whitespace-nowrap font-mono tabular-nums">{r.shiftCount}</TableCell>
+                <TableCell
+                  className={cn(
+                    'whitespace-nowrap font-mono tabular-nums',
+                    r.totalVariance < 0 ? 'text-danger' : r.totalVariance > 0 ? 'text-success' : undefined,
+                  )}
+                >
                   {formatPesewas(r.totalVariance)}
                 </TableCell>
               </TableRow>

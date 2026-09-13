@@ -141,14 +141,25 @@ export function AppShell({ children }: { children: ReactNode }) {
               end={item.path === '/'}
               className={({ isActive }) =>
                 cn(
-                  'flex flex-1 flex-col items-center gap-0.5 py-2.5 font-display text-[11px] text-ink-muted',
+                  'flex flex-1 flex-col items-center gap-0.5 py-2 font-display text-[11px] text-ink-muted',
                   'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent',
                   isActive && 'font-semibold text-accent-strong',
                 )
               }
             >
-              <Icon className="h-4 w-4" aria-hidden="true" />
-              {item.label}
+              {({ isActive }) => (
+                <>
+                  {/* A wash-filled pill behind the icon — the same "you are
+                      here" language as the sidebar's bg-accent-wash active
+                      row, just icon-sized for the compact bottom nav. Text
+                      color/weight alone was too subtle to read at a glance
+                      per live mobile testing. */}
+                  <span className={cn('flex h-7 w-9 items-center justify-center rounded-full', isActive && 'bg-accent-wash')}>
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  {item.label}
+                </>
+              )}
             </NavLink>
           )
         })}
@@ -159,12 +170,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-haspopup="dialog"
             aria-expanded={moreOpen}
             className={cn(
-              'flex flex-1 flex-col items-center gap-0.5 py-2.5 font-display text-[11px] text-ink-muted',
+              'flex flex-1 flex-col items-center gap-0.5 py-2 font-display text-[11px] text-ink-muted',
               'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent',
               isInOverflow && 'font-semibold text-accent-strong',
             )}
           >
-            <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+            <span className={cn('flex h-7 w-9 items-center justify-center rounded-full', isInOverflow && 'bg-accent-wash')}>
+              <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+            </span>
             More
           </button>
         )}

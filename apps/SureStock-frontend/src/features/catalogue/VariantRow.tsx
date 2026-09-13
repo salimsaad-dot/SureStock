@@ -1,45 +1,17 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
 import { Button } from '../../components/Button'
 import { TableCell, TableRow } from '../../components/Table'
 import { TextInput } from '../../components/TextInput'
-import { updateVariant } from '../../lib/api/catalogue'
-import { ApiError, type Variant } from '../../lib/api/types'
-import { formatPesewas, parseCedisToPesewas } from '../../lib/money'
+import type { Variant } from '../../lib/api/types'
+import { formatPesewas } from '../../lib/money'
 import { StockLevelPill } from './StockLevelPill'
+import { useVariantPriceEdit } from './useVariantPriceEdit'
 
+/** Desktop table row — md and up. The mobile equivalent is VariantCard. */
 export function VariantRow({ productId, variant }: { productId: string; variant: Variant }) {
-  const queryClient = useQueryClient()
-  const [editing, setEditing] = useState(false)
-  const [priceInput, setPriceInput] = useState(String(variant.sellingPrice / 100))
-  const [reason, setReason] = useState('')
-  const [priceError, setPriceError] = useState<string | null>(null)
-  const [reasonError, setReasonError] = useState<string | null>(null)
-
-  const mutation = useMutation({
-    mutationFn: (body: { sellingPrice: number; priceChangeReason: string }) => updateVariant(productId, variant.id, body),
-    onSuccess: () => {
-      setEditing(false)
-      queryClient.invalidateQueries({ queryKey: ['product', productId] })
-    },
-    onError: (err) => setPriceError(err instanceof ApiError ? err.message : 'Something went wrong.'),
-  })
-
-  function submit() {
-    setPriceError(null)
-    setReasonError(null)
-    const pesewas = parseCedisToPesewas(priceInput)
-    if (pesewas === null) {
-      setPriceError('Enter a valid amount.')
-      return
-    }
-    const priceChanged = pesewas !== variant.sellingPrice
-    if (priceChanged && !reason.trim()) {
-      setReasonError('A reason is required when changing the selling price.')
-      return
-    }
-    mutation.mutate({ sellingPrice: pesewas, priceChangeReason: reason.trim() })
-  }
+  const { editing, setEditing, priceInput, setPriceInput, reason, setReason, priceError, reasonError, mutation, submit } = useVariantPriceEdit(
+    productId,
+    variant,
+  )
 
   if (editing) {
     return (
@@ -62,21 +34,29 @@ export function VariantRow({ productId, variant }: { productId: string; variant:
   }
 
   return (
+    // whitespace-nowrap on every data cell here: without it, an
+    // auto-layout table with width:100% just shrinks/wraps its columns
+    // to fit rather than overflowing — which is how "Edit price" ended
+    // up wrapping into two lines and the price/cost text got crushed on
+    // a phone screen. Forcing nowrap gives the row its real min-content
+    // width back, so once that's wider than the screen, Table's own
+    // horizontal scroll (with its scroll-shadow) takes over instead —
+    // the same working behavior Inventory's table already has.
     <TableRow>
-      <TableCell>{variant.variantName ?? '—'}</TableCell>
-      <TableCell className="font-mono">{variant.sku}</TableCell>
-      <TableCell className="font-mono">{variant.barcode ?? '—'}</TableCell>
-      <TableCell>
+      <TableCell className="whitespace-nowrap">{variant.variantName ?? '—'}</TableCell>
+      <TableCell className="whitespace-nowrap font-mono">{variant.sku}</TableCell>
+      <TableCell className="whitespace-nowrap font-mono">{variant.barcode ?? '—'}</TableCell>
+      <TableCell className="whitespace-nowrap">
         <StockLevelPill variant={variant} />{' '}
         <span className="font-mono text-ink-muted">{variant.quantityOnHand}</span>
       </TableCell>
-      <TableCell className="text-right font-mono tabular-nums">
+      <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">
         {formatPesewas(variant.sellingPrice)}
         {variant.costPrice !== undefined && (
           <div className="font-mono text-[11px] text-ink-faint">cost {formatPesewas(variant.costPrice)}</div>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell className="whitespace-nowrap">
         <Button size="default" variant="secondary" onClick={() => setEditing(true)}>
           Edit price
         </Button>

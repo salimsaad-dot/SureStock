@@ -117,15 +117,15 @@ export function PurchaseOrderDetailPage() {
           <TableBody>
             {po.lines.map((line) => (
               <TableRow key={line.id}>
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
                   {line.productName}
                   {line.variantName ? ` — ${line.variantName}` : ''}
                 </TableCell>
-                <TableCell className="font-mono text-[12px] text-ink-faint">{line.sku}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">{line.quantityOrdered}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">{line.quantityReceived}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">{formatPesewas(line.unitCost)}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">{formatPesewas(line.lineTotal)}</TableCell>
+                <TableCell className="whitespace-nowrap font-mono text-[12px] text-ink-faint">{line.sku}</TableCell>
+                <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{line.quantityOrdered}</TableCell>
+                <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{line.quantityReceived}</TableCell>
+                <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{formatPesewas(line.unitCost)}</TableCell>
+                <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{formatPesewas(line.lineTotal)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

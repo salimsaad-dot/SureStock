@@ -4,6 +4,7 @@ import { Button } from '../../components/Button'
 import { TextInput } from '../../components/TextInput'
 import { createRefund } from '../../lib/api/sales'
 import { ApiError, type CreateRefundBody, type PaymentMethod, type RefundLineInput, type Sale } from '../../lib/api/types'
+import { generateId } from '../../lib/id'
 import { formatPesewas } from '../../lib/money'
 
 const REFUND_METHODS: { value: PaymentMethod; label: string }[] = [
@@ -59,7 +60,7 @@ export function RefundDialog({ sale, onClose, onSuccess }: { sale: Sale; onClose
     }
 
     const body: CreateRefundBody = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       lines: selectedLines.map((d): RefundLineInput => ({ saleLineId: d.saleLineId, quantity: d.quantity, restock: d.restock })),
       method,
       reason: reason.trim(),
@@ -84,14 +85,14 @@ export function RefundDialog({ sale, onClose, onSuccess }: { sale: Sale; onClose
             return (
               <li key={line.id} className="rounded-lg border border-border p-3">
                 <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-display text-sm text-ink">{line.productNameSnapshot}</p>
+                  <div className="min-w-0">
+                    <p className="break-words font-display text-sm text-ink">{line.productNameSnapshot}</p>
                     <p className="font-display text-[12px] text-ink-faint">
                       {remaining} of {line.quantity} refundable
                       {line.quantityRefunded > 0 && ` (${line.quantityRefunded} already refunded)`}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-none items-center gap-2">
                     <button
                       type="button"
                       onClick={() => updateDraft(line.id, { quantity: Math.max(0, draft.quantity - 1) })}

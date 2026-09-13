@@ -45,6 +45,10 @@ export default defineConfig({
     }),
   ],
   server: {
+    // Listen on the LAN interface too (not just localhost) so a phone on
+    // the same WiFi can open this dev server directly for real mobile
+    // testing — Vite prints the actual LAN URL to use on startup.
+    host: true,
     // The backend does have a real CORS plugin now (2026-08-26), which
     // already allows any localhost origin outside production — this proxy
     // is kept anyway since same-origin in dev means one less moving part

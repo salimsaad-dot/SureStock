@@ -174,12 +174,12 @@ export function PurchaseOrderFormDialog({
         <ul className="mt-4 flex flex-col gap-2">
           {lines.map((l) => (
             <li key={l.variantId} className="flex items-center gap-2 rounded-lg border border-border p-3">
-              <div className="flex-1">
-                <p className="font-display text-sm text-ink">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-display text-sm text-ink">
                   {l.productName}
                   {l.variantName ? ` — ${l.variantName}` : ''}
                 </p>
-                <p className="font-mono text-[11px] text-ink-faint">{l.sku}</p>
+                <p className="truncate font-mono text-[11px] text-ink-faint">{l.sku}</p>
               </div>
               <input
                 type="number"
@@ -187,7 +187,7 @@ export function PurchaseOrderFormDialog({
                 step="any"
                 value={l.quantityOrdered}
                 onChange={(e) => updateLine(l.variantId, { quantityOrdered: Number(e.target.value) })}
-                className="h-10 w-20 rounded-md border border-border-strong bg-surface-raised px-2 text-right font-mono text-sm text-ink"
+                className="h-10 w-20 flex-none rounded-md border border-border-strong bg-surface-raised px-2 text-right font-mono text-sm text-ink"
                 aria-label={`Quantity for ${l.productName}`}
               />
               <input
@@ -196,10 +196,15 @@ export function PurchaseOrderFormDialog({
                 value={l.unitCostCedis}
                 onChange={(e) => updateLine(l.variantId, { unitCostCedis: e.target.value })}
                 placeholder="0.00"
-                className="h-10 w-24 rounded-md border border-border-strong bg-surface-raised px-2 text-right font-mono text-sm text-ink"
+                className="h-10 w-24 flex-none rounded-md border border-border-strong bg-surface-raised px-2 text-right font-mono text-sm text-ink"
                 aria-label={`Unit cost for ${l.productName}`}
               />
-              <button type="button" onClick={() => removeLine(l.variantId)} className="text-ink-faint hover:text-danger" aria-label={`Remove ${l.productName}`}>
+              <button
+                type="button"
+                onClick={() => removeLine(l.variantId)}
+                className="flex-none text-ink-faint hover:text-danger"
+                aria-label={`Remove ${l.productName}`}
+              >
                 ✕
               </button>
             </li>

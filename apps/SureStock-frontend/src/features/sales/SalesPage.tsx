@@ -269,7 +269,7 @@ export function SalesPage() {
               )}
               {sales.map((sale) => (
                 <TableRow key={sale.id}>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <button
                       type="button"
                       onClick={() => navigate(`/sales/${sale.id}`)}
@@ -278,24 +278,24 @@ export function SalesPage() {
                       {sale.receiptNumber}
                     </button>
                   </TableCell>
-                  <TableCell className="text-ink-muted">{new Date(sale.soldAt).toLocaleString()}</TableCell>
+                  <TableCell className="whitespace-nowrap text-ink-muted">{new Date(sale.soldAt).toLocaleString()}</TableCell>
                   {canFilterByStaff && (
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <StaffAvatar name={sale.userName} />
                         {sale.userName}
                       </div>
                     </TableCell>
                   )}
-                  <TableCell className="text-ink-muted">{sale.paymentMethods.map((m) => m.replace('_', ' ')).join(', ')}</TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap text-ink-muted">{sale.paymentMethods.map((m) => m.replace('_', ' ')).join(', ')}</TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <SaleStatusPill status={sale.status} isRefund={sale.refundOfSaleId !== null} />
                   </TableCell>
-                  <TableCell className={`text-right font-mono tabular-nums ${sale.total < 0 ? 'text-danger' : 'text-ink'}`}>
+                  <TableCell className={`whitespace-nowrap text-right font-mono tabular-nums ${sale.total < 0 ? 'text-danger' : 'text-ink'}`}>
                     {sale.total < 0 && '− '}
                     {formatPesewas(Math.abs(sale.total))}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <SaleActionsMenu sale={sale} onRefund={setRefundTargetId} />
                   </TableCell>
                 </TableRow>

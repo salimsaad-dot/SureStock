@@ -42,17 +42,17 @@ function ToastTile({ id, message, variant }: { id: string; message: string; vari
       onMouseEnter={pause}
       onMouseLeave={resume}
       className={cn(
-        'pointer-events-auto flex items-center gap-3 rounded-lg border px-4 py-3 font-display text-sm shadow-lg',
+        'pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-lg border px-4 py-3 font-display text-sm shadow-lg',
         'transition-all duration-[var(--motion-sheet)] ease-out',
         VARIANT_CLASSES[variant],
       )}
     >
-      <span className="flex-1">{message}</span>
+      <span className="min-w-0 flex-1 break-words">{message}</span>
       <button
         type="button"
         aria-label="Dismiss"
         onClick={() => dismiss(id)}
-        className="text-ink-faint hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        className="flex-none text-ink-faint hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
         ×
       </button>

@@ -1,6 +1,7 @@
 import type { CartLine } from '../../features/sell/cart-store'
 import type { CartTotals } from '../../features/sell/cart-totals'
 import type { CreateSaleBody, PaymentInput, Sale } from '../api/types'
+import { generateId } from '../id'
 
 /**
  * A sale charged while offline can't wait for the server to assign a
@@ -45,7 +46,7 @@ export function buildLocalSale(params: {
     refundOfSaleId: null,
     soldAt,
     lines: lines.map((l) => ({
-      id: crypto.randomUUID(),
+      id: generateId(),
       variantId: l.variantId,
       productNameSnapshot: l.productName,
       quantity: l.quantity,
@@ -58,7 +59,7 @@ export function buildLocalSale(params: {
     })),
     payments: [
       ...payments.map((p) => ({
-        id: crypto.randomUUID(),
+        id: generateId(),
         method: p.method,
         amount: p.amount,
         reference: p.reference ?? null,
@@ -66,7 +67,7 @@ export function buildLocalSale(params: {
         status: 'CONFIRMED' as const,
       })),
       ...(changeDue > 0
-        ? [{ id: crypto.randomUUID(), method: 'CHANGE' as const, amount: changeDue, reference: null, provider: null, status: 'CONFIRMED' as const }]
+        ? [{ id: generateId(), method: 'CHANGE' as const, amount: changeDue, reference: null, provider: null, status: 'CONFIRMED' as const }]
         : []),
     ],
   }

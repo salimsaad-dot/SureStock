@@ -115,8 +115,8 @@ export function DashboardPage() {
                   <span className={`flex h-8 w-8 flex-none items-center justify-center rounded-full ${ATTENTION_TONE[item.type]}`}>
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </span>
-                  <span className="flex-1 font-display text-sm text-ink">{item.label}</span>
-                  <span className="font-display text-[13px] font-medium text-accent">View →</span>
+                  <span className="min-w-0 flex-1 truncate font-display text-sm text-ink">{item.label}</span>
+                  <span className="flex-none font-display text-[13px] font-medium text-accent">View →</span>
                 </Link>
               )
             })}
@@ -129,11 +129,11 @@ export function DashboardPage() {
             {data && data.topSellers.length === 0 && <p className="font-display text-sm text-ink-muted">No sales yet today.</p>}
             {data?.topSellers.map((p) => (
               <div key={p.variantId} className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
-                <div>
-                  <p className="font-display text-sm font-medium text-ink">{p.productName}</p>
+                <div className="min-w-0">
+                  <p className="truncate font-display text-sm font-medium text-ink">{p.productName}</p>
                   <p className="font-mono text-[11px] text-ink-faint">{p.sku}</p>
                 </div>
-                <div className="text-right">
+                <div className="flex-none text-right">
                   <p className="font-mono text-sm font-semibold tabular-nums text-ink">{formatPesewas(p.revenue)}</p>
                   <p className="font-display text-[11px] text-ink-faint">{p.qtySold} sold</p>
                 </div>

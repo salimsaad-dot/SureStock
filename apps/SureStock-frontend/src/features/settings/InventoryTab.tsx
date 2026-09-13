@@ -38,7 +38,7 @@ export function InventoryTab({ settings, onSave, saving }: SettingsTabProps) {
         Default reorder point and quantity suggested when adding a new product — each product can still set its own.
       </p>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <TextInput label="Default reorder point" inputMode="decimal" value={defaultReorderPoint} onChange={(e) => setDefaultReorderPoint(e.target.value)} />
         <TextInput
           label="Default reorder quantity"

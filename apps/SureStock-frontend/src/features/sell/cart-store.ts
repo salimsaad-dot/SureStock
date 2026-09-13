@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { generateId } from '../../lib/id'
 
 export interface CartLine {
   variantId: string
@@ -99,7 +100,7 @@ export const useCartStore = create<CartState>()(
         const { lines, cartDiscountAmount, cartDiscountReason, ticketNumber, heldCarts } = get()
         if (lines.length === 0) return
         const held: HeldCart = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           label: label?.trim() || `Sale #${ticketNumber ?? nextTicketNumber()}`,
           heldAt: new Date().toISOString(),
           ticketNumber: ticketNumber ?? nextTicketNumber(),

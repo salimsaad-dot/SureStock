@@ -134,7 +134,7 @@ export function NotificationsTab({ settings, onSave, saving }: SettingsTabProps)
         </p>
       )}
 
-      <div className="mt-6 flex items-center gap-3">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
         <Button isLoading={saving} onClick={submit}>
           Save changes
         </Button>

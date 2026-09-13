@@ -13,39 +13,45 @@ export function ReportsProductsTable({ title, params }: { title: string; params:
   return (
     <div className="rounded-lg border border-border bg-surface-raised p-4">
       <h3 className="font-display text-sm font-semibold text-ink">{title}</h3>
-      <table className="mt-3 w-full font-display text-[13px]">
-        <thead>
-          <tr className="text-left text-[11px] uppercase tracking-wide text-ink-muted">
-            <th className="pb-2 font-semibold">Product</th>
-            <th className="pb-2 text-right font-semibold">Qty Sold</th>
-            <th className="pb-2 text-right font-semibold">Revenue</th>
-          </tr>
-        </thead>
-        <tbody>
-          {isLoading &&
-            Array.from({ length: 5 }).map((_, i) => (
-              <tr key={i}>
-                <td colSpan={3} className="py-1.5">
-                  <div className="h-4 animate-pulse rounded bg-surface-sunken" />
+      {/* Not the shared Table component (no scroll-shadow chrome needed
+          for a simple 3-column list), but it needs the same overflow-x-auto
+          safety net — without it this bare table had no fallback if the
+          money/qty columns ever got squeezed on a narrow screen. */}
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full font-display text-[13px]">
+          <thead>
+            <tr className="text-left text-[11px] uppercase tracking-wide text-ink-muted">
+              <th className="whitespace-nowrap pb-2 font-semibold">Product</th>
+              <th className="whitespace-nowrap pb-2 text-right font-semibold">Qty Sold</th>
+              <th className="whitespace-nowrap pb-2 text-right font-semibold">Revenue</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading &&
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i}>
+                  <td colSpan={3} className="py-1.5">
+                    <div className="h-4 animate-pulse rounded bg-surface-sunken" />
+                  </td>
+                </tr>
+              ))}
+            {!isLoading && products.length === 0 && (
+              <tr>
+                <td colSpan={3} className="py-4 text-center text-ink-muted">
+                  No sales in this range.
                 </td>
               </tr>
+            )}
+            {products.map((p) => (
+              <tr key={p.variantId} className="border-t border-border">
+                <td className="whitespace-nowrap py-2 text-ink">{p.productName}</td>
+                <td className="whitespace-nowrap py-2 text-right font-mono tabular-nums text-ink-muted">{p.qtySold}</td>
+                <td className="whitespace-nowrap py-2 text-right font-mono tabular-nums text-ink">{formatPesewas(p.revenue)}</td>
+              </tr>
             ))}
-          {!isLoading && products.length === 0 && (
-            <tr>
-              <td colSpan={3} className="py-4 text-center text-ink-muted">
-                No sales in this range.
-              </td>
-            </tr>
-          )}
-          {products.map((p) => (
-            <tr key={p.variantId} className="border-t border-border">
-              <td className="py-2 text-ink">{p.productName}</td>
-              <td className="py-2 text-right font-mono tabular-nums text-ink-muted">{p.qtySold}</td>
-              <td className="py-2 text-right font-mono tabular-nums text-ink">{formatPesewas(p.revenue)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

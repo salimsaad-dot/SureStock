@@ -45,15 +45,19 @@ export function SuppliersPanel() {
       <h2 className="font-display text-lg font-semibold text-ink">Suppliers</h2>
 
       <form
-        className="mt-3 flex items-end gap-2"
+        className="mt-3 flex flex-wrap items-end gap-2"
         onSubmit={(e) => {
           e.preventDefault()
           if (name.trim()) create.mutate()
         }}
       >
-        <TextInput label="Supplier name" value={name} onChange={(e) => setName(e.target.value)} error={error ?? undefined} />
-        <TextInput label="Phone (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        <Button type="submit" isLoading={create.isPending}>
+        <div className="min-w-0 flex-1">
+          <TextInput label="Supplier name" value={name} onChange={(e) => setName(e.target.value)} error={error ?? undefined} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <TextInput label="Phone (optional)" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        </div>
+        <Button type="submit" isLoading={create.isPending} className="flex-none">
           Add
         </Button>
       </form>

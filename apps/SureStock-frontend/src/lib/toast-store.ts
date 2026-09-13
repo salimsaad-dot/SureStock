@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { generateId } from './id'
 
 export type ToastVariant = 'default' | 'success' | 'warning' | 'error'
 
@@ -21,7 +22,7 @@ interface ToastState {
 export const useToastStore = create<ToastState>((set) => ({
   toasts: [],
   show: (message, variant = 'default') => {
-    const id = crypto.randomUUID()
+    const id = generateId()
     set((state) => ({ toasts: [...state.toasts, { id, message, variant }] }))
     return id
   },

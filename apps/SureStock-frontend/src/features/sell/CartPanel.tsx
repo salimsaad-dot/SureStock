@@ -29,7 +29,7 @@ export function CartPanel({ onCheckout }: { onCheckout: (preferredMethod: Paymen
   }
 
   return (
-    <aside className="flex h-full flex-col border-l border-border bg-surface-raised">
+    <aside className="flex flex-col border-t border-border bg-surface-raised lg:h-full lg:border-t-0 lg:border-l">
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex items-center gap-2">
           <h2 className="font-display text-lg font-semibold text-ink">Cart</h2>
@@ -53,9 +53,9 @@ export function CartPanel({ onCheckout }: { onCheckout: (preferredMethod: Paymen
       </div>
 
       <div className="border-t border-border p-4">
-        <div className="flex justify-between font-display text-sm text-ink-muted">
-          <span>Subtotal</span>
-          <span className="font-mono tabular-nums">{formatPesewas(totals.subtotal)}</span>
+        <div className="flex justify-between gap-3 font-display text-sm text-ink-muted">
+          <span className="flex-none">Subtotal</span>
+          <span className="min-w-0 break-words text-right font-mono tabular-nums">{formatPesewas(totals.subtotal)}</span>
         </div>
 
         <div className="mt-2 flex items-center justify-between gap-3">
@@ -73,14 +73,16 @@ export function CartPanel({ onCheckout }: { onCheckout: (preferredMethod: Paymen
           />
         </div>
 
-        <div className="mt-2 flex items-baseline justify-between font-display text-lg font-semibold text-ink">
-          <span>Total</span>
-          <span className="font-mono text-[28px] font-bold tabular-nums">{formatPesewas(totals.total)}</span>
+        <div className="mt-2 flex items-baseline justify-between gap-3 font-display text-lg font-semibold text-ink">
+          <span className="flex-none">Total</span>
+          <span className="min-w-0 break-words text-right font-mono text-[28px] font-bold tabular-nums">{formatPesewas(totals.total)}</span>
         </div>
 
-        <div className="mt-3 flex items-center justify-between rounded-md bg-accent-wash px-3 py-2">
-          <span className="font-display text-sm font-medium text-accent-strong">Amount to pay</span>
-          <span className="font-mono text-lg font-semibold tabular-nums text-accent-strong">{formatPesewas(totals.total)}</span>
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-md bg-accent-wash px-3 py-2">
+          <span className="flex-none font-display text-sm font-medium text-accent-strong">Amount to pay</span>
+          <span className="min-w-0 break-words text-right font-mono text-lg font-semibold tabular-nums text-accent-strong">
+            {formatPesewas(totals.total)}
+          </span>
         </div>
 
         <Button size="speed" className="mt-4 w-full" disabled={lines.length === 0} onClick={() => onCheckout(preferredMethod)}>

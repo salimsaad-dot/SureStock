@@ -41,16 +41,24 @@ export function TillShiftsTable({ dateFrom, dateTo, userId }: { dateFrom?: strin
           {!isLoading && shifts.length === 0 && <TableEmpty columns={8} message="No till shifts match these filters." />}
           {shifts.map((shift) => (
             <TableRow key={shift.id}>
-              <TableCell className="text-ink-muted">{new Date(shift.openedAt).toLocaleString()}</TableCell>
-              <TableCell className="text-ink-muted">{shift.closedAt ? new Date(shift.closedAt).toLocaleString() : '—'}</TableCell>
-              <TableCell>{shift.userName}</TableCell>
-              <TableCell className="text-right font-mono tabular-nums">{formatPesewas(shift.openingFloat)}</TableCell>
-              <TableCell className="text-right font-mono tabular-nums">{shift.expectedCash !== null ? formatPesewas(shift.expectedCash) : '—'}</TableCell>
-              <TableCell className="text-right font-mono tabular-nums">{shift.countedCash !== null ? formatPesewas(shift.countedCash) : '—'}</TableCell>
-              <TableCell className={`text-right font-mono tabular-nums ${shift.variance && shift.variance !== 0 ? 'text-danger' : 'text-ink-muted'}`}>
+              <TableCell className="whitespace-nowrap text-ink-muted">{new Date(shift.openedAt).toLocaleString()}</TableCell>
+              <TableCell className="whitespace-nowrap text-ink-muted">{shift.closedAt ? new Date(shift.closedAt).toLocaleString() : '—'}</TableCell>
+              <TableCell className="whitespace-nowrap">{shift.userName}</TableCell>
+              <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{formatPesewas(shift.openingFloat)}</TableCell>
+              <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">
+                {shift.expectedCash !== null ? formatPesewas(shift.expectedCash) : '—'}
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">
+                {shift.countedCash !== null ? formatPesewas(shift.countedCash) : '—'}
+              </TableCell>
+              <TableCell
+                className={`whitespace-nowrap text-right font-mono tabular-nums ${shift.variance && shift.variance !== 0 ? 'text-danger' : 'text-ink-muted'}`}
+              >
                 {shift.variance !== null ? formatPesewas(shift.variance) : '—'}
               </TableCell>
-              <TableCell>{shift.status === 'OPEN' ? <Pill variant="success">Open</Pill> : <Pill variant="warning">Closed</Pill>}</TableCell>
+              <TableCell className="whitespace-nowrap">
+                {shift.status === 'OPEN' ? <Pill variant="success">Open</Pill> : <Pill variant="warning">Closed</Pill>}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

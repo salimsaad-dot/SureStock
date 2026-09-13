@@ -81,11 +81,11 @@ export function ReviewQueuePage() {
             {!isLoading &&
               items.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <Pill variant={item.type === 'NEGATIVE_STOCK' ? 'warning' : 'danger'}>{TYPE_LABEL[item.type]}</Pill>
                   </TableCell>
                   <TableCell className="max-w-xs">{item.reason}</TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     {item.saleReceiptNumber && item.saleId ? (
                       <Link to={`/sales/${item.saleId}`} className="font-mono text-accent hover:text-accent-strong">
                         {item.saleReceiptNumber}
@@ -96,7 +96,7 @@ export function ReviewQueuePage() {
                       <span className="text-ink-faint">—</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-ink-muted">{formatDate(item.createdAt)}</TableCell>
+                  <TableCell className="whitespace-nowrap text-ink-muted">{formatDate(item.createdAt)}</TableCell>
                   <TableCell>
                     {item.resolvedAt ? (
                       <div>

@@ -37,14 +37,14 @@ function buildInitial(rows: RestockRecommendation[], forcedSupplierId?: string |
 function RestockRow({ r }: { r: RestockRecommendation }) {
   return (
     <TableRow>
-      <TableCell>
+      <TableCell className="whitespace-nowrap">
         {r.productName}
         {r.variantName ? ` — ${r.variantName}` : ''}
       </TableCell>
-      <TableCell className="text-right font-mono tabular-nums text-danger">{r.quantityOnHand}</TableCell>
-      <TableCell className="text-right font-mono tabular-nums text-ink-muted">{r.reorderPoint}</TableCell>
-      <TableCell className="text-right font-mono tabular-nums text-ink">{r.suggestedQuantity ?? '—'}</TableCell>
-      <TableCell className="text-ink-muted">{r.supplierName ?? '—'}</TableCell>
+      <TableCell className="whitespace-nowrap text-right font-mono tabular-nums text-danger">{r.quantityOnHand}</TableCell>
+      <TableCell className="whitespace-nowrap text-right font-mono tabular-nums text-ink-muted">{r.reorderPoint}</TableCell>
+      <TableCell className="whitespace-nowrap text-right font-mono tabular-nums text-ink">{r.suggestedQuantity ?? '—'}</TableCell>
+      <TableCell className="whitespace-nowrap text-ink-muted">{r.supplierName ?? '—'}</TableCell>
     </TableRow>
   )
 }
@@ -110,9 +110,9 @@ export function RestockTab({ onCreate }: { onCreate: (initial: PurchaseOrderForm
     <div className="flex flex-col gap-6">
       {[...groups.values()].map((group) => (
         <div key={group.supplierId ?? 'none'} className="rounded-xl border border-border bg-surface-raised p-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display text-sm font-semibold text-ink">{group.supplierName ?? 'No supplier set'}</h3>
-            <Button size="default" onClick={() => onCreate(buildInitial(group.items, group.supplierId))} disabled={!group.supplierId}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="min-w-0 truncate font-display text-sm font-semibold text-ink">{group.supplierName ?? 'No supplier set'}</h3>
+            <Button size="default" className="flex-none" onClick={() => onCreate(buildInitial(group.items, group.supplierId))} disabled={!group.supplierId}>
               Create PO ({group.items.length})
             </Button>
           </div>

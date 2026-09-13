@@ -124,8 +124,13 @@ export function NewProductPage() {
         <TextInput label="Name" error={errors.name?.message} {...register('name')} />
         <TextInput label="Description (optional)" error={errors.description?.message} {...register('description')} />
 
-        <div className="flex gap-3">
-          <label className="flex flex-1 flex-col gap-1.5">
+        {/* flex-wrap, no flex-1 — matches Inventory's filter row. flex-1
+            with no wrap was the real bug: it forced all 3 selects to
+            share one row width and refused to shrink below their
+            content's min-content width, pushing the row (and Unit,
+            being last, the furthest) off the edge on a phone screen. */}
+        <div className="flex flex-wrap gap-3">
+          <label className="flex flex-col gap-1.5">
             <span className="font-display text-[13px] font-medium text-ink">Category</span>
             <select className="h-11 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink" {...register('categoryId')}>
               <option value="">None</option>
@@ -136,7 +141,7 @@ export function NewProductPage() {
               ))}
             </select>
           </label>
-          <label className="flex flex-1 flex-col gap-1.5">
+          <label className="flex flex-col gap-1.5">
             <span className="font-display text-[13px] font-medium text-ink">Supplier</span>
             <select className="h-11 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink" {...register('supplierId')}>
               <option value="">None</option>
@@ -147,7 +152,7 @@ export function NewProductPage() {
               ))}
             </select>
           </label>
-          <label className="flex flex-1 flex-col gap-1.5">
+          <label className="flex flex-col gap-1.5">
             <span className="font-display text-[13px] font-medium text-ink">Unit</span>
             <select className="h-11 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink" {...register('unit')}>
               {UNITS.map((u) => (

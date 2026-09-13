@@ -53,3 +53,19 @@ body {
 #root {
   min-height: 100svh;
 }
+
+/* Form controls must render at >=16px on phones — anything smaller makes
+   iOS/Android auto-zoom the page the moment a field is focused, which is
+   the "stuck zoomed in on login" bug reported from live mobile testing:
+   the disabled pinch-zoom above (maximum-scale=1 in index.html) stops the
+   zoom from being undone once the browser does it, so the real fix is
+   stopping the browser from zooming in the first place. Tailwind's own
+   text-sm/text-[13px] utility classes on individual inputs win on
+   specificity over a bare `input` element selector, hence !important. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

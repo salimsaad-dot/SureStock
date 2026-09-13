@@ -136,7 +136,7 @@ export function ImportPage() {
             <p className="mt-3 text-[13px] text-danger">Map every required field (*) before continuing.</p>
           )}
 
-          <div className="mt-6 flex gap-2">
+          <div className="mt-6 flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setStep('upload')}>
               Back
             </Button>
@@ -187,7 +187,7 @@ export function ImportPage() {
             </Table>
           </div>
 
-          <div className="mt-6 flex gap-2">
+          <div className="mt-6 flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setStep('map')}>
               Back to mapping
             </Button>

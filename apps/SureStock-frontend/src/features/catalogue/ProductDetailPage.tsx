@@ -7,6 +7,7 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from '../../compon
 import { getProduct, listCategories, listSuppliers, updateProductStatus } from '../../lib/api/catalogue'
 import type { ProductStatus } from '../../lib/api/types'
 import { useAuthStore } from '../../lib/auth-store'
+import { VariantCard } from './VariantCard'
 import { VariantRow } from './VariantRow'
 
 const STATUS_CYCLE: ProductStatus[] = ['ACTIVE', 'SEASONAL', 'DISCONTINUED']
@@ -85,7 +86,7 @@ export function ProductDetailPage() {
       </dl>
 
       {canManage && (
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <span className="font-display text-[13px] text-ink-muted">Change status:</span>
           {STATUS_CYCLE.filter((s) => s !== product.status).map((s) => (
             <button
@@ -102,7 +103,13 @@ export function ProductDetailPage() {
       )}
 
       <h2 className="mt-8 font-display text-lg font-semibold text-ink">Variants</h2>
-      <div className="mt-3">
+
+      {/* A horizontally-scrolling table is the right call for a long
+          product list (Inventory), but this product usually has just
+          one or two variants — forcing the same scroll-table here read
+          as broken on a phone (real feedback from live mobile testing),
+          not responsive. Below md this is a stack of cards instead. */}
+      <div className="mt-3 hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -120,6 +127,11 @@ export function ProductDetailPage() {
             ))}
           </TableBody>
         </Table>
+      </div>
+      <div className="mt-3 flex flex-col gap-3 md:hidden">
+        {product.variants.map((variant) => (
+          <VariantCard key={variant.id} productId={product.id} variant={variant} />
+        ))}
       </div>
     </PageContainer>
   )

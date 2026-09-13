@@ -58,9 +58,9 @@ export function StockTakePage() {
             {posted.adjustments
               .filter((a) => a.delta !== 0)
               .map((a) => (
-                <li key={a.variantId} className="flex justify-between font-display text-[13px]">
-                  <span className="text-ink-muted">{a.sku}</span>
-                  <span className={`font-mono font-medium ${a.delta < 0 ? 'text-danger' : 'text-success'}`}>
+                <li key={a.variantId} className="flex justify-between gap-3 font-display text-[13px]">
+                  <span className="min-w-0 truncate text-ink-muted">{a.sku}</span>
+                  <span className={`flex-none font-mono font-medium ${a.delta < 0 ? 'text-danger' : 'text-success'}`}>
                     {a.delta > 0 ? '+' : ''}
                     {a.delta}
                   </span>

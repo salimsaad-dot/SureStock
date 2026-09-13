@@ -91,8 +91,13 @@ export function SellPage() {
   }
 
   return (
-    <div className="flex h-svh flex-col lg:flex-row">
-      <main className="flex-1 overflow-y-auto p-6">
+    // On mobile this is a normal, whole-page-scrolling column — same as
+    // every other page in the app (AppShell's own content region is just
+    // `min-h-svh`, not a fixed height). The h-svh two-pane "product list
+    // scrolls here, cart scrolls there, independently" layout only makes
+    // sense once there's room for both side by side, so it's lg-only.
+    <div className="flex flex-col lg:h-svh lg:flex-row">
+      <main className="p-6 lg:flex-1 lg:overflow-y-auto">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="font-display text-2xl font-bold text-ink">Sell</h1>
@@ -137,7 +142,14 @@ export function SellPage() {
         </div>
       </main>
 
-      <div className="w-full flex-none lg:w-96">
+      {/* On mobile this is just the next block in the page's normal
+          scroll flow (see the outer div's comment) — you scroll down to
+          it, it doesn't sit pinned over the product list. `lg:h-full`
+          only kicks in once the layout is genuinely two side-by-side
+          panes, which is when CartPanel's own internal scroll region
+          (its line items, not its pinned totals footer) should take
+          over instead of the whole page. */}
+      <div className="w-full flex-none lg:h-full lg:w-96">
         <CartPanel
           onCheckout={(method) => {
             setPreferredMethod(method)

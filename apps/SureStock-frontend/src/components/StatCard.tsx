@@ -50,20 +50,23 @@ export function StatCard({ icon, label, value, sublabel, tone, active, onClick, 
         onClick && 'hover:bg-surface-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent',
       )}
     >
-      <div className="flex items-start gap-3">
-        <span className={cn('flex h-10 w-10 flex-none items-center justify-center rounded-lg', toneClasses.iconBg, toneClasses.icon)}>
-          {icon}
-        </span>
-        <span className="flex flex-col">
-          <span className="font-display text-[13px] text-ink-muted">{label}</span>
-          <span className="font-mono text-[28px] font-bold leading-none tabular-nums text-ink">{value}</span>
-          {comparison ? (
-            <ComparisonLine {...comparison} />
-          ) : (
-            sublabel && <span className="font-display text-[11.5px] text-ink-faint">{sublabel}</span>
-          )}
-        </span>
-      </div>
+      {/* Icon on its own row, text below — real feedback from live mobile
+          testing: icon-beside-text left the value too little width on a
+          narrow card, so once a long value wrapped to 2 lines it sat
+          lopsided next to an icon that only ever spanned the first line.
+          Stacking vertically gives the value the card's full width. */}
+      <span className={cn('flex h-10 w-10 flex-none items-center justify-center rounded-lg', toneClasses.iconBg, toneClasses.icon)}>
+        {icon}
+      </span>
+      <span className="flex min-w-0 flex-col">
+        <span className="truncate font-display text-[13px] text-ink-muted">{label}</span>
+        <span className="break-words font-mono text-[28px] font-bold leading-tight tabular-nums text-ink">{value}</span>
+        {comparison ? (
+          <ComparisonLine {...comparison} />
+        ) : (
+          sublabel && <span className="font-display text-[11.5px] text-ink-faint">{sublabel}</span>
+        )}
+      </span>
       {trend && trend.length > 1 && <Sparkline data={trend} tone={tone} />}
     </Tag>
   )

@@ -138,10 +138,10 @@ export function ActivityLogTab() {
             {!isLoading && items.length === 0 && <TableEmpty columns={4} message="No activity matches these filters." />}
             {items.map((item) => (
               <TableRow key={item.id}>
-                <TableCell className="text-ink-muted">{formatDate(item.createdAt)}</TableCell>
-                <TableCell>{item.userName ?? '—'}</TableCell>
-                <TableCell>{ACTION_LABEL[item.action] ?? item.action}</TableCell>
-                <TableCell className="font-mono text-[12px] text-ink-faint">
+                <TableCell className="whitespace-nowrap text-ink-muted">{formatDate(item.createdAt)}</TableCell>
+                <TableCell className="whitespace-nowrap">{item.userName ?? '—'}</TableCell>
+                <TableCell className="whitespace-nowrap">{ACTION_LABEL[item.action] ?? item.action}</TableCell>
+                <TableCell className="whitespace-nowrap font-mono text-[12px] text-ink-faint">
                   {item.entityType} · {item.entityId.slice(-8)}
                 </TableCell>
               </TableRow>

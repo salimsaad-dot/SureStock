@@ -7,6 +7,7 @@ import { createSale } from '../../lib/api/sales'
 import { getCheckoutSettings } from '../../lib/api/settings'
 import { ApiError, type CreateSaleBody, type PaymentInput, type PaymentMethod, type Sale } from '../../lib/api/types'
 import { useAuthStore } from '../../lib/auth-store'
+import { generateId } from '../../lib/id'
 import { formatPesewas, parseCedisToPesewas } from '../../lib/money'
 import { buildLocalSale } from '../../lib/offline/local-sale'
 import { enqueueSale } from '../../lib/offline/outbox'
@@ -108,7 +109,7 @@ export function PaymentSheet({
     const wasOffline = !navigator.onLine
 
     const body: CreateSaleBody = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       lines: lines.map((l) => ({
         variantId: l.variantId,
         quantity: l.quantity,
@@ -182,10 +183,10 @@ export function PaymentSheet({
           <div className="mt-4 flex flex-col gap-3">
             {payments.map((payment, i) => (
               <div key={i} className="flex items-end gap-2">
-                <label className="flex flex-1 flex-col gap-1.5">
+                <label className="flex min-w-0 flex-1 flex-col gap-1.5">
                   <span className="font-display text-[13px] font-medium text-ink">Method</span>
                   <select
-                    className="h-11 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink"
+                    className="h-11 w-full min-w-0 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink"
                     value={payment.method}
                     onChange={(e) => updatePayment(i, { method: e.target.value as PaymentMethod })}
                   >
@@ -196,14 +197,21 @@ export function PaymentSheet({
                     ))}
                   </select>
                 </label>
-                <TextInput
-                  label="Amount (GH₵)"
-                  inputMode="decimal"
-                  value={payment.amountInput}
-                  onChange={(e) => updatePayment(i, { amountInput: e.target.value })}
-                />
+                <div className="min-w-0 flex-1">
+                  <TextInput
+                    label="Amount (GH₵)"
+                    inputMode="decimal"
+                    value={payment.amountInput}
+                    onChange={(e) => updatePayment(i, { amountInput: e.target.value })}
+                  />
+                </div>
                 {payments.length > 1 && (
-                  <button type="button" onClick={() => removePayment(i)} className="h-11 px-2 text-ink-faint hover:text-danger">
+                  <button
+                    type="button"
+                    onClick={() => removePayment(i)}
+                    className="h-11 flex-none px-2 text-ink-faint hover:text-danger"
+                    aria-label="Remove payment method"
+                  >
                     ✕
                   </button>
                 )}

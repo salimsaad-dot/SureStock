@@ -77,9 +77,9 @@ export function ReviewScreen({
         <ul className="mt-5 flex flex-col gap-3">
           {discrepancies.map((d: StockTakeLine) => (
             <li key={d.id} className="rounded-lg border border-border p-3">
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <p className="font-display text-sm text-ink">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-display text-sm text-ink">
                     {d.productName}
                     {d.variantName ? ` — ${d.variantName}` : ''}
                   </p>
@@ -87,12 +87,18 @@ export function ReviewScreen({
                     {d.expectedQuantity} → {d.countedQuantity}
                   </p>
                 </div>
-                <span className={`font-mono text-sm font-semibold ${(d.variance ?? 0) < 0 ? 'text-danger' : 'text-success'}`}>
+                <span className={`flex-none font-mono text-sm font-semibold ${(d.variance ?? 0) < 0 ? 'text-danger' : 'text-success'}`}>
                   {(d.variance ?? 0) > 0 ? '+' : ''}
                   {d.variance}
                 </span>
-                <span className="w-24 text-right font-mono text-[12.5px] text-ink-muted">{formatPesewas(Math.abs(d.varianceValue ?? 0))}</span>
-                <button type="button" onClick={() => onEditLine(d.id)} className="font-display text-[12.5px] text-accent hover:text-accent-strong">
+                <span className="flex-none whitespace-nowrap text-right font-mono text-[12.5px] text-ink-muted">
+                  {formatPesewas(Math.abs(d.varianceValue ?? 0))}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onEditLine(d.id)}
+                  className="flex-none font-display text-[12.5px] text-accent hover:text-accent-strong"
+                >
                   Edit
                 </button>
               </div>

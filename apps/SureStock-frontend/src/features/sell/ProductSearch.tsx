@@ -76,13 +76,13 @@ export function ProductSearch({ children }: { children?: ReactNode }) {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search by product name, SKU or scan barcode…"
-          className="h-14 w-full rounded-lg border border-border-strong bg-surface-raised px-4 font-display text-base text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          className="h-14 min-w-0 flex-1 rounded-lg border border-border-strong bg-surface-raised px-4 font-display text-base text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
         />
         {/* A USB scanner works anywhere on this screen already (see useBarcodeScanner) — this just focuses the field as a visible affordance that scanning is supported here. */}
         <button
           type="button"
           onClick={() => inputRef.current?.focus()}
-          className="flex h-14 flex-none items-center gap-2 rounded-lg border border-border-strong px-4 font-display text-sm font-medium text-accent hover:bg-accent-wash"
+          className="flex h-14 flex-none items-center gap-2 whitespace-nowrap rounded-lg border border-border-strong px-4 font-display text-sm font-medium text-accent hover:bg-accent-wash"
         >
           <ScanLine className="h-5 w-5" aria-hidden="true" /> Scan barcode
         </button>
@@ -149,9 +149,11 @@ export function ProductSearch({ children }: { children?: ReactNode }) {
                 {variant.variantName && <span className="text-ink-faint"> — {variant.variantName}</span>}
               </span>
               <span className="font-mono text-[11px] text-ink-faint">{variant.sku}</span>
-              <div className="mt-1 flex w-full items-center justify-between">
+              <div className="mt-1 flex w-full items-center justify-between gap-2">
                 <StockLevelPill variant={variant} />
-                <span className="font-mono text-lg font-semibold tabular-nums text-ink">{formatPesewas(variant.sellingPrice)}</span>
+                <span className="min-w-0 break-words text-right font-mono text-lg font-semibold tabular-nums text-ink">
+                  {formatPesewas(variant.sellingPrice)}
+                </span>
               </div>
             </button>
           ))}

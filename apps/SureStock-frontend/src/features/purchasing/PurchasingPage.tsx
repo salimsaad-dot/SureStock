@@ -167,7 +167,7 @@ export function PurchasingPage() {
                   {!isLoading && orders.length === 0 && <TableEmpty columns={7} message="No purchase orders match these filters." />}
                   {orders.map((po) => (
                     <TableRow key={po.id}>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => navigate(`/purchasing/${po.id}`)}
@@ -176,12 +176,14 @@ export function PurchasingPage() {
                           {po.orderNumber}
                         </button>
                       </TableCell>
-                      <TableCell>{po.supplierName}</TableCell>
-                      <TableCell className="text-ink-muted">{new Date(po.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-ink-muted">{po.expectedDate ? new Date(po.expectedDate).toLocaleDateString() : '—'}</TableCell>
-                      <TableCell className="text-right font-mono tabular-nums">{po.itemCount}</TableCell>
-                      <TableCell className="text-right font-mono tabular-nums">{formatPesewas(po.totalCost ?? 0)}</TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">{po.supplierName}</TableCell>
+                      <TableCell className="whitespace-nowrap text-ink-muted">{new Date(po.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="whitespace-nowrap text-ink-muted">
+                        {po.expectedDate ? new Date(po.expectedDate).toLocaleDateString() : '—'}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{po.itemCount}</TableCell>
+                      <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{formatPesewas(po.totalCost ?? 0)}</TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <PurchaseOrderStatusPill status={po.status} />
                       </TableCell>
                     </TableRow>

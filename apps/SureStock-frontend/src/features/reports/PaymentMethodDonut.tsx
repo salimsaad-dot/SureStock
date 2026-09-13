@@ -26,8 +26,13 @@ export function PaymentMethodDonut({ data }: { data: PaymentBreakdownItem[] }) {
   }
 
   return (
-    <div className="flex h-64 items-center gap-4">
-      <div className="h-full flex-1">
+    // Below sm, the chart gets its own full-width row (a fixed h-48, not
+    // squeezed by the legend) and the legend stacks underneath — the old
+    // side-by-side flex-row with a flex-none legend forced the pie chart
+    // into a shrinking sliver on a phone. Each legend line also wraps its
+    // amount onto a second line if it doesn't fit, instead of overflowing.
+    <div className="flex flex-col gap-4 sm:h-64 sm:flex-row sm:items-center">
+      <div className="h-48 sm:h-full sm:flex-1">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={data} dataKey="total" nameKey="method" innerRadius="60%" outerRadius="85%" paddingAngle={2} isAnimationActive={false}>
@@ -42,9 +47,9 @@ export function PaymentMethodDonut({ data }: { data: PaymentBreakdownItem[] }) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <ul className="flex flex-none flex-col gap-2">
+      <ul className="flex flex-col gap-2 sm:flex-none">
         {data.map((d) => (
-          <li key={d.method} className="flex items-center gap-2 font-display text-[12.5px]">
+          <li key={d.method} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-display text-[12.5px]">
             <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ backgroundColor: METHOD_COLOR[d.method] }} />
             <span className="text-ink">{METHOD_LABEL[d.method]}</span>
             <span className="text-ink-faint">
