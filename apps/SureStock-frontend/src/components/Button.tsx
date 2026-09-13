@@ -48,7 +48,19 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         {...props}
       >
-        <span className={cn('grid grid-cols-1 grid-rows-1', isLoading && 'invisible')}>
+        {/* shrink-0: this grid wrapper keeps the button's width stable
+            while isLoading swaps the label for a spinner (both occupy the
+            same grid cell). But Tailwind's grid-cols-1 track is
+            minmax(0, 1fr) — an explicit zero minimum, not content-based —
+            so as a flex child of the button's own inline-flex row it had
+            no protection against the button being squeezed by upstream
+            layout pressure (e.g. a narrow table column): it would
+            collapse straight to 0 width and the label would silently
+            overflow and get clipped, rather than the button sizing to
+            fit its own text like any other button. Found via live mobile
+            testing — a table's "Deactivate" button was rendering at 0
+            content width with the text spilling out past the card edge. */}
+        <span className={cn('grid shrink-0 grid-cols-1 grid-rows-1', isLoading && 'invisible')}>
           <span className="col-start-1 row-start-1 flex items-center gap-2">{children}</span>
         </span>
         {isLoading && (

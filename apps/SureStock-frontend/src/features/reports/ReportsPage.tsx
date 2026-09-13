@@ -134,7 +134,7 @@ export function ReportsPage() {
                 )}
               </div>
             </details>
-            <Button isLoading={exporting} onClick={handleExport}>
+            <Button className="flex-none" isLoading={exporting} onClick={handleExport}>
               <Download className="h-4 w-4" aria-hidden="true" /> Export report
             </Button>
           </>

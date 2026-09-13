@@ -76,11 +76,11 @@ export function OnboardingPage() {
 
                   {step.key === 'HARDWARE_TEST' ? (
                     <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                      <div className="flex items-center gap-2 rounded-md border border-border-strong px-3 py-2 font-display text-sm text-ink-muted">
+                      <div className="flex min-w-0 items-center gap-2 rounded-md border border-border-strong px-3 py-2 font-display text-sm text-ink-muted">
                         <ScanLine className="h-4 w-4 flex-none" aria-hidden="true" />
-                        {scannedCode ? <span className="text-ink">Scanned: {scannedCode}</span> : 'Scan anything to test your barcode scanner…'}
+                        {scannedCode ? <span className="truncate text-ink">Scanned: {scannedCode}</span> : 'Scan anything to test your barcode scanner…'}
                       </div>
-                      <Button variant="secondary" onClick={() => window.print()}>
+                      <Button variant="secondary" className="flex-none" onClick={() => window.print()}>
                         <Printer className="h-4 w-4" aria-hidden="true" /> Print a test receipt
                       </Button>
                     </div>

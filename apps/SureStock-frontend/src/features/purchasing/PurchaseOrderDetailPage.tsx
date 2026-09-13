@@ -137,18 +137,22 @@ export function PurchaseOrderDetailPage() {
 
       <div className="mt-6 flex max-w-md flex-wrap gap-2">
         {canEdit && (
-          <Button variant="secondary" onClick={() => setEditOpen(true)}>
+          <Button variant="secondary" className="flex-none" onClick={() => setEditOpen(true)}>
             Edit
           </Button>
         )}
         {canSend && (
-          <Button isLoading={busy} onClick={handleSend}>
+          <Button className="flex-none" isLoading={busy} onClick={handleSend}>
             Send to supplier
           </Button>
         )}
-        {canReceive && <Button onClick={() => setReceiveOpen(true)}>Receive stock</Button>}
+        {canReceive && (
+          <Button className="flex-none" onClick={() => setReceiveOpen(true)}>
+            Receive stock
+          </Button>
+        )}
         {canCancel && (
-          <Button variant="danger" isLoading={busy} onClick={handleCancel}>
+          <Button variant="danger" className="flex-none" isLoading={busy} onClick={handleCancel}>
             Cancel order
           </Button>
         )}

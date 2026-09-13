@@ -83,23 +83,25 @@ export function InventoryPage() {
         actions={
           canManage && (
             <>
-              <Link to="/inventory/settings">
-                <Button variant="secondary" size="default">
+              <Link to="/inventory/settings" className="flex-none">
+                <Button variant="secondary" size="default" className="flex-none">
                   Categories &amp; suppliers
                 </Button>
               </Link>
-              <Link to="/inventory/import">
-                <Button variant="secondary" size="default">
+              <Link to="/inventory/import" className="flex-none">
+                <Button variant="secondary" size="default" className="flex-none">
                   Import
                 </Button>
               </Link>
-              <Link to="/inventory/stock-take">
-                <Button variant="secondary" size="default">
+              <Link to="/inventory/stock-take" className="flex-none">
+                <Button variant="secondary" size="default" className="flex-none">
                   Stock take
                 </Button>
               </Link>
-              <Link to="/inventory/new">
-                <Button size="default">New product</Button>
+              <Link to="/inventory/new" className="flex-none">
+                <Button size="default" className="flex-none">
+                  New product
+                </Button>
               </Link>
             </>
           )
@@ -236,15 +238,15 @@ export function InventoryPage() {
           </TableBody>
         </Table>
 
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           {hasNextPage ? (
-            <Button variant="secondary" isLoading={isFetchingNextPage} onClick={() => fetchNextPage()}>
+            <Button variant="secondary" className="flex-none" isLoading={isFetchingNextPage} onClick={() => fetchNextPage()}>
               Load more
             </Button>
           ) : (
             <span />
           )}
-          <label className="flex items-center gap-2">
+          <label className="flex flex-none items-center gap-2">
             <span className="font-display text-[13px] text-ink-muted">Per page</span>
             <select
               className="h-9 rounded-md border border-border-strong bg-surface-raised px-2 font-display text-[13px] text-ink"

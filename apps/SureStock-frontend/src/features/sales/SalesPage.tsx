@@ -129,10 +129,10 @@ export function SalesPage() {
         subtitle={canFilterByStaff ? 'Track transactions, payments, refunds and till shifts.' : 'Your transaction history.'}
         actions={
           <>
-            <Button variant="secondary" onClick={() => setTab('till-shifts')}>
+            <Button variant="secondary" className="flex-none" onClick={() => setTab('till-shifts')}>
               <Clock className="h-4 w-4" aria-hidden="true" /> Till shifts
             </Button>
-            <Button isLoading={exporting} onClick={handleExport}>
+            <Button className="flex-none" isLoading={exporting} onClick={handleExport}>
               <Download className="h-4 w-4" aria-hidden="true" /> Export report
             </Button>
           </>
