@@ -3,9 +3,13 @@ import { CheckCircle2, Clock3, FileText, PackageCheck, Plus } from 'lucide-react
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../../components/Button'
+import { FilterToolbar } from '../../components/FilterToolbar'
+import { PageContainer } from '../../components/PageContainer'
+import { PageHeader } from '../../components/PageHeader'
 import { Pagination } from '../../components/Pagination'
 import { StatCard } from '../../components/StatCard'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow, TableSkeleton } from '../../components/Table'
+import { Tabs } from '../../components/Tabs'
 import { getPurchaseOrderStats, listPurchaseOrders } from '../../lib/api/purchasing'
 import type { PurchaseOrder, PurchaseOrderStatus } from '../../lib/api/types'
 import { formatPesewas } from '../../lib/money'
@@ -63,16 +67,16 @@ export function PurchasingPage() {
   const orders = data?.items ?? []
 
   return (
-    <main className="p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Purchasing</h1>
-          <p className="mt-0.5 font-body text-sm text-ink-muted">Manage purchase orders, suppliers and restock recommendations.</p>
-        </div>
-        <Button onClick={() => openNewOrder()}>
-          <Plus className="h-4 w-4" aria-hidden="true" /> New purchase order
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Purchasing"
+        subtitle="Manage purchase orders, suppliers and restock recommendations."
+        actions={
+          <Button onClick={() => openNewOrder()}>
+            <Plus className="h-4 w-4" aria-hidden="true" /> New purchase order
+          </Button>
+        }
+      />
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard
@@ -111,41 +115,39 @@ export function PurchasingPage() {
         </p>
       )}
 
-      <div className="mt-6 flex gap-1 border-b border-border">
-        {(['orders', 'suppliers', 'restock'] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={`px-4 py-2.5 font-display text-sm font-medium ${
-              tab === t ? 'border-b-2 border-accent text-accent-strong' : 'text-ink-muted hover:text-ink'
-            }`}
-          >
-            {t === 'orders' ? 'Purchase orders' : t === 'suppliers' ? 'Suppliers' : 'Restock'}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        className="mt-6"
+        tabs={[
+          { key: 'orders', label: 'Purchase orders' },
+          { key: 'suppliers', label: 'Suppliers' },
+          { key: 'restock', label: 'Restock' },
+        ]}
+        active={tab}
+        onChange={(key) => setTab(key as typeof tab)}
+      />
 
       {tab === 'orders' && (
         <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
           <div>
-            <label className="flex flex-col gap-1.5">
-              <span className="font-display text-[13px] font-medium text-ink">Status</span>
-              <select
-                className="h-11 w-56 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink"
-                value={status}
-                onChange={(e) => {
-                  setStatus(e.target.value as PurchaseOrderStatus | '')
-                  setPage(1)
-                }}
-              >
-                {STATUS_FILTERS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <FilterToolbar>
+              <label className="flex flex-col gap-1.5">
+                <span className="font-display text-[13px] font-medium text-ink">Status</span>
+                <select
+                  className="h-11 w-56 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink"
+                  value={status}
+                  onChange={(e) => {
+                    setStatus(e.target.value as PurchaseOrderStatus | '')
+                    setPage(1)
+                  }}
+                >
+                  {STATUS_FILTERS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </FilterToolbar>
 
             <div className="mt-4">
               <Table>
@@ -231,6 +233,6 @@ export function PurchasingPage() {
           onSuccess={handleCreated}
         />
       )}
-    </main>
+    </PageContainer>
   )
 }

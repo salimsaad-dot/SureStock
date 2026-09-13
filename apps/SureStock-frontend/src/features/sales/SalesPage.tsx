@@ -3,9 +3,13 @@ import { CheckCircle2, Clock, Download, RotateCcw, ShoppingCart, Wallet } from '
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../../components/Button'
+import { FilterToolbar } from '../../components/FilterToolbar'
+import { PageContainer } from '../../components/PageContainer'
+import { PageHeader } from '../../components/PageHeader'
 import { Pagination } from '../../components/Pagination'
 import { StatCard } from '../../components/StatCard'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow, TableSkeleton } from '../../components/Table'
+import { Tabs } from '../../components/Tabs'
 import { TextInput } from '../../components/TextInput'
 import { getStaff } from '../../lib/api/auth'
 import { exportSalesCsv, getSale, getSalesStats, listSales } from '../../lib/api/sales'
@@ -119,23 +123,21 @@ export function SalesPage() {
   const sales = data?.items ?? []
 
   return (
-    <main className="p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Sales</h1>
-          <p className="mt-0.5 font-body text-sm text-ink-muted">
-            {canFilterByStaff ? 'Track transactions, payments, refunds and till shifts.' : 'Your transaction history.'}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => setTab('till-shifts')}>
-            <Clock className="h-4 w-4" aria-hidden="true" /> Till shifts
-          </Button>
-          <Button isLoading={exporting} onClick={handleExport}>
-            <Download className="h-4 w-4" aria-hidden="true" /> Export report
-          </Button>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Sales"
+        subtitle={canFilterByStaff ? 'Track transactions, payments, refunds and till shifts.' : 'Your transaction history.'}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setTab('till-shifts')}>
+              <Clock className="h-4 w-4" aria-hidden="true" /> Till shifts
+            </Button>
+            <Button isLoading={exporting} onClick={handleExport}>
+              <Download className="h-4 w-4" aria-hidden="true" /> Export report
+            </Button>
+          </>
+        }
+      />
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard
@@ -172,97 +174,79 @@ export function SalesPage() {
         />
       </div>
 
-      <div className="mt-6 flex flex-wrap items-end gap-3">
-        <div className="w-40">
-          <TextInput
-            type="date"
-            label="From"
-            value={dateFrom}
-            onChange={(e) => {
-              setDateFrom(e.target.value)
-              setPage(1)
-            }}
-          />
-        </div>
-        <div className="w-40">
-          <TextInput
-            type="date"
-            label="To"
-            value={dateTo}
-            onChange={(e) => {
-              setDateTo(e.target.value)
-              setPage(1)
-            }}
-          />
-        </div>
-        {canFilterByStaff && (
+      <div className="mt-6">
+        <FilterToolbar onClear={hasActiveFilters ? clearFilters : undefined}>
+          <div className="w-40">
+            <TextInput
+              type="date"
+              label="From"
+              value={dateFrom}
+              onChange={(e) => {
+                setDateFrom(e.target.value)
+                setPage(1)
+              }}
+            />
+          </div>
+          <div className="w-40">
+            <TextInput
+              type="date"
+              label="To"
+              value={dateTo}
+              onChange={(e) => {
+                setDateTo(e.target.value)
+                setPage(1)
+              }}
+            />
+          </div>
+          {canFilterByStaff && (
+            <label className="flex flex-col gap-1.5">
+              <span className="font-display text-[13px] font-medium text-ink">Staff</span>
+              <select
+                className="h-11 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink"
+                value={userId}
+                onChange={(e) => {
+                  setUserId(e.target.value)
+                  setPage(1)
+                }}
+              >
+                <option value="">All staff</option>
+                {staff?.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className="flex flex-col gap-1.5">
-            <span className="font-display text-[13px] font-medium text-ink">Staff</span>
+            <span className="font-display text-[13px] font-medium text-ink">Payment method</span>
             <select
               className="h-11 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink"
-              value={userId}
+              value={method}
               onChange={(e) => {
-                setUserId(e.target.value)
+                setMethod(e.target.value as PaymentMethod | '')
                 setPage(1)
               }}
             >
-              <option value="">All staff</option>
-              {staff?.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
+              {METHOD_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
                 </option>
               ))}
             </select>
           </label>
-        )}
-        <label className="flex flex-col gap-1.5">
-          <span className="font-display text-[13px] font-medium text-ink">Payment method</span>
-          <select
-            className="h-11 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink"
-            value={method}
-            onChange={(e) => {
-              setMethod(e.target.value as PaymentMethod | '')
-              setPage(1)
-            }}
-          >
-            {METHOD_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="h-11 font-display text-[13px] font-medium text-accent hover:text-accent-strong"
-          >
-            Clear filters
-          </button>
-        )}
+        </FilterToolbar>
       </div>
 
-      <div className="mt-6 flex gap-1 border-b border-border">
-        <button
-          type="button"
-          onClick={() => setTab('transactions')}
-          className={`px-4 py-2.5 font-display text-sm font-medium ${
-            tab === 'transactions' ? 'border-b-2 border-accent text-accent-strong' : 'text-ink-muted hover:text-ink'
-          }`}
-        >
-          Transactions
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('till-shifts')}
-          className={`px-4 py-2.5 font-display text-sm font-medium ${
-            tab === 'till-shifts' ? 'border-b-2 border-accent text-accent-strong' : 'text-ink-muted hover:text-ink'
-          }`}
-        >
-          Till shifts
-        </button>
-      </div>
+      <Tabs
+        className="mt-6"
+        tabs={[
+          { key: 'transactions', label: 'Transactions' },
+          { key: 'till-shifts', label: 'Till shifts' },
+        ]}
+        active={tab}
+        onChange={(key) => setTab(key as typeof tab)}
+      />
 
       {tab === 'transactions' ? (
         <div className="mt-4">
@@ -344,6 +328,6 @@ export function SalesPage() {
       {refundTargetSale && (
         <RefundDialog sale={refundTargetSale} onClose={() => setRefundTargetId(null)} onSuccess={handleRefundSuccess} />
       )}
-    </main>
+    </PageContainer>
   )
 }

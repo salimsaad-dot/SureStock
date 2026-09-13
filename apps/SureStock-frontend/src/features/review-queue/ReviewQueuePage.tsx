@@ -1,9 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { PageContainer } from '../../components/PageContainer'
+import { PageHeader } from '../../components/PageHeader'
 import { Pagination } from '../../components/Pagination'
 import { Pill } from '../../components/Pill'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow, TableSkeleton } from '../../components/Table'
+import { Tabs } from '../../components/Tabs'
 import { listReviewQueue } from '../../lib/api/review-queue'
 import type { ReviewQueueItem } from '../../lib/api/types'
 import { ResolveReviewQueueDialog } from './ResolveReviewQueueDialog'
@@ -47,29 +50,18 @@ export function ReviewQueuePage() {
   const items = data?.items ?? []
 
   return (
-    <main className="p-6">
-      <h1 className="font-display text-2xl font-bold text-ink">Review queue</h1>
-      <p className="mt-0.5 font-body text-sm text-ink-muted">Offline sales that need a manager's judgment call before they're settled.</p>
+    <PageContainer>
+      <PageHeader title="Review queue" subtitle="Offline sales that need a manager's judgment call before they're settled." />
 
-      <div className="mt-4 flex gap-1 border-b border-border">
-        {STATUS_TABS.map((tab) => (
-          <button
-            key={tab.value}
-            type="button"
-            onClick={() => {
-              setStatus(tab.value)
-              setPage(1)
-            }}
-            className={
-              status === tab.value
-                ? 'border-b-2 border-accent px-3 py-2 font-display text-sm font-semibold text-accent-strong'
-                : 'border-b-2 border-transparent px-3 py-2 font-display text-sm text-ink-muted hover:text-ink'
-            }
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        className="mt-4"
+        tabs={STATUS_TABS.map((tab) => ({ key: tab.value, label: tab.label }))}
+        active={status}
+        onChange={(key) => {
+          setStatus(key as typeof status)
+          setPage(1)
+        }}
+      />
 
       <div className="mt-4">
         <Table>
@@ -146,6 +138,6 @@ export function ReviewQueuePage() {
       </div>
 
       {resolvingItem && <ResolveReviewQueueDialog item={resolvingItem} onClose={() => setResolvingItem(null)} />}
-    </main>
+    </PageContainer>
   )
 }
