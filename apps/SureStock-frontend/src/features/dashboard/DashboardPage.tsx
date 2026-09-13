@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, ClipboardCheck, ListChecks, PackageX, ScanEye, TrendingUp, Wallet } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { PageContainer } from '../../components/PageContainer'
+import { PageHeader } from '../../components/PageHeader'
 import { StatCard } from '../../components/StatCard'
 import { getDashboard } from '../../lib/api/dashboard'
 import { getOnboardingStatus } from '../../lib/api/onboarding'
@@ -38,9 +40,8 @@ export function DashboardPage() {
   const { data: onboarding } = useQuery({ queryKey: ['onboarding', 'status'], queryFn: getOnboardingStatus, enabled: role === 'OWNER' })
 
   return (
-    <main className="p-6">
-      <h1 className="font-display text-2xl font-bold text-ink">Dashboard</h1>
-      <p className="mt-0.5 font-body text-sm text-ink-muted">Today, compared with the same day last week.</p>
+    <PageContainer>
+      <PageHeader title="Dashboard" subtitle="Today, compared with the same day last week." />
 
       {onboarding && !onboarding.isComplete && (
         <Link
@@ -55,7 +56,9 @@ export function DashboardPage() {
         </Link>
       )}
 
-      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* Revenue and Gross profit are this shop's two headline figures — given
+          a wider, more prominent row than the operational stats below them. */}
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <StatCard
           icon={<Wallet className="h-5 w-5" aria-hidden="true" />}
           label="Revenue today"
@@ -65,17 +68,20 @@ export function DashboardPage() {
         />
         <StatCard
           icon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
-          label="Transactions"
-          value={data?.todayTransactions ?? 0}
-          tone="accent"
-          comparison={{ changePct: data?.todayTransactionsChangePct ?? null, goodDirectionUp: true, rangeLabel: 'vs last week' }}
-        />
-        <StatCard
-          icon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
           label="Gross profit"
           value={formatPesewas(data?.todayGrossProfit ?? 0)}
           tone="success"
           comparison={{ changePct: data?.todayGrossProfitChangePct ?? null, goodDirectionUp: true, rangeLabel: 'vs last week' }}
+        />
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <StatCard
+          icon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
+          label="Transactions"
+          value={data?.todayTransactions ?? 0}
+          tone="neutral"
+          comparison={{ changePct: data?.todayTransactionsChangePct ?? null, goodDirectionUp: true, rangeLabel: 'vs last week' }}
         />
         <StatCard
           icon={<Wallet className="h-5 w-5" aria-hidden="true" />}
@@ -86,16 +92,16 @@ export function DashboardPage() {
         />
       </div>
 
-      <div className="mt-4 rounded-lg border border-border bg-surface-raised p-4">
-        <h2 className="font-display text-sm font-semibold text-ink">Revenue, last 30 days</h2>
-        <div className="mt-2">
+      <div className="mt-4 rounded-lg border border-border bg-surface-raised p-5">
+        <h2 className="font-display text-lg font-semibold text-ink">Revenue, last 30 days</h2>
+        <div className="mt-3">
           <SalesTrendChart data={data?.trend ?? []} />
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-lg border border-border bg-surface-raised p-4">
-          <h2 className="font-display text-sm font-semibold text-ink">Needs attention</h2>
+          <h2 className="font-display text-lg font-semibold text-ink">Needs attention</h2>
           <div className="mt-3 flex flex-col gap-2">
             {data && data.attention.length === 0 && <p className="font-display text-sm text-ink-muted">Nothing needs attention right now.</p>}
             {data?.attention.map((item) => {
@@ -118,7 +124,7 @@ export function DashboardPage() {
         </div>
 
         <div className="rounded-lg border border-border bg-surface-raised p-4">
-          <h2 className="font-display text-sm font-semibold text-ink">Today's top sellers</h2>
+          <h2 className="font-display text-lg font-semibold text-ink">Today's top sellers</h2>
           <div className="mt-3 flex flex-col gap-2">
             {data && data.topSellers.length === 0 && <p className="font-display text-sm text-ink-muted">No sales yet today.</p>}
             {data?.topSellers.map((p) => (
@@ -136,6 +142,6 @@ export function DashboardPage() {
           </div>
         </div>
       </div>
-    </main>
+    </PageContainer>
   )
 }

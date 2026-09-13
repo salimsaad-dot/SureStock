@@ -3,6 +3,9 @@ import { AlertTriangle, Package, XCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '../../components/Button'
+import { FilterToolbar } from '../../components/FilterToolbar'
+import { PageContainer } from '../../components/PageContainer'
+import { PageHeader } from '../../components/PageHeader'
 import { StatCard } from '../../components/StatCard'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow, TableSkeleton } from '../../components/Table'
 import { TextInput } from '../../components/TextInput'
@@ -73,35 +76,35 @@ export function InventoryPage() {
   )
 
   return (
-    <main className="p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Inventory</h1>
-          <p className="mt-0.5 font-body text-sm text-ink-muted">Manage your products, stock levels, and pricing.</p>
-        </div>
-        {canManage && (
-          <div className="flex gap-2">
-            <Link to="/inventory/settings">
-              <Button variant="secondary" size="default">
-                Categories &amp; suppliers
-              </Button>
-            </Link>
-            <Link to="/inventory/import">
-              <Button variant="secondary" size="default">
-                Import
-              </Button>
-            </Link>
-            <Link to="/inventory/stock-take">
-              <Button variant="secondary" size="default">
-                Stock take
-              </Button>
-            </Link>
-            <Link to="/inventory/new">
-              <Button size="default">New product</Button>
-            </Link>
-          </div>
-        )}
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Inventory"
+        subtitle="Manage your products, stock levels, and pricing."
+        actions={
+          canManage && (
+            <>
+              <Link to="/inventory/settings">
+                <Button variant="secondary" size="default">
+                  Categories &amp; suppliers
+                </Button>
+              </Link>
+              <Link to="/inventory/import">
+                <Button variant="secondary" size="default">
+                  Import
+                </Button>
+              </Link>
+              <Link to="/inventory/stock-take">
+                <Button variant="secondary" size="default">
+                  Stock take
+                </Button>
+              </Link>
+              <Link to="/inventory/new">
+                <Button size="default">New product</Button>
+              </Link>
+            </>
+          )
+        }
+      />
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard
@@ -142,62 +145,55 @@ export function InventoryPage() {
         />
       </div>
 
-      <div className="mt-6 flex flex-wrap items-end gap-3">
-        <div className="w-64">
-          <TextInput label="Search" placeholder="Name, SKU, or barcode…" value={q} onChange={(e) => setQ(e.target.value)} />
-        </div>
-        <label className="flex flex-col gap-1.5">
-          <span className="font-display text-[13px] font-medium text-ink">Category</span>
-          <select
-            className="h-11 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink"
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-          >
-            <option value="">All categories</option>
-            {categories?.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="font-display text-[13px] font-medium text-ink">Status</span>
-          <select
-            className="h-11 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink"
-            value={status}
-            onChange={(e) => setStatus(e.target.value as ProductStatus | '')}
-          >
-            {STATUS_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="font-display text-[13px] font-medium text-ink">Stock level</span>
-          <select
-            className="h-11 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink"
-            value={stockLevel}
-            onChange={(e) => setStockLevel(e.target.value as StockLevel | '')}
-          >
-            {STOCK_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="h-11 font-display text-[13px] font-medium text-accent hover:text-accent-strong"
-          >
-            Clear filters
-          </button>
-        )}
+      <div className="mt-6">
+        <FilterToolbar onClear={hasActiveFilters ? clearFilters : undefined}>
+          <div className="w-64">
+            <TextInput label="Search" placeholder="Name, SKU, or barcode…" value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
+          <label className="flex flex-col gap-1.5">
+            <span className="font-display text-[13px] font-medium text-ink">Category</span>
+            <select
+              className="h-11 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+            >
+              <option value="">All categories</option>
+              {categories?.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="font-display text-[13px] font-medium text-ink">Status</span>
+            <select
+              className="h-11 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as ProductStatus | '')}
+            >
+              {STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="font-display text-[13px] font-medium text-ink">Stock level</span>
+            <select
+              className="h-11 rounded-md border border-border-strong bg-surface-raised px-3 font-display text-sm text-ink"
+              value={stockLevel}
+              onChange={(e) => setStockLevel(e.target.value as StockLevel | '')}
+            >
+              {STOCK_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </FilterToolbar>
       </div>
 
       <div className="mt-4">
@@ -264,6 +260,6 @@ export function InventoryPage() {
           </label>
         </div>
       </div>
-    </main>
+    </PageContainer>
   )
 }
