@@ -26,6 +26,15 @@ export type RefreshBody = z.infer<typeof refreshBodySchema>;
 // buildable here — no SMS provider exists anywhere in this project
 // (same honest, repeatedly-documented gap as receipt delivery and
 // staff-invite links).
+// Self-service profile-photo update (any authenticated role, own
+// account only — see auth/routes.ts's PATCH /auth/me). null clears it
+// back to the initials fallback; the URL itself always comes from
+// POST /uploads/image, never typed in directly.
+export const updateMeBodySchema = z.object({
+  avatarUrl: z.string().min(1).nullable(),
+});
+export type UpdateMeBody = z.infer<typeof updateMeBodySchema>;
+
 export const registerBodySchema = z
   .object({
     shopName: z.string().min(1, 'Enter your shop name.'),

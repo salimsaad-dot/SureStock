@@ -3,7 +3,9 @@ import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import staticPlugin from '@fastify/static';
 import { env } from './config/env.js';
+import { UPLOADS_DIR, ensureUploadsDir } from './lib/uploads.js';
 import prismaPlugin from './plugins/prisma.js';
 import errorHandlerPlugin from './plugins/error-handler.js';
 import { HttpError } from './lib/http-error.js';
@@ -14,6 +16,7 @@ import categoryRoutes from './modules/catalogue/category.routes.js';
 import supplierRoutes from './modules/catalogue/supplier.routes.js';
 import productRoutes from './modules/catalogue/product.routes.js';
 import importRoutes from './modules/catalogue/import.routes.js';
+import uploadRoutes from './modules/uploads/upload.routes.js';
 import receiveRoutes from './modules/inventory/receive.routes.js';
 import adjustmentRoutes from './modules/inventory/adjustment.routes.js';
 import tillShiftRoutes from './modules/sales/till-shift.routes.js';
@@ -158,12 +161,20 @@ export async function buildApp(): Promise<FastifyInstance> {
   // rows Doc 6's import task targets — bounded mainly to stop an
   // accidental (or malicious) huge upload from tying up a request.
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024 } });
+  // Serves product photos and staff avatars back out (lib/uploads.ts
+  // writes them here). Filenames are always server-generated UUIDs
+  // (never a client-supplied name), so they're safe to cache
+  // aggressively — a given URL's content never changes. @fastify/static
+  // requires `root` to exist before registration, hence the mkdir first.
+  await ensureUploadsDir();
+  await app.register(staticPlugin, { root: UPLOADS_DIR, prefix: '/uploads/', cacheControl: true, maxAge: '30d' });
   await app.register(healthRoutes);
   await app.register(authRoutes);
   await app.register(categoryRoutes);
   await app.register(supplierRoutes);
   await app.register(productRoutes);
   await app.register(importRoutes);
+  await app.register(uploadRoutes);
   await app.register(receiveRoutes);
   await app.register(adjustmentRoutes);
   await app.register(tillShiftRoutes);

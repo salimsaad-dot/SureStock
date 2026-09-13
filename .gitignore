@@ -20,3 +20,8 @@ Thumbs.db
 
 # Playwright's own run-state scratch file, not a real test artifact.
 test-results/
+
+# Uploaded product photos/staff avatars (lib/uploads.ts) — real,
+# user-supplied files written to local disk, same reasoning as
+# /backups/ above: never belongs in version control.
+apps/SureStock-backend/uploads/

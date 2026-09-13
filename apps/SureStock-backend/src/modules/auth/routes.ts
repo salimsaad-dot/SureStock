@@ -1,15 +1,16 @@
 import type { FastifyInstance } from 'fastify';
 import type { User } from '@prisma/client';
-import { loginBodySchema, pinUnlockBodySchema, refreshBodySchema, registerBodySchema } from './schemas.js';
-import { verifyPassword, verifyPin, listActiveStaffForLocation, registerShop } from './service.js';
+import { loginBodySchema, pinUnlockBodySchema, refreshBodySchema, registerBodySchema, updateMeBodySchema } from './schemas.js';
+import { verifyPassword, verifyPin, listActiveStaffForLocation, registerShop, updateOwnAvatar } from './service.js';
 import { parseBody } from '../../lib/validate.js';
 import { unauthorized } from '../../lib/http-error.js';
 import { accessUser } from '../../lib/auth-context.js';
+import { deleteUploadedImage } from '../../lib/uploads.js';
 import { env } from '../../config/env.js';
 import type { AccessTokenPayload, RefreshTokenPayload } from '../../types/jwt.js';
 
 function publicUser(user: User) {
-  return { id: user.id, name: user.name, role: user.role, locationId: user.locationId };
+  return { id: user.id, name: user.name, role: user.role, locationId: user.locationId, avatarUrl: user.avatarUrl };
 }
 
 export default async function authRoutes(app: FastifyInstance) {
@@ -165,5 +166,19 @@ export default async function authRoutes(app: FastifyInstance) {
   // another.
   app.get('/auth/staff', { preHandler: [app.authenticate] }, async (request) => {
     return listActiveStaffForLocation(app.prisma, accessUser(request).locationId);
+  });
+
+  // Self-service profile photo — any role, own account only (`user.sub`
+  // from the token, never a body/param id, so there's no way to target
+  // someone else's account here). Old file is cleaned up best-effort
+  // after the record update succeeds, not before — a failed delete of
+  // the old file must never block replacing it with the new one.
+  app.patch('/auth/me', { preHandler: [app.authenticate] }, async (request) => {
+    const user = accessUser(request);
+    const { avatarUrl } = parseBody(updateMeBodySchema, request.body);
+    const previous = await app.prisma.user.findUniqueOrThrow({ where: { id: user.sub }, select: { avatarUrl: true } });
+    const updated = await updateOwnAvatar(app.prisma, user.sub, avatarUrl);
+    if (previous.avatarUrl !== avatarUrl) void deleteUploadedImage(previous.avatarUrl);
+    return publicUser(updated);
   });
 }

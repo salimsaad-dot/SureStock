@@ -262,6 +262,7 @@ model User {
   role              UserRole
   locationId        String    @map("location_id") @db.Char(36)
   isActive          Boolean   @default(true) @map("is_active")
+  avatarUrl         String?   @map("avatar_url")
   lastLoginAt       DateTime? @map("last_login_at") @db.DateTime(3)
   // PIN lockout (Doc 6, T-03): 5 failed PIN attempts locks the account
   // for 5 minutes. Tracked in the database, not in memory — a lockout

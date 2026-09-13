@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { PageContainer } from '../../components/PageContainer'
+import { UserAvatar } from '../../components/UserAvatar'
 import { getStaff } from '../../lib/api/auth'
 
 export function StaffPickerPage() {
@@ -24,8 +25,9 @@ export function StaffPickerPage() {
             key={member.id}
             type="button"
             onClick={() => navigate(`/switch/${member.id}`, { state: { name: member.name } })}
-            className="flex h-24 flex-col items-center justify-center gap-1 rounded-lg border border-border bg-surface-raised font-display transition-colors duration-[var(--motion-state)] ease-out hover:bg-surface-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+            className="flex h-28 flex-col items-center justify-center gap-1.5 rounded-lg border border-border bg-surface-raised font-display transition-colors duration-[var(--motion-state)] ease-out hover:bg-surface-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           >
+            <UserAvatar name={member.name} avatarUrl={member.avatarUrl} />
             <span className="text-sm font-semibold text-ink">{member.name}</span>
             <span className="font-mono text-[11px] uppercase tracking-wide text-ink-faint">
               {member.role}

@@ -4,6 +4,7 @@ import { generateId } from '../../lib/id.js';
 import { toDecimal, toPesewas } from '../../lib/money.js';
 import { HttpError, notFound } from '../../lib/http-error.js';
 import { encodeCursor, decodeCursor } from '../../lib/cursor.js';
+import { deleteUploadedImage } from '../../lib/uploads.js';
 import { matchScore } from './search.js';
 import { postMovement, computeDaysOfCover } from '../inventory/movement.service.js';
 import type {
@@ -511,6 +512,10 @@ export async function updateProduct(
     data: body,
     include: { variants: { where: { locationId } } },
   });
+  // Best-effort — a stray orphaned file on disk is a non-issue, but a
+  // failed cleanup must never block the product update that already
+  // succeeded above.
+  if (body.imageUrl !== undefined && body.imageUrl !== existing.imageUrl) void deleteUploadedImage(existing.imageUrl);
   return serializeProduct(updated, role);
 }
 

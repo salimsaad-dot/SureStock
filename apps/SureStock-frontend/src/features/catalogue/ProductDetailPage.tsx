@@ -4,9 +4,12 @@ import { PageContainer } from '../../components/PageContainer'
 import { PageHeader } from '../../components/PageHeader'
 import { Pill } from '../../components/Pill'
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '../../components/Table'
-import { getProduct, listCategories, listSuppliers, updateProductStatus } from '../../lib/api/catalogue'
+import { getProduct, listCategories, listSuppliers, updateProduct, updateProductStatus } from '../../lib/api/catalogue'
 import type { ProductStatus } from '../../lib/api/types'
+import { uploadImage } from '../../lib/api/uploads'
 import { useAuthStore } from '../../lib/auth-store'
+import { useToast } from '../../lib/toast-store'
+import { ProductAvatar } from './ProductAvatar'
 import { VariantCard } from './VariantCard'
 import { VariantRow } from './VariantRow'
 
@@ -17,6 +20,7 @@ export function ProductDetailPage() {
   const queryClient = useQueryClient()
   const role = useAuthStore((s) => s.session?.user.role)
   const canManage = role === 'OWNER' || role === 'MANAGER'
+  const show = useToast()
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
@@ -28,6 +32,18 @@ export function ProductDetailPage() {
   const statusMutation = useMutation({
     mutationFn: (status: ProductStatus) => updateProductStatus(id!, status),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['product', id] }),
+  })
+
+  const photoMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const { url } = await uploadImage(file)
+      return updateProduct(id!, { imageUrl: url })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product', id] })
+      show('Photo updated.')
+    },
+    onError: () => show("Couldn't upload that image — try a JPEG, PNG, or WebP under 5MB.", 'error'),
   })
 
   if (isLoading) {
@@ -65,6 +81,26 @@ export function ProductDetailPage() {
         backLabel="Back to inventory"
         statusPill={statusPill}
       />
+
+      <div className="mt-4 flex items-center gap-3">
+        <ProductAvatar name={product.name} imageUrl={product.imageUrl} size="large" />
+        {canManage && (
+          <label className="font-display text-[13px] font-medium text-accent hover:text-accent-strong">
+            {photoMutation.isPending ? 'Uploading…' : product.imageUrl ? 'Change photo' : 'Add photo'}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              disabled={photoMutation.isPending}
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) photoMutation.mutate(file)
+                e.target.value = ''
+              }}
+              className="sr-only"
+            />
+          </label>
+        )}
+      </div>
 
       <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-2 font-display text-sm">
         <div>

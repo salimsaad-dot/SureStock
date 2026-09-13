@@ -1,5 +1,5 @@
 import { apiRequest } from './client'
-import type { AuthSession, StaffMember } from './types'
+import type { AuthSession, AuthUser, StaffMember } from './types'
 
 export function login(identifier: string, password: string) {
   return apiRequest<AuthSession>('/auth/login', {
@@ -33,6 +33,11 @@ export function pinUnlock(userId: string, pin: string) {
 /** Roster for the PIN quick-switch picker, scoped server-side to the caller's own location. */
 export function getStaff() {
   return apiRequest<StaffMember[]>('/auth/staff')
+}
+
+/** Self-service profile photo — always the caller's own account (see the backend's PATCH /auth/me). null clears it back to initials. */
+export function updateMyAvatar(avatarUrl: string | null) {
+  return apiRequest<AuthUser>('/auth/me', { method: 'PATCH', body: { avatarUrl } })
 }
 
 /**

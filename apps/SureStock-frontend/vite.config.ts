@@ -59,6 +59,14 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
+      // Uploaded product photos/avatars (lib/uploads.ts on the backend,
+      // served at this same /uploads/ prefix — no rewrite needed). The
+      // backend returns relative URLs so a real production deployment's
+      // own reverse proxy needs the equivalent rule, same as /api above.
+      '/uploads': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      },
     },
   },
   test: {

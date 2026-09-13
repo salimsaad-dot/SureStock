@@ -7,6 +7,7 @@ import { useOfflineSync } from '../lib/offline/use-offline-sync'
 import { logout } from '../lib/api/auth'
 import { navItemsForRole, type NavGroup } from './nav'
 import { MobileMoreSheet } from './MobileMoreSheet'
+import { ProfileAvatarButton } from './ProfileAvatarButton'
 import { SyncStatusPill } from './SyncStatusPill'
 import { ThemeCycleButton } from './ThemeCycleButton'
 import { ThemeToggle } from './ThemeToggle'
@@ -99,8 +100,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="m-3 rounded-lg border border-border bg-surface-sunken p-3">
-          <p className="truncate font-display text-sm font-medium text-ink">{session?.user.name}</p>
-          <p className="font-mono text-[11px] uppercase tracking-wide text-ink-faint">{session?.user.role}</p>
+          <div className="flex items-center gap-2.5">
+            <ProfileAvatarButton size="default" />
+            <div className="min-w-0">
+              <p className="truncate font-display text-sm font-medium text-ink">{session?.user.name}</p>
+              <p className="font-mono text-[11px] uppercase tracking-wide text-ink-faint">{session?.user.role}</p>
+            </div>
+          </div>
           <div className="mt-3 border-t border-border pt-3">
             <ThemeToggle />
           </div>
@@ -121,9 +127,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex items-center justify-end gap-1 border-b border-border bg-surface-raised px-4 py-2 lg:hidden">
-        <ThemeCycleButton />
-        <SyncStatusPill />
+      <div className="flex items-center justify-between gap-1 border-b border-border bg-surface-raised px-4 py-2 lg:hidden">
+        <ProfileAvatarButton size="small" />
+        <div className="flex items-center gap-1">
+          <ThemeCycleButton />
+          <SyncStatusPill />
+        </div>
       </div>
 
       <div className="flex-1 pb-16 lg:pb-0">{children}</div>

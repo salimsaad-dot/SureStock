@@ -104,9 +104,14 @@ export async function verifyPin(prisma: typeof PrismaClient, userId: string, pin
 export function listActiveStaffForLocation(prisma: typeof PrismaClient, locationId: string) {
   return prisma.user.findMany({
     where: { locationId, isActive: true },
-    select: { id: true, name: true, role: true },
+    select: { id: true, name: true, role: true, avatarUrl: true },
     orderBy: { name: 'asc' },
   });
+}
+
+/** Self-service profile photo — always the caller's own account (see PATCH /auth/me), never an arbitrary user id. */
+export function updateOwnAvatar(prisma: typeof PrismaClient, userId: string, avatarUrl: string | null): Promise<User> {
+  return prisma.user.update({ where: { id: userId }, data: { avatarUrl } });
 }
 
 export function hashPassword(plain: string): Promise<string> {

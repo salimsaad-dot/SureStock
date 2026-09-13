@@ -110,7 +110,7 @@ export interface CreateProductBody {
   unit?: ProductUnit
   taxRateId?: string
   isPerishable?: boolean
-  imageUrl?: string
+  imageUrl?: string | null
   variants: VariantInput[]
 }
 

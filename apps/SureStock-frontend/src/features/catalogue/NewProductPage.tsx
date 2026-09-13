@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useEffect, useState } from 'react'
+import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { Button } from '../../components/Button'
@@ -11,7 +11,9 @@ import { TextInput } from '../../components/TextInput'
 import { createProduct, listCategories, listSuppliers } from '../../lib/api/catalogue'
 import { getInventoryDefaults } from '../../lib/api/settings'
 import { ApiError, type ProductUnit } from '../../lib/api/types'
+import { uploadImage } from '../../lib/api/uploads'
 import { parseCedisToPesewas } from '../../lib/money'
+import { ProductAvatar } from './ProductAvatar'
 
 const UNITS: ProductUnit[] = ['EACH', 'KG', 'LITRE', 'PACK', 'METRE']
 
@@ -65,6 +67,13 @@ export function NewProductPage() {
     defaultValues: { name: '', description: '', categoryId: '', supplierId: '', unit: 'EACH', isPerishable: false, variants: [emptyVariant] },
   })
   const { fields, append, remove } = useFieldArray({ control, name: 'variants' })
+  const nameValue = useWatch({ control, name: 'name' })
+
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const imageUpload = useMutation({
+    mutationFn: uploadImage,
+    onSuccess: ({ url }) => setImageUrl(url),
+  })
 
   // The very first variant row exists before inventoryDefaults has loaded
   // (useForm's defaultValues run synchronously on mount) — backfill it
@@ -104,6 +113,7 @@ export function NewProductPage() {
         supplierId: values.supplierId || undefined,
         unit: values.unit,
         isPerishable: values.isPerishable,
+        imageUrl: imageUrl ?? undefined,
         variants,
       })
     },
@@ -123,6 +133,25 @@ export function NewProductPage() {
       <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit((values) => mutation.mutate(values))}>
         <TextInput label="Name" error={errors.name?.message} {...register('name')} />
         <TextInput label="Description (optional)" error={errors.description?.message} {...register('description')} />
+
+        <div className="flex items-center gap-3">
+          <ProductAvatar name={nameValue || '?'} imageUrl={imageUrl} size="large" />
+          <div>
+            <label className="font-display text-[13px] font-medium text-ink">Photo (optional)</label>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              disabled={imageUpload.isPending}
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) imageUpload.mutate(file)
+              }}
+              className="mt-1.5 block font-display text-sm text-ink file:mr-3 file:rounded-md file:border file:border-border-strong file:bg-surface-raised file:px-3 file:py-2 file:font-display file:text-sm file:text-ink"
+            />
+            {imageUpload.isPending && <p className="mt-1 text-[12.5px] text-ink-muted">Uploading…</p>}
+            {imageUpload.isError && <p className="mt-1 text-[12.5px] text-danger">Couldn't upload that image — try a JPEG, PNG, or WebP under 5MB.</p>}
+          </div>
+        </div>
 
         {/* flex-wrap, no flex-1 — matches Inventory's filter row. flex-1
             with no wrap was the real bug: it forced all 3 selects to

@@ -5,12 +5,14 @@ export interface AuthUser {
   name: string
   role: UserRole
   locationId: string
+  avatarUrl: string | null
 }
 
 export interface StaffMember {
   id: string
   name: string
   role: UserRole
+  avatarUrl: string | null
 }
 
 export interface AuthSession {
