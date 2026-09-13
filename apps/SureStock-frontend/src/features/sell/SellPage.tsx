@@ -96,7 +96,7 @@ export function SellPage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="font-display text-2xl font-bold text-ink">Sell</h1>
-            <p className="mt-0.5 font-body text-sm text-ink-muted">Scan barcode or search for a product to start a sale.</p>
+            <p className="mt-0.5 font-display text-sm text-ink-muted">Scan barcode or search for a product to start a sale.</p>
           </div>
           <div className="flex items-center gap-2">
             {ticketNumber && (

@@ -22,7 +22,7 @@ export function QuickPickGrid({
   return (
     <section className="mt-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-base font-semibold text-ink">{title}</h2>
+        <h2 className="font-display text-lg font-semibold text-ink">{title}</h2>
         {showViewAll && (
           <Link to="/inventory" className="font-display text-[13px] font-medium text-accent hover:text-accent-strong">
             View all products →

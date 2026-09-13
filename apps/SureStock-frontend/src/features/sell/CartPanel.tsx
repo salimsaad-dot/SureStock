@@ -73,9 +73,9 @@ export function CartPanel({ onCheckout }: { onCheckout: (preferredMethod: Paymen
           />
         </div>
 
-        <div className="mt-2 flex justify-between font-display text-lg font-semibold text-ink">
+        <div className="mt-2 flex items-baseline justify-between font-display text-lg font-semibold text-ink">
           <span>Total</span>
-          <span className="font-mono text-2xl tabular-nums">{formatPesewas(totals.total)}</span>
+          <span className="font-mono text-[28px] font-bold tabular-nums">{formatPesewas(totals.total)}</span>
         </div>
 
         <div className="mt-3 flex items-center justify-between rounded-md bg-accent-wash px-3 py-2">

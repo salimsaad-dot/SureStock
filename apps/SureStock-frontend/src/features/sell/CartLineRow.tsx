@@ -50,7 +50,7 @@ export function CartLineRow({ line }: { line: CartLine }) {
           <button
             type="button"
             onClick={() => setQuantity(line.variantId, line.quantity - 1)}
-            className="flex h-9 w-9 items-center justify-center text-ink hover:bg-surface-sunken"
+            className="flex h-10 w-10 items-center justify-center text-ink transition-colors duration-[var(--motion-state)] ease-out hover:bg-surface-sunken"
             aria-label="Decrease quantity"
           >
             <Minus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -59,7 +59,7 @@ export function CartLineRow({ line }: { line: CartLine }) {
           <button
             type="button"
             onClick={() => setQuantity(line.variantId, line.quantity + 1)}
-            className="flex h-9 w-9 items-center justify-center text-ink hover:bg-surface-sunken"
+            className="flex h-10 w-10 items-center justify-center text-ink transition-colors duration-[var(--motion-state)] ease-out hover:bg-surface-sunken"
             aria-label="Increase quantity"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />

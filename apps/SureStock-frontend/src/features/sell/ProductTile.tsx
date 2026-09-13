@@ -37,7 +37,7 @@ export function ProductTile({ tile }: { tile: SellTile }) {
       <ProductAvatar name={tile.productName} imageUrl={tile.imageUrl} size="large" />
       <div className="w-full">
         <p className="truncate font-display text-sm font-medium text-ink">{tile.productName}</p>
-        <p className="font-mono text-sm font-semibold tabular-nums text-ink">{formatPesewas(tile.sellingPrice)}</p>
+        <p className="font-mono text-base font-semibold tabular-nums text-ink">{formatPesewas(tile.sellingPrice)}</p>
         <p className={`mt-0.5 font-display text-[11px] font-medium ${outOfStock ? 'text-danger' : 'text-success'}`}>
           {outOfStock ? 'Out of stock' : `${tile.quantityOnHand} in stock`}
         </p>
