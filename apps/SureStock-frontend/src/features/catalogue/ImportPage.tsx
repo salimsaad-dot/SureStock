@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../components/Button'
+import { PageContainer } from '../../components/PageContainer'
+import { PageHeader } from '../../components/PageHeader'
 import { Pill } from '../../components/Pill'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/Table'
 import { commitImport, downloadImportTemplate, parseImportFile, validateImport } from '../../lib/api/catalogue'
@@ -59,11 +61,8 @@ export function ImportPage() {
   const requiredFieldsMapped = REQUIRED_IMPORT_FIELDS.every((field) => mapping[field])
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <Link to="/inventory" className="font-display text-[13px] text-ink-muted hover:text-ink">
-        ← Back to inventory
-      </Link>
-      <h1 className="mt-2 font-display text-2xl font-bold text-ink">Import products</h1>
+    <PageContainer maxWidth="3xl">
+      <PageHeader variant="detail" title="Import products" backTo="/inventory" backLabel="Back to inventory" />
 
       {step === 'upload' && (
         <section className="mt-6">
@@ -213,6 +212,6 @@ export function ImportPage() {
           </Link>
         </section>
       )}
-    </main>
+    </PageContainer>
   )
 }

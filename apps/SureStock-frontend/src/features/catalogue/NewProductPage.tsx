@@ -2,9 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { Button } from '../../components/Button'
+import { PageContainer } from '../../components/PageContainer'
+import { PageHeader } from '../../components/PageHeader'
 import { TextInput } from '../../components/TextInput'
 import { createProduct, listCategories, listSuppliers } from '../../lib/api/catalogue'
 import { getInventoryDefaults } from '../../lib/api/settings'
@@ -115,11 +117,8 @@ export function NewProductPage() {
   })
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
-      <Link to="/inventory" className="font-display text-[13px] text-ink-muted hover:text-ink">
-        ← Back to inventory
-      </Link>
-      <h1 className="mt-2 font-display text-2xl font-bold text-ink">New product</h1>
+    <PageContainer maxWidth="2xl">
+      <PageHeader variant="detail" title="New product" backTo="/inventory" backLabel="Back to inventory" />
 
       <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit((values) => mutation.mutate(values))}>
         <TextInput label="Name" error={errors.name?.message} {...register('name')} />
@@ -206,6 +205,6 @@ export function NewProductPage() {
           Create product
         </Button>
       </form>
-    </main>
+    </PageContainer>
   )
 }
