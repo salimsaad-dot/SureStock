@@ -53,6 +53,25 @@
   color-scheme: light;
 }
 
+/* Redesign 2026-09, accessibility pass: every hover/pressed/focus-state
+   transition, dialog/sheet entrance, and toast slide in this app is
+   driven by these four tokens (see `duration-[var(--motion-*)]` usage
+   throughout src/components/ and feature pages) — zeroing them here is
+   a single, complete fix for "respect prefers-reduced-motion" rather
+   than patching every consuming file individually. Deliberately not
+   touching Tailwind's own `animate-spin`/`animate-pulse` (Spinner,
+   TableSkeleton) — those communicate an in-progress/loading state
+   rather than being decorative motion, and WCAG's guidance targets the
+   latter. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-state: 0ms;
+    --motion-sheet: 0ms;
+    --motion-insert: 0ms;
+    --motion-route: 0ms;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --surface: oklch(0.175 0.012 260);
