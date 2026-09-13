@@ -41,7 +41,10 @@ body {
   margin: 0;
   background: var(--surface);
   color: var(--ink);
-  font-family: var(--font-body);
+  /* IBM Plex Sans is the real default — --font-body (serif) stays
+     available for the one deliberate use (ComingSoon.tsx) but must
+     never be what plain, unstyled text silently falls back to. */
+  font-family: var(--font-display);
   font-size: 16px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;

@@ -49,8 +49,11 @@ export async function createProduct(
 /** Real login through the actual UI form — not skipped, since T-32 covers real user flows, not just API setup. */
 export async function loginViaUI(page: Page, email: string, password: string): Promise<void> {
   await page.goto('/login');
-  await page.getByLabel('Phone or email').fill(email);
-  await page.getByLabel('Password').fill(password);
+  // exact: true — LoginPage's password-visibility toggle button has an
+  // aria-label of "Show password"/"Hide password", which otherwise
+  // collides with a non-exact getByLabel('Password') substring match.
+  await page.getByLabel('Phone or email', { exact: true }).fill(email);
+  await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.waitForURL((url) => url.pathname === '/' || url.pathname === '/dashboard');
 }
