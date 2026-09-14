@@ -127,9 +127,19 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex items-center justify-between gap-1 border-b border-border bg-surface-raised px-4 py-2 lg:hidden">
-        <ProfileAvatarButton size="small" />
+      {/* The desktop sidebar carries the SureStock brand mark at its own
+          top — the mobile bar had nothing standing in for that at all
+          (real gap found live: "the SureStock logo is nowhere on
+          mobile"). Mirrors the sidebar's icon + wordmark, just compact. */}
+      <div className="flex items-center justify-between gap-2 border-b border-border bg-surface-raised px-4 py-2 lg:hidden">
+        <div className="flex flex-none items-center gap-2">
+          <span className="flex h-7 w-7 flex-none items-center justify-center rounded-md bg-accent text-white">
+            <Package className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <span className="font-display text-sm font-bold text-ink">SureStock</span>
+        </div>
         <div className="flex items-center gap-1">
+          <ProfileAvatarButton size="small" />
           <ThemeCycleButton />
           <SyncStatusPill />
         </div>
