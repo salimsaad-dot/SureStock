@@ -62,7 +62,7 @@ export function SuppliersPanel() {
         </Button>
       </form>
 
-      <div className="mt-4">
+      <div className="mt-4 hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -103,6 +103,32 @@ export function SuppliersPanel() {
             ))}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="mt-4 flex flex-col gap-2 md:hidden">
+        {isLoading &&
+          Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-[68px] animate-pulse rounded-lg border border-border bg-surface-raised" />)}
+        {!isLoading && suppliers?.length === 0 && <EmptyState message="No suppliers yet." />}
+        {suppliers?.map((supplier) => (
+          <div key={supplier.id} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-raised p-3">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="truncate font-display text-sm font-medium text-ink">{supplier.name}</span>
+                {supplier.archivedAt ? <Pill variant="warning">Archived</Pill> : <Pill variant="success">Active</Pill>}
+              </div>
+              <p className="mt-0.5 font-mono text-[12px] text-ink-faint">{supplier.phone ?? '—'}</p>
+            </div>
+            {supplier.archivedAt ? (
+              <Button size="default" variant="secondary" className="flex-none" isLoading={restore.isPending} onClick={() => restore.mutate(supplier.id)}>
+                Restore
+              </Button>
+            ) : (
+              <Button size="default" variant="secondary" className="flex-none" isLoading={archive.isPending} onClick={() => archive.mutate(supplier.id)}>
+                Archive
+              </Button>
+            )}
+          </div>
+        ))}
       </div>
     </section>
   )

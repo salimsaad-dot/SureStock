@@ -126,8 +126,18 @@ export function PurchasingPage() {
         onChange={(key) => setTab(key as typeof tab)}
       />
 
+      {/* tab === 'orders' panel. minmax(0,1fr) below, not a bare 1fr — a
+          raw arbitrary grid-template-columns value doesn't get
+          Tailwind's usual minmax(0,...) treatment, so the track's
+          automatic minimum defaults to content-based `auto`. That let
+          this column refuse to shrink below the nowrap table's natural
+          width, forcing the whole page wider than the viewport next to
+          the fixed 320px restock panel at laptop widths (1024-1280px) —
+          the CSS Grid version of the flexbox min-width:auto trap fixed
+          elsewhere all session, just via `grid-template-columns`
+          instead of `flex`. */}
       {tab === 'orders' && (
-        <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div>
             <FilterToolbar>
               <label className="flex flex-col gap-1.5">
@@ -150,46 +160,79 @@ export function PurchasingPage() {
             </FilterToolbar>
 
             <div className="mt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>PO number</TableHead>
-                    <TableHead>Supplier</TableHead>
-                    <TableHead>Order date</TableHead>
-                    <TableHead>Expected date</TableHead>
-                    <TableHead className="text-right">Items</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading && <TableSkeleton rows={5} columns={7} />}
-                  {!isLoading && orders.length === 0 && <TableEmpty columns={7} message="No purchase orders match these filters." />}
-                  {orders.map((po) => (
-                    <TableRow key={po.id}>
-                      <TableCell className="whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/purchasing/${po.id}`)}
-                          className="font-mono text-accent hover:text-accent-strong hover:underline"
-                        >
-                          {po.orderNumber}
-                        </button>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">{po.supplierName}</TableCell>
-                      <TableCell className="whitespace-nowrap text-ink-muted">{new Date(po.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell className="whitespace-nowrap text-ink-muted">
-                        {po.expectedDate ? new Date(po.expectedDate).toLocaleDateString() : '—'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{po.itemCount}</TableCell>
-                      <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{formatPesewas(po.totalCost ?? 0)}</TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        <PurchaseOrderStatusPill status={po.status} />
-                      </TableCell>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>PO number</TableHead>
+                      <TableHead>Supplier</TableHead>
+                      <TableHead>Order date</TableHead>
+                      <TableHead>Expected date</TableHead>
+                      <TableHead className="text-right">Items</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading && <TableSkeleton rows={5} columns={7} />}
+                    {!isLoading && orders.length === 0 && <TableEmpty columns={7} message="No purchase orders match these filters." />}
+                    {orders.map((po) => (
+                      <TableRow key={po.id}>
+                        <TableCell className="whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/purchasing/${po.id}`)}
+                            className="font-mono text-accent hover:text-accent-strong hover:underline"
+                          >
+                            {po.orderNumber}
+                          </button>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">{po.supplierName}</TableCell>
+                        <TableCell className="whitespace-nowrap text-ink-muted">{new Date(po.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="whitespace-nowrap text-ink-muted">
+                          {po.expectedDate ? new Date(po.expectedDate).toLocaleDateString() : '—'}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{po.itemCount}</TableCell>
+                        <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{formatPesewas(po.totalCost ?? 0)}</TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <PurchaseOrderStatusPill status={po.status} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="flex flex-col gap-2 md:hidden">
+                {isLoading &&
+                  Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-[92px] animate-pulse rounded-lg border border-border bg-surface-raised" />)}
+                {!isLoading && orders.length === 0 && (
+                  <p className="rounded-lg border border-border bg-surface-raised p-6 text-center text-sm text-ink-muted">No purchase orders match these filters.</p>
+                )}
+                {orders.map((po) => (
+                  <div
+                    key={po.id}
+                    onClick={() => navigate(`/purchasing/${po.id}`)}
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-surface-raised p-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="truncate font-mono text-[13px] text-accent">{po.orderNumber}</span>
+                        <PurchaseOrderStatusPill status={po.status} />
+                      </div>
+                      <p className="mt-0.5 truncate font-display text-[13px] text-ink">{po.supplierName}</p>
+                      <p className="mt-0.5 font-display text-[12px] text-ink-faint">
+                        Ordered {new Date(po.createdAt).toLocaleDateString()}
+                        {po.expectedDate && ` · Expected ${new Date(po.expectedDate).toLocaleDateString()}`}
+                      </p>
+                    </div>
+                    <div className="flex flex-none flex-col items-end gap-1">
+                      <span className="font-mono text-sm font-semibold tabular-nums text-ink">{formatPesewas(po.totalCost ?? 0)}</span>
+                      <span className="font-display text-[12px] text-ink-faint">{po.itemCount} item{po.itemCount === 1 ? '' : 's'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
               {data && data.totalCount > 0 && (
                 <Pagination

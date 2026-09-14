@@ -135,7 +135,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <div className="flex-1 pb-16 lg:pb-0">{children}</div>
+      {/* min-w-0: the one thing missing that let ANY page's content push
+          the whole layout wider than the viewport at lg+ (found via
+          Purchasing's 4 StatCards + a fixed 320px restock panel
+          overflowing at 1024px) — without it, a flex-row sibling of the
+          256px sidebar refuses to shrink below its own content's natural
+          width instead of actually sharing the remaining space, the same
+          trap fixed repeatedly elsewhere this session, just one level
+          higher up the tree than any of those fixes reached. */}
+      <div className="min-w-0 flex-1 pb-16 lg:pb-0">{children}</div>
 
       <nav
         className="fixed inset-x-0 bottom-0 z-10 flex border-t border-border bg-surface-raised lg:hidden"

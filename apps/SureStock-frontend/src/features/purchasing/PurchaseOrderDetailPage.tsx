@@ -103,33 +103,64 @@ export function PurchaseOrderDetailPage() {
       />
 
       <div className="mt-6">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Product</TableHead>
-              <TableHead>SKU</TableHead>
-              <TableHead className="text-right">Ordered</TableHead>
-              <TableHead className="text-right">Received</TableHead>
-              <TableHead className="text-right">Unit cost</TableHead>
-              <TableHead className="text-right">Line total</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {po.lines.map((line) => (
-              <TableRow key={line.id}>
-                <TableCell className="whitespace-nowrap">
-                  {line.productName}
-                  {line.variantName ? ` — ${line.variantName}` : ''}
-                </TableCell>
-                <TableCell className="whitespace-nowrap font-mono text-[12px] text-ink-faint">{line.sku}</TableCell>
-                <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{line.quantityOrdered}</TableCell>
-                <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{line.quantityReceived}</TableCell>
-                <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{formatPesewas(line.unitCost)}</TableCell>
-                <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{formatPesewas(line.lineTotal)}</TableCell>
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>SKU</TableHead>
+                <TableHead className="text-right">Ordered</TableHead>
+                <TableHead className="text-right">Received</TableHead>
+                <TableHead className="text-right">Unit cost</TableHead>
+                <TableHead className="text-right">Line total</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {po.lines.map((line) => (
+                <TableRow key={line.id}>
+                  <TableCell className="whitespace-nowrap">
+                    {line.productName}
+                    {line.variantName ? ` — ${line.variantName}` : ''}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap font-mono text-[12px] text-ink-faint">{line.sku}</TableCell>
+                  <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{line.quantityOrdered}</TableCell>
+                  <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{line.quantityReceived}</TableCell>
+                  <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{formatPesewas(line.unitCost)}</TableCell>
+                  <TableCell className="whitespace-nowrap text-right font-mono tabular-nums">{formatPesewas(line.lineTotal)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="flex flex-col gap-2 md:hidden">
+          {po.lines.map((line) => (
+            <div key={line.id} className="rounded-lg border border-border bg-surface-raised p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-display text-sm text-ink">
+                    {line.productName}
+                    {line.variantName ? ` — ${line.variantName}` : ''}
+                  </p>
+                  <p className="font-mono text-[12px] text-ink-faint">{line.sku}</p>
+                </div>
+                <span className="flex-none font-mono text-sm font-semibold tabular-nums text-ink">{formatPesewas(line.lineTotal)}</span>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 border-t border-border pt-2 font-display text-[12.5px] text-ink-muted">
+                <span>
+                  Ordered <span className="font-mono tabular-nums text-ink">{line.quantityOrdered}</span>
+                </span>
+                <span>
+                  Received <span className="font-mono tabular-nums text-ink">{line.quantityReceived}</span>
+                </span>
+                <span>
+                  Unit cost <span className="font-mono tabular-nums text-ink">{formatPesewas(line.unitCost)}</span>
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <p className="mt-3 text-right font-display text-sm text-ink-muted">
           Total: <span className="font-mono font-semibold text-ink">{formatPesewas(po.totalCost ?? 0)}</span>
         </p>

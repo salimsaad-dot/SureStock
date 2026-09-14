@@ -124,30 +124,52 @@ export function ActivityLogTab() {
       </div>
 
       <div className="mt-4">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>When</TableHead>
-              <TableHead>Staff</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Entity</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading && <TableSkeleton rows={5} columns={4} />}
-            {!isLoading && items.length === 0 && <TableEmpty columns={4} message="No activity matches these filters." />}
-            {items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="whitespace-nowrap text-ink-muted">{formatDate(item.createdAt)}</TableCell>
-                <TableCell className="whitespace-nowrap">{item.userName ?? '—'}</TableCell>
-                <TableCell className="whitespace-nowrap">{ACTION_LABEL[item.action] ?? item.action}</TableCell>
-                <TableCell className="whitespace-nowrap font-mono text-[12px] text-ink-faint">
-                  {item.entityType} · {item.entityId.slice(-8)}
-                </TableCell>
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>When</TableHead>
+                <TableHead>Staff</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Entity</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {isLoading && <TableSkeleton rows={5} columns={4} />}
+              {!isLoading && items.length === 0 && <TableEmpty columns={4} message="No activity matches these filters." />}
+              {items.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="whitespace-nowrap text-ink-muted">{formatDate(item.createdAt)}</TableCell>
+                  <TableCell className="whitespace-nowrap">{item.userName ?? '—'}</TableCell>
+                  <TableCell className="whitespace-nowrap">{ACTION_LABEL[item.action] ?? item.action}</TableCell>
+                  <TableCell className="whitespace-nowrap font-mono text-[12px] text-ink-faint">
+                    {item.entityType} · {item.entityId.slice(-8)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="flex flex-col gap-2 md:hidden">
+          {isLoading &&
+            Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-[62px] animate-pulse rounded-lg border border-border bg-surface-raised" />)}
+          {!isLoading && items.length === 0 && (
+            <p className="rounded-lg border border-border bg-surface-raised p-6 text-center text-sm text-ink-muted">No activity matches these filters.</p>
+          )}
+          {items.map((item) => (
+            <div key={item.id} className="rounded-lg border border-border bg-surface-raised p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate font-display text-sm font-medium text-ink">{ACTION_LABEL[item.action] ?? item.action}</span>
+                <span className="flex-none font-display text-[12px] text-ink-faint">{formatDate(item.createdAt)}</span>
+              </div>
+              <p className="mt-1 font-display text-[12.5px] text-ink-muted">{item.userName ?? '—'}</p>
+              <p className="mt-0.5 font-mono text-[12px] text-ink-faint">
+                {item.entityType} · {item.entityId.slice(-8)}
+              </p>
+            </div>
+          ))}
+        </div>
 
         {data && data.totalCount > 0 && (
           <Pagination page={data.page} pageSize={data.pageSize} totalCount={data.totalCount} totalPages={data.totalPages} onPageChange={setPage} itemLabel="entries" />

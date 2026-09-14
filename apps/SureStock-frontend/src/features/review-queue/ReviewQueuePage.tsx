@@ -64,66 +64,114 @@ export function ReviewQueuePage() {
       />
 
       <div className="mt-4">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Reason</TableHead>
-              <TableHead>Sale / SKU</TableHead>
-              <TableHead>Flagged</TableHead>
-              <TableHead>Resolution</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading && <TableSkeleton rows={5} columns={6} />}
-            {!isLoading && items.length === 0 && <TableEmpty columns={6} message="Nothing here." />}
-            {!isLoading &&
-              items.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="whitespace-nowrap">
-                    <Pill variant={item.type === 'NEGATIVE_STOCK' ? 'warning' : 'danger'}>{TYPE_LABEL[item.type]}</Pill>
-                  </TableCell>
-                  <TableCell className="max-w-xs">{item.reason}</TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {item.saleReceiptNumber && item.saleId ? (
-                      <Link to={`/sales/${item.saleId}`} className="font-mono text-accent hover:text-accent-strong">
-                        {item.saleReceiptNumber}
-                      </Link>
-                    ) : item.variantSku ? (
-                      <span className="font-mono text-ink-muted">{item.variantSku}</span>
-                    ) : (
-                      <span className="text-ink-faint">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-ink-muted">{formatDate(item.createdAt)}</TableCell>
-                  <TableCell>
-                    {item.resolvedAt ? (
-                      <div>
-                        <p className="text-ink">{item.resolutionNote}</p>
-                        <p className="text-[11.5px] text-ink-faint">
-                          {item.resolvedByName} · {formatDate(item.resolvedAt)}
-                        </p>
-                      </div>
-                    ) : (
-                      <span className="text-ink-faint">Open</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {!item.resolvedAt && (
-                      <button
-                        type="button"
-                        onClick={() => setResolvingItem(item)}
-                        className="font-display text-[13px] font-medium text-accent hover:text-accent-strong"
-                      >
-                        Resolve
-                      </button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Type</TableHead>
+                <TableHead>Reason</TableHead>
+                <TableHead>Sale / SKU</TableHead>
+                <TableHead>Flagged</TableHead>
+                <TableHead>Resolution</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading && <TableSkeleton rows={5} columns={6} />}
+              {!isLoading && items.length === 0 && <TableEmpty columns={6} message="Nothing here." />}
+              {!isLoading &&
+                items.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="whitespace-nowrap">
+                      <Pill variant={item.type === 'NEGATIVE_STOCK' ? 'warning' : 'danger'}>{TYPE_LABEL[item.type]}</Pill>
+                    </TableCell>
+                    <TableCell className="max-w-xs">{item.reason}</TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {item.saleReceiptNumber && item.saleId ? (
+                        <Link to={`/sales/${item.saleId}`} className="font-mono text-accent hover:text-accent-strong">
+                          {item.saleReceiptNumber}
+                        </Link>
+                      ) : item.variantSku ? (
+                        <span className="font-mono text-ink-muted">{item.variantSku}</span>
+                      ) : (
+                        <span className="text-ink-faint">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-ink-muted">{formatDate(item.createdAt)}</TableCell>
+                    <TableCell>
+                      {item.resolvedAt ? (
+                        <div>
+                          <p className="text-ink">{item.resolutionNote}</p>
+                          <p className="text-[11.5px] text-ink-faint">
+                            {item.resolvedByName} · {formatDate(item.resolvedAt)}
+                          </p>
+                        </div>
+                      ) : (
+                        <span className="text-ink-faint">Open</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {!item.resolvedAt && (
+                        <button
+                          type="button"
+                          onClick={() => setResolvingItem(item)}
+                          className="font-display text-[13px] font-medium text-accent hover:text-accent-strong"
+                        >
+                          Resolve
+                        </button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="flex flex-col gap-2 md:hidden">
+          {isLoading &&
+            Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[110px] animate-pulse rounded-lg border border-border bg-surface-raised" />)}
+          {!isLoading && items.length === 0 && (
+            <p className="rounded-lg border border-border bg-surface-raised p-6 text-center text-sm text-ink-muted">Nothing here.</p>
+          )}
+          {!isLoading &&
+            items.map((item) => (
+              <div key={item.id} className="rounded-lg border border-border bg-surface-raised p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <Pill variant={item.type === 'NEGATIVE_STOCK' ? 'warning' : 'danger'}>{TYPE_LABEL[item.type]}</Pill>
+                  {!item.resolvedAt && (
+                    <button
+                      type="button"
+                      onClick={() => setResolvingItem(item)}
+                      className="flex-none font-display text-[13px] font-medium text-accent hover:text-accent-strong"
+                    >
+                      Resolve
+                    </button>
+                  )}
+                </div>
+                <p className="mt-2 font-display text-[13px] text-ink">{item.reason}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-display text-[12px] text-ink-faint">
+                  {item.saleReceiptNumber && item.saleId ? (
+                    <Link to={`/sales/${item.saleId}`} className="font-mono text-accent hover:text-accent-strong">
+                      {item.saleReceiptNumber}
+                    </Link>
+                  ) : (
+                    item.variantSku && <span className="font-mono text-ink-muted">{item.variantSku}</span>
+                  )}
+                  <span>{formatDate(item.createdAt)}</span>
+                </div>
+                {item.resolvedAt ? (
+                  <div className="mt-2 border-t border-border pt-2">
+                    <p className="font-display text-[13px] text-ink">{item.resolutionNote}</p>
+                    <p className="font-display text-[11.5px] text-ink-faint">
+                      {item.resolvedByName} · {formatDate(item.resolvedAt)}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-2 border-t border-border pt-2 font-display text-[12px] text-ink-faint">Open</p>
+                )}
+              </div>
+            ))}
+        </div>
 
         {data && data.totalCount > 0 && (
           <Pagination

@@ -39,7 +39,7 @@ export function ShrinkageTab({ filters }: { filters: ReportsFilterParams }) {
           <h2 className="flex-none font-display text-lg font-semibold text-ink">By staff member</h2>
           <p className="min-w-0 break-words font-mono text-sm font-semibold text-ink">Total: {formatPesewas(data?.totalLoss ?? 0)}</p>
         </div>
-        <div className="mt-3">
+        <div className="mt-3 hidden md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -63,6 +63,31 @@ export function ShrinkageTab({ filters }: { filters: ReportsFilterParams }) {
               ))}
             </TableBody>
           </Table>
+        </div>
+
+        <div className="mt-3 flex flex-col gap-2 md:hidden">
+          {!isLoading && (data?.byStaff.length ?? 0) === 0 && (
+            <p className="rounded-lg border border-border bg-surface-sunken p-4 text-center text-sm text-ink-muted">No shrinkage recorded in this range.</p>
+          )}
+          {(data?.byStaff ?? []).map((s) => (
+            <div key={s.userId} className="rounded-lg border border-border bg-surface-sunken p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate font-display text-sm font-medium text-ink">{s.userName}</span>
+                <span className="font-mono text-sm font-semibold tabular-nums text-ink">{formatPesewas(s.total)}</span>
+              </div>
+              <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 font-display text-[12.5px] text-ink-muted">
+                <span>
+                  Damage <span className="font-mono tabular-nums text-ink">{formatPesewas(s.damageTotal)}</span>
+                </span>
+                <span>
+                  Expiry <span className="font-mono tabular-nums text-ink">{formatPesewas(s.expiryTotal)}</span>
+                </span>
+                <span>
+                  Variance <span className="font-mono tabular-nums text-ink">{formatPesewas(s.varianceTotal)}</span>
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -49,6 +49,29 @@ function RestockRow({ r }: { r: RestockRecommendation }) {
   )
 }
 
+/** Mobile card for the same row — the Supplier column is dropped since RestockTab already groups rows by supplier, so it's redundant within a group. */
+function RestockCard({ r }: { r: RestockRecommendation }) {
+  return (
+    <div className="rounded-lg border border-border bg-surface-raised p-3">
+      <p className="truncate font-display text-sm text-ink">
+        {r.productName}
+        {r.variantName ? ` — ${r.variantName}` : ''}
+      </p>
+      <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 font-display text-[12.5px] text-ink-muted">
+        <span>
+          Current <span className="font-mono tabular-nums text-danger">{r.quantityOnHand}</span>
+        </span>
+        <span>
+          Min stock <span className="font-mono tabular-nums text-ink">{r.reorderPoint}</span>
+        </span>
+        <span>
+          Suggested <span className="font-mono tabular-nums text-accent">{r.suggestedQuantity ?? '—'}</span>
+        </span>
+      </div>
+    </div>
+  )
+}
+
 /** The compact side panel embedded on the Purchase Orders tab, matching the mockup's flat top-N list. */
 export function RestockSummaryPanel({ onCreate }: { onCreate: (initial: PurchaseOrderFormInitial) => void }) {
   const { data, isLoading } = useQuery({ queryKey: ['restock-recommendations'], queryFn: getRestockRecommendations })
@@ -116,7 +139,7 @@ export function RestockTab({ onCreate }: { onCreate: (initial: PurchaseOrderForm
               Create PO ({group.items.length})
             </Button>
           </div>
-          <div className="mt-3">
+          <div className="mt-3 hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -133,6 +156,12 @@ export function RestockTab({ onCreate }: { onCreate: (initial: PurchaseOrderForm
                 ))}
               </TableBody>
             </Table>
+          </div>
+
+          <div className="mt-3 flex flex-col gap-2 md:hidden">
+            {group.items.map((r) => (
+              <RestockCard key={r.variantId} r={r} />
+            ))}
           </div>
         </div>
       ))}

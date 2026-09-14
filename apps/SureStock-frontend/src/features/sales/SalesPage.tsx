@@ -250,58 +250,96 @@ export function SalesPage() {
 
       {tab === 'transactions' ? (
         <div className="mt-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Receipt</TableHead>
-                <TableHead>Date</TableHead>
-                {canFilterByStaff && <TableHead>Staff</TableHead>}
-                <TableHead>Method</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && <TableSkeleton rows={6} columns={canFilterByStaff ? 7 : 6} />}
-              {!isLoading && sales.length === 0 && (
-                <TableEmpty columns={canFilterByStaff ? 7 : 6} message="No sales match these filters." />
-              )}
-              {sales.map((sale) => (
-                <TableRow key={sale.id}>
-                  <TableCell className="whitespace-nowrap">
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/sales/${sale.id}`)}
-                      className="font-mono text-accent hover:text-accent-strong hover:underline"
-                    >
-                      {sale.receiptNumber}
-                    </button>
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-ink-muted">{new Date(sale.soldAt).toLocaleString()}</TableCell>
-                  {canFilterByStaff && (
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Receipt</TableHead>
+                  <TableHead>Date</TableHead>
+                  {canFilterByStaff && <TableHead>Staff</TableHead>}
+                  <TableHead>Method</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading && <TableSkeleton rows={6} columns={canFilterByStaff ? 7 : 6} />}
+                {!isLoading && sales.length === 0 && (
+                  <TableEmpty columns={canFilterByStaff ? 7 : 6} message="No sales match these filters." />
+                )}
+                {sales.map((sale) => (
+                  <TableRow key={sale.id}>
                     <TableCell className="whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <StaffAvatar name={sale.userName} />
-                        {sale.userName}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/sales/${sale.id}`)}
+                        className="font-mono text-accent hover:text-accent-strong hover:underline"
+                      >
+                        {sale.receiptNumber}
+                      </button>
                     </TableCell>
-                  )}
-                  <TableCell className="whitespace-nowrap text-ink-muted">{sale.paymentMethods.map((m) => m.replace('_', ' ')).join(', ')}</TableCell>
-                  <TableCell className="whitespace-nowrap">
+                    <TableCell className="whitespace-nowrap text-ink-muted">{new Date(sale.soldAt).toLocaleString()}</TableCell>
+                    {canFilterByStaff && (
+                      <TableCell className="whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <StaffAvatar name={sale.userName} />
+                          {sale.userName}
+                        </div>
+                      </TableCell>
+                    )}
+                    <TableCell className="whitespace-nowrap text-ink-muted">{sale.paymentMethods.map((m) => m.replace('_', ' ')).join(', ')}</TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <SaleStatusPill status={sale.status} isRefund={sale.refundOfSaleId !== null} />
+                    </TableCell>
+                    <TableCell className={`whitespace-nowrap text-right font-mono tabular-nums ${sale.total < 0 ? 'text-danger' : 'text-ink'}`}>
+                      {sale.total < 0 && '− '}
+                      {formatPesewas(Math.abs(sale.total))}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <SaleActionsMenu sale={sale} onRefund={setRefundTargetId} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="flex flex-col gap-2 md:hidden">
+            {isLoading &&
+              Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-[86px] animate-pulse rounded-lg border border-border bg-surface-raised" />)}
+            {!isLoading && sales.length === 0 && (
+              <p className="rounded-lg border border-border bg-surface-raised p-6 text-center text-sm text-ink-muted">No sales match these filters.</p>
+            )}
+            {sales.map((sale) => (
+              <div
+                key={sale.id}
+                onClick={() => navigate(`/sales/${sale.id}`)}
+                className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-surface-raised p-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="truncate font-mono text-[13px] text-accent">{sale.receiptNumber}</span>
                     <SaleStatusPill status={sale.status} isRefund={sale.refundOfSaleId !== null} />
-                  </TableCell>
-                  <TableCell className={`whitespace-nowrap text-right font-mono tabular-nums ${sale.total < 0 ? 'text-danger' : 'text-ink'}`}>
+                  </div>
+                  <p className="mt-0.5 truncate font-display text-[12px] text-ink-faint">{new Date(sale.soldAt).toLocaleString()}</p>
+                  {canFilterByStaff && (
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <StaffAvatar name={sale.userName} />
+                      <span className="truncate font-display text-[12px] text-ink-muted">{sale.userName}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-none flex-col items-end gap-1">
+                  <span className={`font-mono text-sm font-semibold tabular-nums ${sale.total < 0 ? 'text-danger' : 'text-ink'}`}>
                     {sale.total < 0 && '− '}
                     {formatPesewas(Math.abs(sale.total))}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    <SaleActionsMenu sale={sale} onRefund={setRefundTargetId} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </span>
+                  <SaleActionsMenu sale={sale} onRefund={setRefundTargetId} />
+                </div>
+              </div>
+            ))}
+          </div>
 
           {data && data.totalCount > 0 && (
             <Pagination

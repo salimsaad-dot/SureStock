@@ -162,7 +162,7 @@ export function ImportPage() {
             </p>
           )}
 
-          <div className="mt-4">
+          <div className="mt-4 hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -185,6 +185,20 @@ export function ImportPage() {
                 ))}
               </TableBody>
             </Table>
+          </div>
+
+          <div className="mt-4 flex flex-col gap-2 md:hidden">
+            {report.rows.map((row) => (
+              <div key={row.rowIndex} className="rounded-lg border border-border bg-surface-raised p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-[12px] text-ink-faint">Row {row.rowIndex}</span>
+                  {row.status === 'valid' ? <Pill variant="success">Valid</Pill> : <Pill variant="danger">Invalid</Pill>}
+                </div>
+                <p className="mt-1 font-display text-[13px] text-ink-muted">
+                  {row.status === 'valid' ? (typeof row.data?.name === 'string' ? row.data.name : '—') : row.reasons.join('; ')}
+                </p>
+              </div>
+            ))}
           </div>
 
           <div className="mt-6 flex flex-wrap gap-2">

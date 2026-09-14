@@ -199,44 +199,81 @@ export function InventoryPage() {
       </div>
 
       <div className="mt-4">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Product</TableHead>
-              <TableHead>SKU</TableHead>
-              <TableHead>Stock</TableHead>
-              <TableHead className="text-right">Price</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading && <TableSkeleton rows={6} columns={6} />}
-            {!isLoading && rows.length === 0 && <TableEmpty columns={6} message="No products match these filters." />}
-            {rows.map(({ product, variant }) => (
-              <TableRow key={variant.id} className="cursor-pointer" onClick={() => navigate(`/inventory/${product.id}`)}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <ProductAvatar name={product.name} imageUrl={product.imageUrl} />
-                    <div>
-                      <div className="text-ink">{product.name}</div>
-                      {variant.variantName && <div className="text-[12px] text-ink-faint">{variant.variantName}</div>}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="font-mono">{variant.sku}</TableCell>
-                <TableCell>
-                  <StockLevelPill variant={variant} />
-                </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">{formatPesewas(variant.sellingPrice)}</TableCell>
-                <TableCell className="text-ink-muted">{product.status}</TableCell>
-                <TableCell>
-                  <ProductActionsMenu product={product} canManage={canManage} />
-                </TableCell>
+        {/* Inventory is a long, many-row list — horizontal scroll (with
+            the scroll-shadow indicator) is the right call for that on
+            desktop/tablet. On a phone, real feedback was that scrolling
+            sideways through a table read as broken, not responsive —
+            below md this becomes a stacked card per product instead,
+            same "few fields, no scroll" treatment as the Variants table
+            got earlier. */}
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>SKU</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead />
               </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading && <TableSkeleton rows={6} columns={6} />}
+              {!isLoading && rows.length === 0 && <TableEmpty columns={6} message="No products match these filters." />}
+              {rows.map(({ product, variant }) => (
+                <TableRow key={variant.id} className="cursor-pointer" onClick={() => navigate(`/inventory/${product.id}`)}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <ProductAvatar name={product.name} imageUrl={product.imageUrl} />
+                      <div>
+                        <div className="text-ink">{product.name}</div>
+                        {variant.variantName && <div className="text-[12px] text-ink-faint">{variant.variantName}</div>}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-mono">{variant.sku}</TableCell>
+                  <TableCell>
+                    <StockLevelPill variant={variant} />
+                  </TableCell>
+                  <TableCell className="text-right font-mono tabular-nums">{formatPesewas(variant.sellingPrice)}</TableCell>
+                  <TableCell className="text-ink-muted">{product.status}</TableCell>
+                  <TableCell>
+                    <ProductActionsMenu product={product} canManage={canManage} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="flex flex-col gap-2 md:hidden">
+          {isLoading &&
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-[70px] animate-pulse rounded-lg border border-border bg-surface-raised" />
             ))}
-          </TableBody>
-        </Table>
+          {!isLoading && rows.length === 0 && (
+            <p className="rounded-lg border border-border bg-surface-raised p-6 text-center text-sm text-ink-muted">No products match these filters.</p>
+          )}
+          {rows.map(({ product, variant }) => (
+            <div
+              key={variant.id}
+              onClick={() => navigate(`/inventory/${product.id}`)}
+              className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-surface-raised p-3"
+            >
+              <ProductAvatar name={product.name} imageUrl={product.imageUrl} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-display text-sm font-medium text-ink">{product.name}</p>
+                <p className="font-mono text-[12px] text-ink-faint">SKU: {variant.sku}</p>
+              </div>
+              <div className="flex flex-none flex-col items-end gap-1">
+                <StockLevelPill variant={variant} />
+                <span className="font-mono text-sm font-semibold tabular-nums text-ink">{formatPesewas(variant.sellingPrice)}</span>
+              </div>
+              <ProductActionsMenu product={product} canManage={canManage} />
+            </div>
+          ))}
+        </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           {hasNextPage ? (
