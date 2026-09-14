@@ -1,4 +1,4 @@
-import { Monitor, Moon, Sun } from 'lucide-react'
+import { Moon, Sun } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { useThemeStore, type ThemePreference } from '../lib/theme-store'
@@ -6,7 +6,6 @@ import { useThemeStore, type ThemePreference } from '../lib/theme-store'
 const THEME_OPTIONS: { value: ThemePreference; label: string; icon: LucideIcon }[] = [
   { value: 'light', label: 'Light', icon: Sun },
   { value: 'dark', label: 'Dark', icon: Moon },
-  { value: 'system', label: 'System', icon: Monitor },
 ]
 
 /** Same tile-group visual language as CartPanel's payment-method pre-selector — icon + label, active state via border+wash+color, never color alone. */
@@ -17,7 +16,7 @@ export function ThemeToggle() {
   return (
     <div role="radiogroup" aria-label="Theme">
       <p className="font-display text-[11px] text-ink-faint">Theme</p>
-      <div className="mt-1 grid grid-cols-3 gap-1">
+      <div className="mt-1 grid grid-cols-2 gap-1">
         {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
           <button
             key={value}

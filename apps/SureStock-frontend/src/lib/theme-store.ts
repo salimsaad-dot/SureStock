@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type ThemePreference = 'light' | 'dark' | 'system'
+export type ThemePreference = 'light' | 'dark'
 
 interface ThemeState {
   theme: ThemePreference
@@ -11,18 +11,27 @@ interface ThemeState {
 /**
  * A device preference, not a shop setting — persisted to localStorage
  * directly (same pattern as auth-store.ts), never sent to the backend.
- * `tokens.css` already has full light/dark token values and a
- * `[data-theme]` selector wired for exactly this ("system" = no
- * attribute, follow `prefers-color-scheme`; "light"/"dark" = force it)
- * — this store plus ThemeSync.tsx is what actually drives that
- * attribute, since nothing did before now.
+ * Deliberately just light/dark, defaulting to light — a "System" option
+ * (follow prefers-color-scheme) existed originally but was real, direct
+ * user feedback that it added a confusing third state for no real
+ * benefit on a business device someone picks a theme for once. `tokens.css`
+ * still carries a `prefers-color-scheme` media-query fallback from that
+ * era; harmless now since ThemeSync always sets `data-theme` explicitly,
+ * so that branch is simply never reached.
  */
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      theme: 'system',
+      theme: 'light',
       setTheme: (theme) => set({ theme }),
     }),
-    { name: 'surestock-theme' },
+    {
+      name: 'surestock-theme',
+      // A device that persisted the old 'system' value (or anything else
+      // no longer valid) must not carry it forward as a silently-broken
+      // theme — coerce anything but an exact 'dark' to the new default.
+      version: 1,
+      migrate: (persisted) => ({ theme: (persisted as { theme?: string } | undefined)?.theme === 'dark' ? 'dark' : 'light' }),
+    },
   ),
 )

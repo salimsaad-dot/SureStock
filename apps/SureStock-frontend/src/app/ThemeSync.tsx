@@ -11,11 +11,7 @@ export function ThemeSync() {
   const theme = useThemeStore((s) => s.theme)
 
   useEffect(() => {
-    if (theme === 'system') {
-      delete document.documentElement.dataset.theme
-    } else {
-      document.documentElement.dataset.theme = theme
-    }
+    document.documentElement.dataset.theme = theme
   }, [theme])
 
   return null
