@@ -5,12 +5,22 @@ import { Sparkline } from './Sparkline'
 export type StatTone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger'
 
 // Tailwind needs literal class strings at build time — can't interpolate `bg-${tone}-wash`.
-const TONE_CLASSES: Record<StatTone, { iconBg: string; icon: string }> = {
-  neutral: { iconBg: 'bg-surface-sunken', icon: 'text-ink-muted' },
-  accent: { iconBg: 'bg-accent-wash', icon: 'text-accent-strong' },
-  success: { iconBg: 'bg-success-wash', icon: 'text-success' },
-  warning: { iconBg: 'bg-warning-wash', icon: 'text-warning' },
-  danger: { iconBg: 'bg-danger-wash', icon: 'text-danger' },
+// emphasisBg/emphasisBorder/emphasisValue back the optional `emphasis` prop
+// below — a page's one or two headline figures get a color-anchored
+// treatment instead of the plain white default. Deliberately built from
+// the same wash/strong tokens every other tone-colored element already
+// uses (never a solid tone fill behind text): `--accent`/`--success`
+// invert which theme they're lighter in (dark in light mode, light in
+// dark mode per tokens.css), so white-on-solid-color text would lose
+// contrast in one theme or the other. Wash-background + "-strong"-colored
+// text is the same combination already proven safe everywhere else
+// (e.g. the active sidebar nav item), just applied to a whole card.
+const TONE_CLASSES: Record<StatTone, { iconBg: string; icon: string; emphasisBg: string; emphasisBorder: string; emphasisValue: string }> = {
+  neutral: { iconBg: 'bg-surface-sunken', icon: 'text-ink-muted', emphasisBg: 'bg-surface-sunken', emphasisBorder: 'border-border-strong', emphasisValue: 'text-ink' },
+  accent: { iconBg: 'bg-accent-wash', icon: 'text-accent-strong', emphasisBg: 'bg-accent-wash', emphasisBorder: 'border-accent', emphasisValue: 'text-accent-strong' },
+  success: { iconBg: 'bg-success-wash', icon: 'text-success', emphasisBg: 'bg-success-wash', emphasisBorder: 'border-success', emphasisValue: 'text-success' },
+  warning: { iconBg: 'bg-warning-wash', icon: 'text-warning', emphasisBg: 'bg-warning-wash', emphasisBorder: 'border-warning', emphasisValue: 'text-warning' },
+  danger: { iconBg: 'bg-danger-wash', icon: 'text-danger', emphasisBg: 'bg-danger-wash', emphasisBorder: 'border-danger', emphasisValue: 'text-danger' },
 }
 
 export interface StatCardComparison {
@@ -34,9 +44,11 @@ export interface StatCardProps {
   trend?: number[]
   /** Mutually exclusive with `sublabel` in practice — a colored vs-prior-period indicator instead of plain caption text. */
   comparison?: StatCardComparison
+  /** A bolder, color-anchored treatment for the one or two headline figures on a page (e.g. Dashboard's Revenue/Gross profit) — tinted background, colored border, tone-colored value, instead of the plain white default every other stat card uses. */
+  emphasis?: boolean
 }
 
-export function StatCard({ icon, label, value, sublabel, tone, active, onClick, trend, comparison }: StatCardProps) {
+export function StatCard({ icon, label, value, sublabel, tone, active, onClick, trend, comparison, emphasis }: StatCardProps) {
   const toneClasses = TONE_CLASSES[tone]
   const Tag = onClick ? 'button' : 'div'
 
@@ -45,8 +57,9 @@ export function StatCard({ icon, label, value, sublabel, tone, active, onClick, 
       type={onClick ? 'button' : undefined}
       onClick={onClick}
       className={cn(
-        'flex flex-col gap-3 rounded-lg border bg-surface-raised p-4 text-left transition-colors duration-[var(--motion-state)] ease-out',
-        active ? 'border-accent' : 'border-border',
+        'flex flex-col gap-3 rounded-lg border p-4 text-left transition-colors duration-[var(--motion-state)] ease-out',
+        emphasis ? toneClasses.emphasisBg : 'bg-surface-raised',
+        emphasis ? toneClasses.emphasisBorder : active ? 'border-accent' : 'border-border',
         onClick && 'hover:bg-surface-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent',
       )}
     >
@@ -54,13 +67,29 @@ export function StatCard({ icon, label, value, sublabel, tone, active, onClick, 
           testing: icon-beside-text left the value too little width on a
           narrow card, so once a long value wrapped to 2 lines it sat
           lopsided next to an icon that only ever spanned the first line.
-          Stacking vertically gives the value the card's full width. */}
-      <span className={cn('flex h-10 w-10 flex-none items-center justify-center rounded-lg', toneClasses.iconBg, toneClasses.icon)}>
+          Stacking vertically gives the value the card's full width. An
+          emphasis card gets a "cutout" badge (surface-raised, not the
+          tone wash) so it still reads as a distinct badge against the
+          now tone-tinted card behind it. */}
+      <span
+        className={cn(
+          'flex h-10 w-10 flex-none items-center justify-center rounded-lg',
+          emphasis ? 'bg-surface-raised' : toneClasses.iconBg,
+          toneClasses.icon,
+        )}
+      >
         {icon}
       </span>
       <span className="flex min-w-0 flex-col">
         <span className="truncate font-display text-[13px] text-ink-muted">{label}</span>
-        <span className="break-words font-mono text-[28px] font-bold leading-tight tabular-nums text-ink">{value}</span>
+        <span
+          className={cn(
+            'break-words font-mono text-[28px] font-bold leading-tight tabular-nums',
+            emphasis ? toneClasses.emphasisValue : 'text-ink',
+          )}
+        >
+          {value}
+        </span>
         {comparison ? (
           <ComparisonLine {...comparison} />
         ) : (

@@ -64,6 +64,7 @@ export function DashboardPage() {
           label="Revenue today"
           value={formatPesewas(data?.todayRevenue ?? 0)}
           tone="accent"
+          emphasis
           comparison={{ changePct: data?.todayRevenueChangePct ?? null, goodDirectionUp: true, rangeLabel: 'vs last week' }}
         />
         <StatCard
@@ -71,6 +72,7 @@ export function DashboardPage() {
           label="Gross profit"
           value={formatPesewas(data?.todayGrossProfit ?? 0)}
           tone="success"
+          emphasis
           comparison={{ changePct: data?.todayGrossProfitChangePct ?? null, goodDirectionUp: true, rangeLabel: 'vs last week' }}
         />
       </div>

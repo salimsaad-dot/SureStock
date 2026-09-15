@@ -130,8 +130,17 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* The desktop sidebar carries the SureStock brand mark at its own
           top — the mobile bar had nothing standing in for that at all
           (real gap found live: "the SureStock logo is nowhere on
-          mobile"). Mirrors the sidebar's icon + wordmark, just compact. */}
-      <div className="flex items-center justify-between gap-2 border-b border-border bg-surface-raised px-4 py-2 lg:hidden">
+          mobile"). Mirrors the sidebar's icon + wordmark, just compact.
+          sticky top-0: real feedback that this bar used to scroll away
+          with the page instead of staying put like the bottom nav
+          already does — matches that same fixed/pinned behavior, and
+          the safe-area inset keeps it clear of a phone's own status
+          bar/notch, same reasoning as the bottom nav's own safe-area
+          padding below. */}
+      <div
+        className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-border bg-surface-raised px-4 py-2 lg:hidden"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
+      >
         <div className="flex flex-none items-center gap-2">
           <span className="flex h-7 w-7 flex-none items-center justify-center rounded-md bg-accent text-white">
             <Package className="h-4 w-4" aria-hidden="true" />

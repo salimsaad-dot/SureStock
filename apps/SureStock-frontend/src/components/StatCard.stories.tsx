@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { AlertTriangle, Package, XCircle } from 'lucide-react'
+import { AlertTriangle, Package, TrendingUp, XCircle } from 'lucide-react'
 import { StatCard } from './StatCard'
 
 const meta: Meta<typeof StatCard> = {
@@ -49,6 +49,30 @@ export const OutOfStock: Story = {
     sublabel: 'Currently unavailable',
     tone: 'danger',
   },
+}
+
+/** Dashboard's headline figures (Revenue/Gross profit) — a tinted background, colored border, and tone-colored value, instead of the plain white default every other stat card uses. */
+export const Emphasis: Story = {
+  render: () => (
+    <div className="grid grid-cols-2 gap-3">
+      <StatCard
+        icon={<TrendingUp className="h-5 w-5" />}
+        label="Revenue today"
+        value="GH₵ 1,240.00"
+        tone="accent"
+        emphasis
+        comparison={{ changePct: 12.4, goodDirectionUp: true, rangeLabel: 'vs last week' }}
+      />
+      <StatCard
+        icon={<TrendingUp className="h-5 w-5" />}
+        label="Gross profit"
+        value="GH₵ 480.00"
+        tone="success"
+        emphasis
+        comparison={{ changePct: 8.1, goodDirectionUp: true, rangeLabel: 'vs last week' }}
+      />
+    </div>
+  ),
 }
 
 export const Row: Story = {
