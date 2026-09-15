@@ -92,8 +92,35 @@ export function AppShell({ children }: { children: ReactNode }) {
                     )
                   }
                 >
-                  <Icon className="h-4 w-4 flex-none" aria-hidden="true" />
-                  {item.label}
+                  {({ isActive }) => (
+                    <>
+                      {/* A solid accent-filled icon badge for the active
+                          item, not just tinted text — genuinely bolder,
+                          not merely a subtler variant of the same wash
+                          the whole row already has (a first attempt at
+                          exactly that looked almost identical to the
+                          plain state once actually rendered). `surface`
+                          (not white) as the icon's own color is what
+                          makes this safe in both themes: `--accent` is
+                          dark in light mode but light in dark mode
+                          (tokens.css), so a fixed "white icon" would lose
+                          contrast in dark mode specifically — `--surface`
+                          already flips the same way `--accent` does,
+                          just inverted (near-white in light mode,
+                          near-black in dark mode), so it reliably
+                          contrasts against accent's mid-toned lightness
+                          regardless of which theme is active. */}
+                      <span
+                        className={cn(
+                          'flex h-6 w-6 flex-none items-center justify-center rounded-md',
+                          isActive && 'bg-accent text-surface',
+                        )}
+                      >
+                        <Icon className="h-4 w-4 flex-none" aria-hidden="true" />
+                      </span>
+                      {item.label}
+                    </>
+                  )}
                 </NavLink>
               </div>
             )

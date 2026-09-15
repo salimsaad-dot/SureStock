@@ -146,6 +146,7 @@ export function SalesPage() {
           value={formatPesewas(stats?.totalSales ?? 0)}
           sublabel="This period"
           tone="accent"
+          emphasis
           trend={trends.totalSales}
         />
         <StatCard

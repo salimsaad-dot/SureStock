@@ -4,11 +4,11 @@ import { cn } from '../lib/cn'
 export type PillVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral'
 
 const variantClasses: Record<PillVariant, string> = {
-  success: 'bg-success-wash text-success',
-  warning: 'bg-warning-wash text-warning',
-  danger: 'bg-danger-wash text-danger',
-  info: 'bg-accent-wash text-accent-strong',
-  neutral: 'bg-surface-sunken text-ink-muted',
+  success: 'border border-success/35 bg-success-wash text-success',
+  warning: 'border border-warning/35 bg-warning-wash text-warning',
+  danger: 'border border-danger/35 bg-danger-wash text-danger',
+  info: 'border border-accent/35 bg-accent-wash text-accent-strong',
+  neutral: 'border border-border bg-surface-sunken text-ink-muted',
 }
 
 export interface PillProps {

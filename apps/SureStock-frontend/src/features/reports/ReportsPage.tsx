@@ -163,6 +163,7 @@ export function ReportsPage() {
           label="Total Sales"
           value={formatPesewas(overview?.totalSales ?? 0)}
           tone="accent"
+          emphasis
           comparison={{ changePct: overview?.totalSalesChangePct ?? null, goodDirectionUp: true, rangeLabel: priorRangeLabel }}
         />
         <StatCard
@@ -170,6 +171,7 @@ export function ReportsPage() {
           label="Gross Profit"
           value={formatPesewas(overview?.grossProfit ?? 0)}
           tone="success"
+          emphasis
           comparison={{ changePct: overview?.grossProfitChangePct ?? null, goodDirectionUp: true, rangeLabel: priorRangeLabel }}
         />
         <StatCard
