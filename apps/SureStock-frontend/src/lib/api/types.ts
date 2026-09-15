@@ -689,6 +689,7 @@ export interface StaffAdmin {
   isActive: boolean
   lastLoginAt: string | null
   createdAt: string
+  avatarUrl: string | null
 }
 
 export interface CreateStaffBody {

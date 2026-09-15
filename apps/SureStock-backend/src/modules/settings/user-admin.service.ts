@@ -43,6 +43,7 @@ function serializeStaff(u: User) {
     isActive: u.isActive,
     lastLoginAt: u.lastLoginAt,
     createdAt: u.createdAt,
+    avatarUrl: u.avatarUrl,
   };
 }
 
