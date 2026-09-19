@@ -61,34 +61,49 @@ function CountingCard({
   const toneClass = variance.tone === 'success' ? 'text-success' : variance.tone === 'danger' ? 'text-danger' : 'text-ink-muted'
 
   return (
-    <div className="w-full max-w-md rounded-xl border border-border bg-surface-raised p-5">
-      <p className="font-display text-[11.5px] font-semibold uppercase tracking-wide text-ink-muted">Count this item</p>
-      <p className="mt-1 font-display text-2xl font-bold leading-tight text-ink">
-        {line.productName}
-        {line.variantName ? ` — ${line.variantName}` : ''}
-      </p>
-      <p className="font-mono text-[12.5px] text-ink-muted">{line.sku}</p>
-
-      <p className="mt-4 font-display text-[13px] font-medium text-ink">Counted quantity</p>
-      <div className="mt-1.5 flex h-[72px] items-center justify-end rounded-md border border-accent bg-surface-raised px-4 font-mono text-4xl font-semibold text-ink shadow-[0_0_0_2px_var(--accent-wash)]">
-        {entry || '0'}
-      </div>
-      <p className={`mt-1.5 font-display text-[12.5px] ${toneClass}`}>{variance.text}</p>
-
-      <div className="mt-4">
-        <NumericKeypad onDigit={pressDigit} onDecimal={pressDecimal} onBackspace={pressBackspace} />
-      </div>
-
-      {formError && (
-        <p role="alert" className="mt-3 font-display text-[13px] text-danger">
-          {formError}
+    <>
+      <div className="w-full max-w-md rounded-xl border border-border bg-surface-raised p-5">
+        <p className="font-display text-[11.5px] font-semibold uppercase tracking-wide text-ink-muted">Count this item</p>
+        <p className="mt-1 font-display text-2xl font-bold leading-tight text-ink">
+          {line.productName}
+          {line.variantName ? ` — ${line.variantName}` : ''}
         </p>
-      )}
+        <p className="font-mono text-[12.5px] text-ink-muted">{line.sku}</p>
 
-      <Button size="speed" className="mt-4 w-full" isLoading={isSaving} onClick={submit}>
-        {saveLabel}
-      </Button>
-    </div>
+        <p className="mt-4 font-display text-[13px] font-medium text-ink">Counted quantity</p>
+        <div className="mt-1.5 flex h-[72px] items-center justify-end rounded-md border border-accent bg-surface-raised px-4 font-mono text-4xl font-semibold text-ink shadow-[0_0_0_2px_var(--accent-wash)]">
+          {entry || '0'}
+        </div>
+        <p className={`mt-1.5 font-display text-[12.5px] ${toneClass}`}>{variance.text}</p>
+
+        <div className="mt-4">
+          <NumericKeypad onDigit={pressDigit} onDecimal={pressDecimal} onBackspace={pressBackspace} />
+        </div>
+
+        {formError && (
+          <p role="alert" className="mt-3 font-display text-[13px] text-danger">
+            {formError}
+          </p>
+        )}
+      </div>
+
+      {/* Fixed, not part of the card's own scroll flow: always reachable
+          in one tap regardless of product-name length or device height,
+          the same "always-visible primary action" pattern already used
+          for the mobile bottom nav and Sell's mini-cart bar. bottom-16
+          clears the mobile bottom nav; lg:bottom-0 since that nav is
+          lg:hidden and there's nothing to clear on desktop. */}
+      <div
+        className="fixed inset-x-0 bottom-16 z-10 border-t border-border bg-surface-raised px-5 py-3 lg:bottom-0"
+        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
+      >
+        <div className="mx-auto max-w-md">
+          <Button size="speed" className="w-full" isLoading={isSaving} onClick={submit}>
+            {saveLabel}
+          </Button>
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -149,7 +164,18 @@ export function CountingScreen({
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center gap-5 p-5">
+    // pb-44: clearance for CountingCard's fixed Save/Next bar (~93px) plus
+    // the mobile bottom nav it sits above (64px) — without reserving this
+    // much, the last keypad row and the "Review & post" link render
+    // *behind* those two stacked fixed bars and stay hidden even after
+    // scrolling all the way down, since a `fixed` bar occupies the same
+    // screen position regardless of scroll. Found via live testing at
+    // 375x667: a realistic product name already pushed the Save button
+    // ~14px past the fold before this fix existed at all (a longer name
+    // much further); the page scrolled fine, but a rapid, repetitive
+    // counting flow needing a scroll before every single save defeats
+    // the point of "speed mode".
+    <main className="flex flex-1 flex-col items-center gap-5 p-5 pb-44">
       <div className="w-full max-w-md">
         <div className="flex justify-between font-display text-[12.5px] text-ink-muted">
           <span>Stock take {stockTake.categoryName ? `· ${stockTake.categoryName}` : '· Full shop'}</span>

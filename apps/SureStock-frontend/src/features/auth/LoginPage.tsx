@@ -64,7 +64,7 @@ export function LoginPage() {
       <div className="flex flex-col justify-center p-6 sm:p-10">
         <div className="mx-auto w-full max-w-sm">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-accent text-white">
+            <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-accent text-surface">
               <Package className="h-5 w-5" aria-hidden="true" />
             </span>
             <p className="font-display text-sm font-bold text-ink">SureStock</p>
@@ -146,12 +146,12 @@ export function LoginPage() {
         </div>
 
         <div className="relative">
-          <h2 className="font-display text-4xl font-bold leading-tight text-white">
+          <h2 className="font-display text-4xl font-bold leading-tight text-surface">
             Smart inventory
             <br />
             solutions
           </h2>
-          <p className="mt-3 font-display text-sm font-semibold uppercase tracking-wide text-white/80">
+          <p className="mt-3 font-display text-sm font-semibold uppercase tracking-wide text-surface/80">
             Stay optimized. Grow faster.
           </p>
         </div>
@@ -162,7 +162,7 @@ export function LoginPage() {
 
 function FloatingIcon({ icon: Icon, className }: { icon: typeof Package; className: string }) {
   return (
-    <span className={`absolute flex h-12 w-12 items-center justify-center rounded-xl bg-white text-accent-strong ${className}`}>
+    <span className={`absolute flex h-12 w-12 items-center justify-center rounded-xl bg-surface text-accent-strong ${className}`}>
       <Icon className="h-5 w-5" aria-hidden="true" />
     </span>
   )

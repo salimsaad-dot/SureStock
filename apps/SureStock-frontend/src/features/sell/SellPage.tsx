@@ -1,13 +1,17 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useState } from 'react'
+import { ChevronUp } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { PageHeader } from '../../components/PageHeader'
 import { getPopularProducts, getRecentProducts, lookupByBarcode } from '../../lib/api/catalogue'
 import { getCurrentTillShift } from '../../lib/api/sales'
 import { ApiError, type PaymentMethod, type Sale } from '../../lib/api/types'
 import { useAuthStore } from '../../lib/auth-store'
+import { formatPesewas } from '../../lib/money'
 import { lookupBarcodeOffline } from '../../lib/offline/catalogue-cache'
 import { useToast } from '../../lib/toast-store'
 import { CartPanel } from './CartPanel'
 import { CategoryTiles } from './CategoryTiles'
+import { computeCartTotals } from './cart-totals'
 import { useCartStore } from './cart-store'
 import { HeldCartChips } from './HeldCartChips'
 import { OpenShiftGate } from './OpenShiftGate'
@@ -26,11 +30,29 @@ export function SellPage() {
   const [completedSale, setCompletedSale] = useState<Sale | null>(null)
   const [categoryId, setCategoryId] = useState('')
   const lines = useCartStore((s) => s.lines)
+  const cartDiscountAmount = useCartStore((s) => s.cartDiscountAmount)
   const ticketNumber = useCartStore((s) => s.ticketNumber)
   const addLine = useCartStore((s) => s.addLine)
   const hold = useCartStore((s) => s.hold)
   const show = useToast()
   const queryClient = useQueryClient()
+  const cartRef = useRef<HTMLDivElement>(null)
+  const cartFooterRef = useRef<HTMLDivElement>(null)
+  const [cartOffscreen, setCartOffscreen] = useState(false)
+  const cartTotal = computeCartTotals(lines, cartDiscountAmount).total
+
+  useEffect(() => {
+    // Keyed on `shift`, not `[]`: CartPanel (and cartFooterRef's real DOM
+    // node) only exists once the isLoading/!shift early returns below
+    // stop taking effect — an empty dep array would attach this observer
+    // during the very first commit, against a still-null ref, and never
+    // retry once the real footer actually mounts.
+    const el = cartFooterRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(([entry]) => setCartOffscreen(!entry?.isIntersecting), { threshold: 0 })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [shift])
 
   const handleScan = useCallback(
     async (code: string) => {
@@ -98,29 +120,35 @@ export function SellPage() {
     // sense once there's room for both side by side, so it's lg-only.
     <div className="flex flex-col lg:h-svh lg:flex-row">
       <main className="p-6 lg:flex-1 lg:overflow-y-auto">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="font-display text-2xl font-bold text-ink">Sell</h1>
-            <p className="mt-0.5 font-display text-sm text-ink-muted">Scan barcode or search for a product to start a sale.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {ticketNumber && (
-              <div className="rounded-lg border border-border bg-surface-raised px-3 py-2">
-                <p className="font-display text-[11px] text-ink-faint">Current sale</p>
-                <p className="font-mono text-sm font-semibold text-ink">#{ticketNumber}</p>
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => hold()}
-              disabled={lines.length === 0}
-              className="h-11 rounded-md border border-border-strong px-4 font-display text-sm font-medium text-ink hover:bg-surface-sunken disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Hold sale
-            </button>
-            <SellMoreMenu />
-          </div>
-        </div>
+        {/* The title row specifically is identical markup to PageHeader's
+            'page' variant (same wrapper/heading/actions classes) — only
+            the BODY below it is the genuinely different fixed two-pane
+            "speed mode" shape PageHeader's own doc comment calls out.
+            Adopting it here is a pure dedup, not a design change: same
+            text, same classes, same layout. */}
+        <PageHeader
+          title="Sell"
+          subtitle="Scan barcode or search for a product to start a sale."
+          actions={
+            <>
+              {ticketNumber && (
+                <div className="rounded-lg border border-border bg-surface-raised px-3 py-2">
+                  <p className="font-display text-[11px] text-ink-faint">Current sale</p>
+                  <p className="font-mono text-sm font-semibold text-ink">#{ticketNumber}</p>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => hold()}
+                disabled={lines.length === 0}
+                className="h-11 rounded-md border border-border-strong px-4 font-display text-sm font-medium text-ink hover:bg-surface-sunken disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Hold sale
+              </button>
+              <SellMoreMenu />
+            </>
+          }
+        />
 
         <HeldCartChips />
 
@@ -149,14 +177,42 @@ export function SellPage() {
           panes, which is when CartPanel's own internal scroll region
           (its line items, not its pinned totals footer) should take
           over instead of the whole page. */}
-      <div className="w-full flex-none lg:h-full lg:w-96">
+      <div ref={cartRef} className="w-full flex-none lg:h-full lg:w-96">
         <CartPanel
+          footerRef={cartFooterRef}
           onCheckout={(method) => {
             setPreferredMethod(method)
             setPaymentOpen(true)
           }}
         />
       </div>
+
+      {/* Mobile only: on a phone the cart isn't a persistent side pane
+          (see the outer div's comment) — it's below the product grid, so
+          after adding a few items the cashier has to scroll past
+          everything just to see or reach the Charge button. This pins a
+          reachable summary above the bottom nav that jumps straight to
+          the real cart/Charge button rather than skipping the review
+          step, since — unlike desktop — the cart isn't visible while
+          browsing here. Hidden once the real cart panel is actually in
+          view (via IntersectionObserver) so it never sits on top of the
+          real Charge button once you've scrolled down to it. */}
+      {lines.length > 0 && cartOffscreen && (
+        <button
+          type="button"
+          onClick={() => cartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          className="fixed inset-x-0 z-10 flex items-center justify-between gap-3 border-t border-border bg-accent px-4 py-3 text-surface lg:hidden"
+          style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom))' }}
+        >
+          <span className="font-display text-sm font-semibold">
+            {lines.length} item{lines.length === 1 ? '' : 's'} in cart
+          </span>
+          <span className="flex items-center gap-1 font-display text-sm font-bold">
+            View cart · {formatPesewas(cartTotal)}
+            <ChevronUp className="h-4 w-4" aria-hidden="true" />
+          </span>
+        </button>
+      )}
 
       {paymentOpen && (
         <PaymentSheet

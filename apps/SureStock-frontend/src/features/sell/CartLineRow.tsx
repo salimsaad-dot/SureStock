@@ -79,7 +79,7 @@ export function CartLineRow({ line }: { line: CartLine }) {
         <div className="mt-2 flex flex-wrap items-end gap-2">
           <TextInput label="Discount (GH₵)" inputMode="decimal" value={discountInput} onChange={(e) => setDiscountInput(e.target.value)} />
           <TextInput label="Reason" value={reasonInput} onChange={(e) => setReasonInput(e.target.value)} />
-          <button type="button" onClick={saveDiscount} className="h-11 rounded-md bg-accent px-3 font-display text-[13px] font-semibold text-white">
+          <button type="button" onClick={saveDiscount} className="h-11 rounded-md bg-accent px-3 font-display text-[13px] font-semibold text-surface">
             Apply
           </button>
         </div>

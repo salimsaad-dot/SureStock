@@ -27,11 +27,13 @@ export type PageHeaderProps = PageHeaderPageProps | PageHeaderDetailProps
 /**
  * Two shapes, matching what every page in this app already hand-rolls:
  * 'page' (bare title/subtitle, optional right-aligned actions — Dashboard,
- * Inventory, Sales, Reports, Purchasing, Review Queue, Settings) and
- * 'detail' (back-link → title+status-pill row → subtitle — Product/Sale/
- * PurchaseOrder detail pages). SellPage and Stock Take's in-progress flow
- * intentionally don't use this — they're a different "speed mode" page
- * kind, not a header/container variant.
+ * Inventory, Sales, Reports, Purchasing, Review Queue, Settings, and
+ * SellPage's title row) and 'detail' (back-link → title+status-pill row →
+ * subtitle — Product/Sale/PurchaseOrder detail pages). SellPage's title
+ * row turned out to be identical markup to 'page', so it adopts this too;
+ * only its BODY below the title (and Stock Take's in-progress flow) stays
+ * hand-rolled — a genuinely different fixed-viewport "speed mode" shape,
+ * not just an unmigrated header.
  */
 export function PageHeader(props: PageHeaderProps) {
   if (props.variant === 'detail') {

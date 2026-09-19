@@ -10,7 +10,7 @@ export function CategoryTiles({ value, onChange }: { value: string; onChange: (c
         type="button"
         onClick={() => onChange('')}
         className={`rounded-full px-4 py-2 font-display text-[13px] font-semibold ${
-          value === '' ? 'bg-accent text-white' : 'border border-border-strong text-ink-muted hover:bg-surface-sunken'
+          value === '' ? 'bg-accent text-surface' : 'border border-border-strong text-ink-muted hover:bg-surface-sunken'
         }`}
       >
         All
@@ -21,7 +21,7 @@ export function CategoryTiles({ value, onChange }: { value: string; onChange: (c
           type="button"
           onClick={() => onChange(c.id)}
           className={`rounded-full px-4 py-2 font-display text-[13px] font-semibold ${
-            value === c.id ? 'bg-accent text-white' : 'border border-border-strong text-ink-muted hover:bg-surface-sunken'
+            value === c.id ? 'bg-accent text-surface' : 'border border-border-strong text-ink-muted hover:bg-surface-sunken'
           }`}
         >
           {c.name}

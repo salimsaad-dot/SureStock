@@ -173,40 +173,52 @@ export function PurchaseOrderFormDialog({
 
         <ul className="mt-4 flex flex-col gap-2">
           {lines.map((l) => (
-            <li key={l.variantId} className="flex items-center gap-2 rounded-lg border border-border p-3">
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-sm text-ink">
-                  {l.productName}
-                  {l.variantName ? ` — ${l.variantName}` : ''}
-                </p>
-                <p className="truncate font-mono text-[11px] text-ink-faint">{l.sku}</p>
+            // Was one row: a min-w-0 name next to two fixed-width inputs
+            // and a remove button — at 360-390px that left ~60-90px for
+            // the product name before it truncated illegibly, and the
+            // h-10 (40px) inputs sat below the app's own 44px touch-
+            // target standard (used two fields above, for Supplier/
+            // search, in this same dialog). Two rows gives the name its
+            // own full-width line (no truncation) and the inputs room to
+            // meet the 44px standard.
+            <li key={l.variantId} className="rounded-lg border border-border p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-sm text-ink">
+                    {l.productName}
+                    {l.variantName ? ` — ${l.variantName}` : ''}
+                  </p>
+                  <p className="truncate font-mono text-[11px] text-ink-faint">{l.sku}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeLine(l.variantId)}
+                  className="flex h-11 w-11 flex-none items-center justify-center text-ink-faint hover:text-danger"
+                  aria-label={`Remove ${l.productName}`}
+                >
+                  ✕
+                </button>
               </div>
-              <input
-                type="number"
-                min={1}
-                step="any"
-                value={l.quantityOrdered}
-                onChange={(e) => updateLine(l.variantId, { quantityOrdered: Number(e.target.value) })}
-                className="h-10 w-20 flex-none rounded-md border border-border-strong bg-surface-raised px-2 text-right font-mono text-sm text-ink"
-                aria-label={`Quantity for ${l.productName}`}
-              />
-              <input
-                type="text"
-                inputMode="decimal"
-                value={l.unitCostCedis}
-                onChange={(e) => updateLine(l.variantId, { unitCostCedis: e.target.value })}
-                placeholder="0.00"
-                className="h-10 w-24 flex-none rounded-md border border-border-strong bg-surface-raised px-2 text-right font-mono text-sm text-ink"
-                aria-label={`Unit cost for ${l.productName}`}
-              />
-              <button
-                type="button"
-                onClick={() => removeLine(l.variantId)}
-                className="flex-none text-ink-faint hover:text-danger"
-                aria-label={`Remove ${l.productName}`}
-              >
-                ✕
-              </button>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  step="any"
+                  value={l.quantityOrdered}
+                  onChange={(e) => updateLine(l.variantId, { quantityOrdered: Number(e.target.value) })}
+                  className="h-11 min-w-0 flex-1 rounded-md border border-border-strong bg-surface-raised px-2 text-right font-mono text-sm text-ink"
+                  aria-label={`Quantity for ${l.productName}`}
+                />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={l.unitCostCedis}
+                  onChange={(e) => updateLine(l.variantId, { unitCostCedis: e.target.value })}
+                  placeholder="0.00"
+                  className="h-11 min-w-0 flex-1 rounded-md border border-border-strong bg-surface-raised px-2 text-right font-mono text-sm text-ink"
+                  aria-label={`Unit cost for ${l.productName}`}
+                />
+              </div>
             </li>
           ))}
           {lines.length === 0 && <p className="font-display text-sm text-ink-muted">No products added yet.</p>}

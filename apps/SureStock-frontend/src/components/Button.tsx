@@ -13,8 +13,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
+  // text-surface, not text-white: --accent inverts lightness between
+  // themes (dark in light mode, light in dark mode, tokens.css), so a
+  // fixed white label drops to ~2:1 contrast in dark mode — well under
+  // WCAG AA. --surface flips the opposite way, so it stays high-contrast
+  // against accent's mid-toned lightness in both themes.
   primary:
-    'bg-accent text-white hover:bg-accent-strong active:bg-accent-strong disabled:hover:bg-accent',
+    'bg-accent text-surface hover:bg-accent-strong active:bg-accent-strong disabled:hover:bg-accent',
   secondary:
     'bg-transparent border border-border-strong text-ink hover:bg-surface-sunken active:bg-surface-sunken',
   danger:

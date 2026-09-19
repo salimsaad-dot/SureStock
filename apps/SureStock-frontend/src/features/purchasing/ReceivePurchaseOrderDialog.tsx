@@ -81,7 +81,7 @@ export function ReceivePurchaseOrderDialog({
                     step="any"
                     value={draft.quantityReceived}
                     onChange={(e) => updateDraft(line.id, Math.min(remaining, Math.max(0, Number(e.target.value))))}
-                    className="h-10 w-20 flex-none rounded-md border border-border-strong bg-surface-raised px-2 text-right font-mono text-sm text-ink"
+                    className="h-11 w-20 flex-none rounded-md border border-border-strong bg-surface-raised px-2 text-right font-mono text-sm text-ink"
                     aria-label={`Quantity received for ${line.productName}`}
                   />
                 </div>

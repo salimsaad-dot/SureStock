@@ -59,7 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-svh flex-col lg:flex-row">
       <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-svh lg:w-64 lg:flex-none lg:flex-col lg:self-start lg:overflow-y-auto lg:border-r lg:border-border lg:bg-surface-raised">
         <div className="flex items-center gap-2.5 p-4">
-          <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-accent text-white">
+          <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-accent text-surface">
             <Package className="h-5 w-5" aria-hidden="true" />
           </span>
           <div className="leading-tight">
@@ -169,7 +169,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
       >
         <div className="flex flex-none items-center gap-2">
-          <span className="flex h-7 w-7 flex-none items-center justify-center rounded-md bg-accent text-white">
+          <span className="flex h-7 w-7 flex-none items-center justify-center rounded-md bg-accent text-surface">
             <Package className="h-4 w-4" aria-hidden="true" />
           </span>
           <span className="font-display text-sm font-bold text-ink">SureStock</span>

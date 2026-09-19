@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react'
 import { ProductAvatar } from '../catalogue/ProductAvatar'
+import { cn } from '../../lib/cn'
 import type { SellTile } from '../../lib/api/types'
 import { formatPesewas } from '../../lib/money'
 import { useCartStore } from './cart-store'
@@ -25,12 +26,17 @@ export function ProductTile({ tile }: { tile: SellTile }) {
   }
 
   return (
-    <div className="relative flex flex-col items-start gap-2 rounded-lg border border-border bg-surface-raised p-3">
+    <div
+      className={cn(
+        'relative flex flex-col items-start gap-2 rounded-lg border p-3',
+        outOfStock ? 'border-danger/35 bg-danger-wash' : 'border-border bg-surface-raised',
+      )}
+    >
       <button
         type="button"
         onClick={add}
         aria-label={`Add ${tile.productName}`}
-        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-accent text-white shadow hover:bg-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-accent text-surface shadow hover:bg-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         <Plus className="h-4 w-4" aria-hidden="true" />
       </button>

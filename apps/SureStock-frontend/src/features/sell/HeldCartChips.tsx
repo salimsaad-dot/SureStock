@@ -20,7 +20,7 @@ export function HeldCartChips() {
             type="button"
             onClick={() => discardHeld(held.id)}
             aria-label={`Discard held sale ${held.label}`}
-            className="flex h-5 w-5 items-center justify-center rounded-full text-accent-strong hover:bg-accent hover:text-white"
+            className="flex h-5 w-5 items-center justify-center rounded-full text-accent-strong hover:bg-accent hover:text-surface"
           >
             <X className="h-3 w-3" aria-hidden="true" />
           </button>

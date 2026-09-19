@@ -1,5 +1,5 @@
 import { CreditCard, Landmark, Lock, Smartphone } from 'lucide-react'
-import { useState } from 'react'
+import { type Ref, useState } from 'react'
 import { Button } from '../../components/Button'
 import { EmptyState } from '../../components/EmptyState'
 import type { PaymentMethod } from '../../lib/api/types'
@@ -14,7 +14,17 @@ const METHOD_TILES: { value: PaymentMethod; label: string; icon: typeof Landmark
   { value: 'CARD', label: 'Card', icon: CreditCard },
 ]
 
-export function CartPanel({ onCheckout }: { onCheckout: (preferredMethod: PaymentMethod) => void }) {
+export function CartPanel({
+  onCheckout,
+  footerRef,
+}: {
+  onCheckout: (preferredMethod: PaymentMethod) => void
+  /** Lets a mobile-only "jump to cart" affordance (SellPage) know when the
+   * real Charge button — not just the top of this panel — has actually
+   * scrolled into view, since the panel itself can be much taller than
+   * the screen once there are several line items. */
+  footerRef?: Ref<HTMLDivElement>
+}) {
   const lines = useCartStore((s) => s.lines)
   const cartDiscountAmount = useCartStore((s) => s.cartDiscountAmount)
   const cartDiscountReason = useCartStore((s) => s.cartDiscountReason)
@@ -52,7 +62,7 @@ export function CartPanel({ onCheckout }: { onCheckout: (preferredMethod: Paymen
         )}
       </div>
 
-      <div className="border-t border-border p-4">
+      <div ref={footerRef} className="border-t border-border p-4">
         <div className="flex justify-between gap-3 font-display text-sm text-ink-muted">
           <span className="flex-none">Subtotal</span>
           <span className="min-w-0 break-words text-right font-mono tabular-nums">{formatPesewas(totals.subtotal)}</span>
